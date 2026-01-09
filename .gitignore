@@ -1,0 +1,12 @@
+### Gradle ###
+gradle/
+.gradle
+build/
+
+### IntelliJ ###
+.idea/
+out/
+*.iml
+
+### OS ###
+.DS_Store
