@@ -1,0 +1,13 @@
+package app.tamingo;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class TamingoApplicationTests {
+
+	@Test
+	void contextLoads() {
+	}
+
+}
