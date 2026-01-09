@@ -43,22 +43,20 @@
 [#5] Feat: 로그인 기능 추가
 ```
 
-```
-| Type | Description |
-|------|------------|
-| Feat | 새로운 기능 추가 |
-| Fix | 버그 수정 |
-| Docs | 문서 수정 |
-| Style | 코드 포맷팅 (로직 변경 없음) |
-| Refactor | 코드 리팩토링 |
-| Test | 테스트 코드 추가 또는 수정 |
-| Chore | 빌드 설정 및 기타 작업 |
-| Design | UI 디자인 변경 |
-| Comment | 주석 추가 및 변경 |
-| Rename | 파일 또는 폴더명 변경 |
-| Remove | 파일 삭제 |
-| Init | 프로젝트 초기 세팅 |
-| Merge | 브랜치 병합 |
-| !BREAKING CHANGE | 큰 API 변경 |
-| !HOTFIX | 긴급 버그 수정 |
-```
+| Type                 | 의미                   | 사용 예시                                    |
+| -------------------- | -------------------- | ---------------------------------------- |
+| **Feat**             | 새로운 기능 추가            | `Feat: 일정 상세 조회 API 추가`                  |
+| **Fix**              | 버그 수정                | `Fix: 출발 판단 계산 오류 수정`                    |
+| **Docs**             | 문서 수정                | `Docs: API 명세서 업데이트`                     |
+| **Style**            | 코드 스타일 변경 (로직 영향 없음) | `Style: import 정리`                       |
+| **Refactor**         | 코드 리팩토링 (기능 변경 없음)   | `Refactor: 출발 판단 로직 분리`                  |
+| **Test**             | 테스트 코드 추가/수정         | `Test: 일정 상세 조회 테스트 추가`                  |
+| **Chore**            | 빌드/설정/기타 작업          | `Chore: gradle 설정 업데이트`                  |
+| **Design**           | UI/UX 디자인 변경         | `Design: 홈 화면 레이아웃 수정`                   |
+| **Comment**          | 주석 추가/수정             | `Comment: 출발 판단 로직 설명 추가`                |
+| **Rename**           | 파일/폴더명 변경            | `Rename: ScheduleDto → ScheduleResponse` |
+| **Remove**           | 파일/코드 삭제             | `Remove: 사용하지 않는 테스트 삭제`                 |
+| **Init**             | 프로젝트 초기 세팅           | `Init: Spring Boot 프로젝트 초기화`             |
+| **Merge**            | 브랜치 병합               | `Merge: feature/schedule-detail`         |
+| **!BREAKING CHANGE** | 하위 호환 불가 변경          | `!BREAKING CHANGE: 일정 API 응답 구조 변경`      |
+| **!HOTFIX**          | 운영 긴급 수정             | `!HOTFIX: 출발 알림 실패 긴급 수정`                |
