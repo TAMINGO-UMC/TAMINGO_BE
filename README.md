@@ -11,7 +11,7 @@
 | Backend | Backend |                                    Backend                                    | Backend | Backend |
 |:------:|:------:|:-----------------------------------------------------------------------------:|:------:|:------:|
 | <img src="https://github.com/HeejuKo.png" width="150" /> | <img src="https://github.com/JiwonLee42.png" width="150" /> |        <img src="https://github.com/dearmytwilight.png" width="150" />        | <img src="https://github.com/leegy21.png" width="150" /> | <img src="https://avatars.githubusercontent.com/u/0?v=4" width="150" /> |
-| [고희주](https://github.com/HeejuKo)<br/>로그인 / 회원가입<br/>이메일 인증<br/>온보딩 | [이지원](https://github.com/JiwonLee42)<br/>홈 | [김도윤](https://github.com/dearmytwilight)<br/>마이페이지<br/>장소 & 시간 설정<br/>알림 / 설정 | [이가영](https://github.com/leegy21)<br/>일정<br/>할 일 | 김현강<br/>마이페이지<br/>주간 리포트<br/>캘린더 연동 |
+| [고희주](https://github.com/HeejuKo)<br/>로그인 / 회원가입<br/>이메일 인증<br/>온보딩 | [이지원](https://github.com/JiwonLee42)<br/>홈 | [김도윤](https://github.com/dearmytwilight)<br/>마이페이지<br/>장소 & 시간 설정<br/>알림 / 설정 | [이가영](https://github.com/leegy21)<br/>일정<br/>할 일 |  [김현강](https://github.com/hyeonkangkimm)<br/>마이페이지<br/>주간 리포트<br/>캘린더 연동 |
 
 </div>
 
