@@ -118,11 +118,11 @@ public class SignupService {
         }
 
         if (nickname == null || nickname.isBlank()) {
-            throw new CustomException(ErrorCode.INVALID_REQUEST);
+            throw new CustomException(ErrorCode.SIGNUP_NICKNAME_REQUIRED);
         }
 
         if (password == null || password.isBlank()) {
-            throw new CustomException(ErrorCode.INVALID_REQUEST);
+            throw new CustomException(ErrorCode.SIGNUP_PASSWORD_REQUIRED);
         }
 
         if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.LOCAL, email)) {
@@ -146,7 +146,7 @@ public class SignupService {
                 .toList();
         userTermsAgreementRepository.saveAll(agreements);
 
-        // 세션 삭제
+        // 세션 삭제HttpStatus
         signupSessionRepository.deleteById(signupSessionId);
 
         return user.getId();

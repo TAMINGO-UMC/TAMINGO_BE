@@ -22,6 +22,13 @@ public enum ErrorCode implements BaseCode {
     SIGNUP_EMAIL_NOT_MATCHED(HttpStatus.BAD_REQUEST, "AUTH-005", "요청 이메일이 세션 정보와 일치하지 않습니다."),
     SIGNUP_EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "AUTH-006", "이메일 인증이 완료되지 않았습니다."),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "AUTH-007", "이미 가입된 이메일입니다."),
+    SIGNUP_NICKNAME_REQUIRED(HttpStatus.BAD_REQUEST, "AUTH-008", "닉네임은 필수입니다."),
+    SIGNUP_PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "AUTH-009", "비밀번호는 필수입니다."),
+
+    // 로그인
+    LOGIN_EMAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH-030", "존재하지 않는 이메일입니다."),
+    LOGIN_PASSWORD_INVALID(HttpStatus.BAD_REQUEST, "AUTH-031", "비밀번호가 올바르지 않습니다."),
+    LOGIN_PASSWORD_NOT_SET(HttpStatus.BAD_REQUEST, "AUTH-032", "비밀번호가 설정되지 않은 계정입니다."),
 
     // 유저
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER-001", "사용자를 찾을 수 없습니다."),
