@@ -15,5 +15,8 @@ public interface TermsRepository extends JpaRepository<Terms, Long> {
     // 약관 개별 조회 (코드로 조회)
     Optional<Terms> findByCode(TermsCode code);
 
+    // 필수 약관 목록 조회
+    List<Terms> findAllByIsRequiredTrue();
+
     boolean existsByCode(TermsCode code);
 }
