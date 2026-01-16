@@ -25,7 +25,7 @@ public class NotificationSetting extends BaseEntity {
     private boolean departAlertEnabled;
 
     @Column(name = "depart_alert_minutes", nullable = false)
-    private short departAlertMinutes;
+    private short departAlertMinutes; // 10, 15, 30
 
     public static NotificationSetting create(User user, boolean enabled, int minutes) {
         NotificationSetting s = new NotificationSetting();
