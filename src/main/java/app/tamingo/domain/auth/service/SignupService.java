@@ -2,8 +2,11 @@ package app.tamingo.domain.auth.service;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
+import app.tamingo.common.security.JwtTokenProvider;
 import app.tamingo.domain.auth.entity.AuthIdentity;
 import app.tamingo.domain.auth.entity.AuthProvider;
+import app.tamingo.domain.auth.redis.RefreshToken;
+import app.tamingo.domain.auth.redis.RefreshTokenRepository;
 import app.tamingo.domain.auth.redis.SignupSession;
 import app.tamingo.domain.auth.redis.SignupSessionRepository;
 import app.tamingo.domain.auth.repository.AuthIdentityRepository;
@@ -37,6 +40,9 @@ public class SignupService {
     private final UserTermsAgreementRepository userTermsAgreementRepository;
     private final AuthIdentityRepository authIdentityRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     private final EmailVerificationService emailVerificationService;
 
@@ -105,7 +111,7 @@ public class SignupService {
     }
 
     // 4. 아이디 생성 (회원가입 완료)
-    public Long completeSignup(String signupSessionId, String nickname, String password) {
+    public SignupResult completeSignup(String signupSessionId, String nickname, String password) {
         SignupSession session = getSessionOrThrow(signupSessionId);
 
         if (!session.isEmailVerified()) {
@@ -146,11 +152,23 @@ public class SignupService {
                 .toList();
         userTermsAgreementRepository.saveAll(agreements);
 
-        // 세션 삭제HttpStatus
+        // 세션 삭제 및 토큰 발급
         signupSessionRepository.deleteById(signupSessionId);
 
-        return user.getId();
+        String access = jwtTokenProvider.createAccessToken(user.getId());
+        String refresh = jwtTokenProvider.createRefreshToken(user.getId());
+
+        long refreshTtlSec = jwtTokenProvider.getRefreshExpMs() / 1000;
+        refreshTokenRepository.save(RefreshToken.create(user.getId(), refresh, refreshTtlSec));
+
+        return new SignupResult(user.getId(), access, refresh);
     }
+
+    public record SignupResult(
+            Long userId,
+            String accessToken,
+            String refreshToken
+    ) {}
 
     private SignupSession getSessionOrThrow(String signupSessionId) {
         if (signupSessionId == null || signupSessionId.isBlank()) {

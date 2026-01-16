@@ -59,9 +59,13 @@ public class SignupController {
             @RequestHeader("X-Signup-Session-Id") String signupSessionId,
             @RequestBody CompleteSignupRequest request
     ) {
-        Long userId = signupService.completeSignup(signupSessionId, request.nickname(), request.password());
+        SignupService.SignupResult r = signupService.completeSignup(
+                signupSessionId,
+                request.nickname(),
+                request.password()
+        );
         return ApiResponse.onSuccess(
-                new CompleteSignupResponse(userId),
+                new CompleteSignupResponse(r.userId(), r.accessToken(), r.refreshToken()),
                 SuccessCode.CREATED
         );
     }
