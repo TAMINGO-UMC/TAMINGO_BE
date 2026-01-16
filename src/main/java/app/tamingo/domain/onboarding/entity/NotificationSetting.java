@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class NotificationSetting extends BaseEntity {
 
     @Id
+    @Column(name = "user_id")
     private Long userId;
 
     @MapsId
@@ -24,20 +25,21 @@ public class NotificationSetting extends BaseEntity {
     @Column(name = "depart_alert_enabled", nullable = false)
     private boolean departAlertEnabled;
 
-    @Column(name = "depart_alert_minutes", nullable = false)
-    private short departAlertMinutes; // 10, 15, 30
+    @Enumerated(EnumType.STRING)
+    @Column(name = "depart_alert_minutes", nullable = false, length = 10)
+    private AlertMinute departAlertMinute;
 
-    public static NotificationSetting create(User user, boolean enabled, int minutes) {
+    public static NotificationSetting create(User user, boolean enabled, AlertMinute minute) {
         NotificationSetting s = new NotificationSetting();
         s.user = user;
         s.userId = user.getId();
         s.departAlertEnabled = enabled;
-        s.departAlertMinutes = (short) minutes;
+        s.departAlertMinute = minute;
         return s;
     }
 
-    public void update(boolean enabled, int minutes) {
+    public void update(boolean enabled, AlertMinute minute) {
         this.departAlertEnabled = enabled;
-        this.departAlertMinutes = (short) minutes;
+        this.departAlertMinute = minute;
     }
 }
