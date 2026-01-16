@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: tamingo-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - "5432:5432"
+    volumes:
+      - tamingo_pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: tamingo-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - tamingo_redisdata:/data
+
+volumes:
+  tamingo_pgdata:
+  tamingo_redisdata:
