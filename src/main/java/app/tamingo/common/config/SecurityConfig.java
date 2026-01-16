@@ -16,9 +16,12 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/api/auth/signup/**",
+                                "/api/auth/login/**"
                         ).permitAll()
-                        .anyRequest().permitAll() // ← 지금은 전체 오픈
+                        .requestMatchers("/api/auth/logout").authenticated()
+                        .anyRequest().permitAll()
                 );
 
         return http.build();
