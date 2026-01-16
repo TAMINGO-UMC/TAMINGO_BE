@@ -2,8 +2,14 @@ package app.tamingo.domain.auth.service;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
+import app.tamingo.common.security.JwtTokenProvider;
+import app.tamingo.domain.auth.entity.AuthIdentity;
+import app.tamingo.domain.auth.entity.AuthProvider;
+import app.tamingo.domain.auth.redis.RefreshToken;
+import app.tamingo.domain.auth.redis.RefreshTokenRepository;
 import app.tamingo.domain.auth.redis.SignupSession;
 import app.tamingo.domain.auth.redis.SignupSessionRepository;
+import app.tamingo.domain.auth.repository.AuthIdentityRepository;
 import app.tamingo.domain.terms.entity.Terms;
 import app.tamingo.domain.terms.entity.TermsCode;
 import app.tamingo.domain.terms.repository.TermsRepository;
@@ -12,6 +18,7 @@ import app.tamingo.domain.terms.entity.UserTermsAgreement;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +38,11 @@ public class SignupService {
     private final TermsRepository termsRepository;
     private final UserRepository userRepository;
     private final UserTermsAgreementRepository userTermsAgreementRepository;
+    private final AuthIdentityRepository authIdentityRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     private final EmailVerificationService emailVerificationService;
 
@@ -64,7 +76,7 @@ public class SignupService {
         }
 
         // 이미 가입된 이메일일 경우
-        if (userRepository.existsByEmail(email)) {
+        if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.LOCAL, email)) {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
@@ -99,7 +111,7 @@ public class SignupService {
     }
 
     // 4. 아이디 생성 (회원가입 완료)
-    public Long completeSignup(String signupSessionId, String nickname) {
+    public SignupResult completeSignup(String signupSessionId, String nickname, String password) {
         SignupSession session = getSessionOrThrow(signupSessionId);
 
         if (!session.isEmailVerified()) {
@@ -112,16 +124,24 @@ public class SignupService {
         }
 
         if (nickname == null || nickname.isBlank()) {
-            throw new CustomException(ErrorCode.INVALID_REQUEST);
+            throw new CustomException(ErrorCode.SIGNUP_NICKNAME_REQUIRED);
         }
 
-        if (userRepository.existsByEmail(email)) {
+        if (password == null || password.isBlank()) {
+            throw new CustomException(ErrorCode.SIGNUP_PASSWORD_REQUIRED);
+        }
+
+        if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.LOCAL, email)) {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         // 유저 생성
         User user = User.create(email, nickname);
         userRepository.save(user);
+
+        // LOCAL 인증 정보 저장
+        String hash = passwordEncoder.encode(password);
+        authIdentityRepository.save(AuthIdentity.createLocal(user, email, hash));
 
         // 약관 동의 여부 저장
         List<Terms> currentTerms = termsRepository.findAll();
@@ -132,11 +152,23 @@ public class SignupService {
                 .toList();
         userTermsAgreementRepository.saveAll(agreements);
 
-        // 세션 삭제
+        // 세션 삭제 및 토큰 발급
         signupSessionRepository.deleteById(signupSessionId);
 
-        return user.getId();
+        String access = jwtTokenProvider.createAccessToken(user.getId());
+        String refresh = jwtTokenProvider.createRefreshToken(user.getId());
+
+        long refreshTtlSec = jwtTokenProvider.getRefreshExpMs() / 1000;
+        refreshTokenRepository.save(RefreshToken.create(user.getId(), refresh, refreshTtlSec));
+
+        return new SignupResult(user.getId(), access, refresh);
     }
+
+    public record SignupResult(
+            Long userId,
+            String accessToken,
+            String refreshToken
+    ) {}
 
     private SignupSession getSessionOrThrow(String signupSessionId) {
         if (signupSessionId == null || signupSessionId.isBlank()) {

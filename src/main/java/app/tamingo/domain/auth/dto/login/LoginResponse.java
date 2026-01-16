@@ -1,6 +1,6 @@
-package app.tamingo.domain.auth.dto.signup;
+package app.tamingo.domain.auth.dto.login;
 
-public record CompleteSignupResponse(
+public record LoginResponse(
         Long userId,
         String accessToken,
         String refreshToken
