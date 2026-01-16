@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -36,5 +37,5 @@ public class Terms {
     private String version;
 
     @Column(name = "effective_at", nullable = false)
-    private OffsetDateTime effectiveAt;
+    private LocalDateTime effectiveAt;
 }
