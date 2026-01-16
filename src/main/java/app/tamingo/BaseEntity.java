@@ -26,5 +26,5 @@ public class BaseEntity {
             shape = JsonFormat.Shape.STRING,
             pattern = "yyyy-MM-dd HH:mm:ss",
             timezone = "Asia/Seoul")
-    private LocalDateTime modifiedDate;
+    private LocalDateTime updatedDate;
 }
