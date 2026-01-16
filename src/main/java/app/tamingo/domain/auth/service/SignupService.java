@@ -124,13 +124,13 @@ public class SignupService {
         userRepository.save(user);
 
         // 약관 동의 여부 저장
-        List<Terms> currentTerms = termsRepository.findAllByOrderByIsRequiredDescEffectiveAtDesc();
+        List<Terms> currentTerms = termsRepository.findAll();
         Map<TermsCode, Boolean> agreedMap = toSafeEnumMap(session.getAgreedTerms());
 
-        for (Terms t : currentTerms) {
-            boolean agreed = Boolean.TRUE.equals(agreedMap.get(t.getCode()));
-            userTermsAgreementRepository.save(UserTermsAgreement.agree(user, t, agreed));
-        }
+        List<UserTermsAgreement> agreements = currentTerms.stream()
+                .map(t -> UserTermsAgreement.agree(user, t, Boolean.TRUE.equals(agreedMap.get(t.getCode()))))
+                .toList();
+        userTermsAgreementRepository.saveAll(agreements);
 
         // 세션 삭제
         signupSessionRepository.deleteById(signupSessionId);

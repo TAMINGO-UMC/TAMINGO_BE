@@ -20,7 +20,7 @@ public class SignupController {
     public ApiResponse<CreateSignupSessionResponse> createSignupSession(
             @RequestBody CreateSignupSessionRequest request
     ) {
-        String sessionId = signupService.createSignupSession(request.agreedTerms());
+        String sessionId = signupService.createSignupSession(request.terms());
         return ApiResponse.onSuccess(
                 new CreateSignupSessionResponse(sessionId, 900L),
                 SuccessCode.OK
