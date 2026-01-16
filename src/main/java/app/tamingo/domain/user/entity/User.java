@@ -36,4 +36,8 @@ public class User extends BaseEntity {
         user.nickname = nickname;
         return user;
     }
+
+    public void completeOnboarding() {
+        this.onboardingCompleted = true;
+    }
 }
