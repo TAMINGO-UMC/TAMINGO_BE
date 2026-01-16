@@ -1,5 +1,7 @@
 package app.tamingo.common.security;
 
+import app.tamingo.common.exception.CustomException;
+import app.tamingo.common.response.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,13 +59,15 @@ public class JwtTokenProvider {
         return Long.valueOf(claims.getSubject());
     }
 
-    public boolean validate(String token) {
+    public void validateOrThrow(String token) {
         try {
             parse(token);
-            return true;
-        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException |
-                 SignatureException | IllegalArgumentException e) {
-            return false;
+        } catch (ExpiredJwtException e) {
+            throw new CustomException(ErrorCode.TOKEN_EXPIRED);
+        } catch (SecurityException | SignatureException e) {
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
+        } catch (MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
     }
 

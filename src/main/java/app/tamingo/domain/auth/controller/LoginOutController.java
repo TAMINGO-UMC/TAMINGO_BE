@@ -5,6 +5,7 @@ import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.auth.dto.login.LoginRequest;
 import app.tamingo.domain.auth.dto.login.LoginResponse;
 import app.tamingo.domain.auth.service.LoginService;
+import app.tamingo.domain.auth.service.LogoutService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class LoginController {
 
     private final LoginService loginService;
+    private final LogoutService logoutService;
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest req) {
