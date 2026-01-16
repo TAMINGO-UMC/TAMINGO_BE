@@ -1,4 +1,6 @@
 package app.tamingo.domain.auth.redis;
 
-public class RefreshTokenRepository {
+import org.springframework.data.repository.CrudRepository;
+
+public interface RefreshTokenRepository extends CrudRepository<RefreshToken, String> {
 }
