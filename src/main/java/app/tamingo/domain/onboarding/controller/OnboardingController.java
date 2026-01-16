@@ -18,11 +18,11 @@ public class OnboardingController {
 
     // 온보딩 저장 + (임시) 인증 전이므로 userId는 헤더로 받음
     @PostMapping
-    public ApiResponse<OnboardingResponse> saveOnboarding(
+    public ApiResponse<OnboardingResponse> save(
             @RequestHeader("X-USER-ID") Long userId,
-            @Valid @RequestBody OnboardingRequest request
+            @RequestBody @Valid OnboardingRequest request
     ) {
         onboardingService.saveOnboarding(userId, request);
-        return ApiResponse.onSuccess(OnboardingResponse.completed(), SuccessCode.OK);
+        return ApiResponse.onSuccess(new OnboardingResponse(true), SuccessCode.OK);
     }
 }

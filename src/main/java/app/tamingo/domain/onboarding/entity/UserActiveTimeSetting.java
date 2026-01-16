@@ -16,11 +16,12 @@ import java.time.LocalTime;
 public class UserActiveTimeSetting extends BaseEntity {
 
     @Id
+    @Column(name = "user_id")
     private Long userId;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(name = "start_time", nullable = false)
@@ -60,7 +61,6 @@ public class UserActiveTimeSetting extends BaseEntity {
     ) {
         UserActiveTimeSetting s = new UserActiveTimeSetting();
         s.user = user;
-        s.userId = user.getId();
         s.startTime = startTime;
         s.endTime = endTime;
         s.monEnabled = monEnabled;

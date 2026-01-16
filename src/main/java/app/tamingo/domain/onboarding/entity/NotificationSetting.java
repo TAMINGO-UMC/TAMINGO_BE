@@ -15,11 +15,11 @@ public class NotificationSetting extends BaseEntity {
 
     @Id
     @Column(name = "user_id")
-    private Long userId;
+    private Long id;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(name = "depart_alert_enabled", nullable = false)
@@ -32,7 +32,6 @@ public class NotificationSetting extends BaseEntity {
     public static NotificationSetting create(User user, boolean enabled, AlertMinute minute) {
         NotificationSetting s = new NotificationSetting();
         s.user = user;
-        s.userId = user.getId();
         s.departAlertEnabled = enabled;
         s.departAlertMinute = minute;
         return s;
