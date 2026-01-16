@@ -9,7 +9,7 @@ public record TermsDetailResponse(
         TermsCode code,
         String title,
         String content,
-        boolean required,
+        boolean isRequired,
         String version,
         OffsetDateTime effectiveAt
 ) {

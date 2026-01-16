@@ -30,7 +30,7 @@ public class Terms {
     private String content;
 
     @Column(name = "is_required", nullable = false)
-    private boolean required;
+    private boolean isRequired;
 
     @Column(nullable = false, length = 20)
     private String version;

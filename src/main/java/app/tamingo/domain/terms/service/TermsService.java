@@ -21,7 +21,7 @@ public class TermsService {
     private final TermsRepository termsRepository;
 
     public List<TermsSummaryResponse> getTermsList() {
-        return termsRepository.findAllByOrderByRequiredDescEffectiveAtDesc()
+        return termsRepository.findAllByOrderByIsRequiredDescEffectiveAtDesc()
                 .stream()
                 .map(TermsSummaryResponse::from)
                 .toList();

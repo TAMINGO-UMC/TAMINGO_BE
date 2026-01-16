@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface TermsRepository extends JpaRepository<Terms, Long> {
 
     // 약관 목록 조회 (필수 먼저, 같은 그룹이면 최신 적용일자 먼저)
-    List<Terms> findAllByOrderByRequiredDescEffectiveAtDesc();
+    List<Terms> findAllByOrderByIsRequiredDescEffectiveAtDesc();
 
     // 약관 개별 조회 (코드로 조회)
     Optional<Terms> findByCode(TermsCode code);

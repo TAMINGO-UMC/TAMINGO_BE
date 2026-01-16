@@ -5,14 +5,12 @@ import app.tamingo.domain.terms.entity.TermsCode;
 
 public record TermsSummaryResponse(
         TermsCode code,
-        String codeDescription,
         String title,
-        boolean required
+        boolean isRequired
 ) {
     public static TermsSummaryResponse from(Terms terms) {
         return new TermsSummaryResponse(
                 terms.getCode(),
-                terms.getCode().getDescription(),
                 terms.getTitle(),
                 terms.isRequired()
         );
