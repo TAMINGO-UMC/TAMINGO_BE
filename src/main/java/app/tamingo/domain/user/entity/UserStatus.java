@@ -1,4 +1,7 @@
 package app.tamingo.domain.user.entity;
 
-public class UserStatus {
+public enum UserStatus {
+    ACTIVE,
+    INACTIVE,
+    DELETED
 }
