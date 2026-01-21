@@ -1,6 +1,6 @@
 package app.tamingo.domain.terms.repository;
 
-import app.tamingo.domain.terms.entity.UserTermsAgreement;
+import app.tamingo.domain.user.entity.UserTermsAgreement;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
