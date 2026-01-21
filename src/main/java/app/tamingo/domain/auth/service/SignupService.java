@@ -14,7 +14,7 @@ import app.tamingo.domain.terms.entity.Terms;
 import app.tamingo.domain.terms.entity.TermsCode;
 import app.tamingo.domain.terms.repository.TermsRepository;
 import app.tamingo.domain.terms.repository.UserTermsAgreementRepository;
-import app.tamingo.domain.terms.entity.UserTermsAgreement;
+import app.tamingo.domain.user.entity.UserTermsAgreement;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
