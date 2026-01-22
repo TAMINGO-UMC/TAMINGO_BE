@@ -1,4 +1,5 @@
 package app.tamingo.domain.gpt.prompt.common;
 
-public class PromptTemplate {
+public interface PromptTemplate {
+    String render();
 }
