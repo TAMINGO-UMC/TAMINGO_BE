@@ -31,6 +31,17 @@ public enum GptErrorCode implements BaseCode {
             HttpStatus.INTERNAL_SERVER_ERROR,
             "GPT-004",
             "GPT 처리 중 알 수 없는 오류가 발생했습니다."
+    ),
+    GPT_RESPONSE_FORMAT_ERROR(
+            HttpStatus.BAD_GATEWAY,
+            "GPT-005",
+            "GPT 응답 형식이 올바르지 않습니다."
+    ),
+
+    GPT_PARSE_ERROR(
+            HttpStatus.BAD_GATEWAY,
+            "GPT-006",
+            "GPT 응답 JSON 파싱에 실패했습니다."
     );
     private final HttpStatus httpStatus;
     private final String code;
