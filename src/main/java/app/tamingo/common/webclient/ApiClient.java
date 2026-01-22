@@ -22,7 +22,7 @@ public class ApiClient {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(responseType)
-                .block(); // MVC 기준
+                .block();
     }
 
     protected <T> T get(
