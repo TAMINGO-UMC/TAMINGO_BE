@@ -38,3 +38,7 @@ jwt:
   secret: ${JWT_SECRET}
   access-exp-ms: 3600000        # 1시간
   refresh-exp-ms: 1209600000    # 14일
+
+chatgpt:
+  url: https://api.openai.com/v1/completions
+  api-key: ${GPT_API_KEY}
