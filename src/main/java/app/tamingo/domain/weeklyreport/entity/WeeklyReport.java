@@ -29,75 +29,38 @@ public class WeeklyReport extends BaseEntity {
     @Column(name = "id")
     private Long id;
 
-    /**
-     * 유저 외래키
-     */
+
+     //유저 외래키
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /**
-     * 주 시작 요일 (월요일 기준 등)
-     */
+    //주 시작 요일 (월요일 기준 등)
     @Column(name = "week_start_date", nullable = false)
     private LocalDate weekStartDate;
 
-    /**
-     * 주 종료 요일
-     */
+    //주 종료 요일
     @Column(name = "week_end_date", nullable = false)
     private LocalDate weekEndDate;
 
-    /**
-     * 정시 도착률 (%)
-     */
+    //정시 도착률 (%)
     @Column(name = "on_time_rate", nullable = false, precision = 5, scale = 2)
     private BigDecimal onTimeRate;
 
-    /**
-     * 지난 주 대비 정시 도착률 변화량 (p.p)
-     */
+    //지난 주 대비 정시 도착률 변화량 (p.p)
     @Column(name = "on_time_diff", precision = 5, scale = 2)
     private BigDecimal onTimeDiff;
 
-    /**
-     * 할 일 완료율 (%)
-     */
+    //할 일 완료율 (%)
     @Column(name = "task_completion_rate", nullable = false, precision = 5, scale = 2)
     private BigDecimal taskCompletionRate;
 
-    /**
-     * 지난 주 대비 할 일 완료율 변화량 (p.p)
-     */
+    //지난 주 대비 할 일 완료율 변화량 (p.p)
     @Column(name = "task_completion_diff", precision = 5, scale = 2)
     private BigDecimal taskCompletionDiff;
 
-    /**
-     * 생산성 점수
-     */
+    //생산성 점수
     @Column(name = "productivity_score", nullable = false)
     private Integer productivityScore;
 
-
-    public static WeeklyReport of(
-            User user,
-            LocalDate weekStartDate,
-            LocalDate weekEndDate,
-            BigDecimal onTimeRate,
-            BigDecimal onTimeDiff,
-            BigDecimal taskCompletionRate,
-            BigDecimal taskCompletionDiff,
-            Integer productivityScore
-    ) {
-        return WeeklyReport.builder()
-                .user(user)
-                .weekStartDate(weekStartDate)
-                .weekEndDate(weekEndDate)
-                .onTimeRate(onTimeRate)
-                .onTimeDiff(onTimeDiff)
-                .taskCompletionRate(taskCompletionRate)
-                .taskCompletionDiff(taskCompletionDiff)
-                .productivityScore(productivityScore)
-                .build();
-    }
 }
