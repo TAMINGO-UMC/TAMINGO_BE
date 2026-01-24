@@ -12,13 +12,13 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
-        name="favorite_place",
+        name="favorite_place_standard",
         indexes = {
                 // 유저별 장소 조회시 인덱스
                 @Index(name = "idx_favorite_place_user_id", columnList = "user_id")
         }
 )
-public class FavoritePlace extends BaseEntity {
+public class FavoritePlaceStandard extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,5 +42,13 @@ public class FavoritePlace extends BaseEntity {
 
     // 장소의 경도
     private Double longitude;
+
+    // 업데이트 더티체킹
+    public void update(String name, String address, Double latitude, Double longitude) {
+        this.name = name;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
 
 }
