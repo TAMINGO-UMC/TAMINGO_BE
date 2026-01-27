@@ -1,6 +1,7 @@
 package app.tamingo.domain.dailyactivity.entity;
 
 import app.tamingo.BaseEntity;
+import app.tamingo.domain.dailyactivity.enums.DayOfWeekType;
 import app.tamingo.domain.weeklyreport.entity.WeeklyReport;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,9 +31,10 @@ public class DailyActivitySummary extends BaseEntity {
     @JoinColumn(name = "weekly_report_id", nullable = false)
     private WeeklyReport weeklyReport;
 
-    // 요일 (월요일=1 ~ 일요일=7)
-    @Column(name = "day_of_week", nullable = false)
-    private Short dayOfWeek;
+    // 요일
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week", nullable = false, length = 20)
+    private DayOfWeekType dayOfWeek;
 
     // 해당 요일의 일정 수
     @Column(name = "schedule_count", nullable = false)
@@ -58,7 +60,7 @@ public class DailyActivitySummary extends BaseEntity {
     @Builder(builderMethodName = "internalBuilder")
     private DailyActivitySummary(
             WeeklyReport weeklyReport,
-            Short dayOfWeek,
+            DayOfWeekType dayOfWeek,
             Integer scheduleCount,
             Integer taskCount,
             Integer scheduleDoneCount,
@@ -74,7 +76,7 @@ public class DailyActivitySummary extends BaseEntity {
 
     public static DailyActivitySummary of(
             WeeklyReport weeklyReport,
-            Short dayOfWeek,
+            DayOfWeekType dayOfWeek,
             Integer scheduleCount,
             Integer taskCount,
             Integer scheduleDoneCount,
