@@ -1,6 +1,7 @@
 package app.tamingo.domain.weeklyinsight.entity;
 
 import app.tamingo.BaseEntity;
+import app.tamingo.domain.weeklyinsight.enums.WeeklyInsightType;
 import app.tamingo.domain.weeklyreport.entity.WeeklyReport;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,8 +27,9 @@ public class WeeklyInsight extends BaseEntity {
     private WeeklyReport weeklyReport;
 
     // 인사이트 타입
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 30)
-    private String type;
+    private WeeklyInsightType type;
 
     // 제목
     @Column(name = "title", nullable = false, length = 100)
@@ -45,7 +47,7 @@ public class WeeklyInsight extends BaseEntity {
     @Builder(builderMethodName = "internalBuilder")
     private WeeklyInsight(
             WeeklyReport weeklyReport,
-            String type,
+            WeeklyInsightType type,
             String title,
             String content,
             String modelVersion
@@ -59,7 +61,7 @@ public class WeeklyInsight extends BaseEntity {
 
     public static WeeklyInsight of(
             WeeklyReport weeklyReport,
-            String type,
+            WeeklyInsightType type,
             String title,
             String content,
             String modelVersion
