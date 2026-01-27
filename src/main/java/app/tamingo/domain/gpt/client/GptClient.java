@@ -21,7 +21,7 @@ public class GptClient extends ApiClient {
     public GptResponse requestCompletion(GptRequest request) {
         try {
             return post(
-                    uri -> uri.path("/responses").build(),
+                    uri -> uri.path("/chat/completions").build(),
                     request,
                     GptResponse.class
             );

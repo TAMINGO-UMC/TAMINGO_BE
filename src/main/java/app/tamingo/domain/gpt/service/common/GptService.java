@@ -2,6 +2,8 @@ package app.tamingo.domain.gpt.service.common;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.gpt.GptErrorCode;
+import app.tamingo.common.webclient.ApiClient;
+import app.tamingo.domain.gpt.client.GptClient;
 import app.tamingo.domain.gpt.dto.ExampleGptResponse;
 import app.tamingo.domain.gpt.dto.GptRequest;
 import app.tamingo.domain.gpt.dto.GptResponse;
@@ -12,6 +14,7 @@ import app.tamingo.domain.gpt.prompt.common.PromptTemplate;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.models.OpenAPI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +25,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @RequiredArgsConstructor
 public class GptService {
 
-    private final WebClient webClient;
+    private final GptClient gptClient;
     private final GeneralSystemPrompt generalSystemPrompt = new GeneralSystemPrompt();
 
     public String callGpt(GptRequest gptRequest){
@@ -36,14 +39,7 @@ public class GptService {
         gptRequest.setMaxTokens(maxTokens);
 
         // OpenAi 호출
-        return webClient.post()
-                .uri("/chat/completions")
-                .bodyValue(gptRequest)
-                .retrieve()
-                .bodyToMono(GptResponse.class)
-                .map(GptResponse::firstContent)
-                .block();
-
+        return gptClient.requestCompletion(gptRequest).firstContent();
     }
 
     /**
