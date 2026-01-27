@@ -9,8 +9,6 @@ import java.math.BigDecimal;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         name = "daily_activity_summary",
@@ -27,24 +25,24 @@ public class DailyActivitySummary extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //주간 리포트 외래키
+    // 주간 리포트 외래키
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "weekly_report_id", nullable = false)
     private WeeklyReport weeklyReport;
 
-    //요일 (월요일=1 ~ 일요일=7)
+    // 요일 (월요일=1 ~ 일요일=7)
     @Column(name = "day_of_week", nullable = false)
     private Short dayOfWeek;
 
-    //해당 요일의 일정 수
+    // 해당 요일의 일정 수
     @Column(name = "schedule_count", nullable = false)
     private Integer scheduleCount;
 
-    //해당 요일의 할 일 수
+    // 해당 요일의 할 일 수
     @Column(name = "task_count", nullable = false)
     private Integer taskCount;
 
-    //해당 요일의 완료된 일정 개수
+    // 해당 요일의 완료된 일정 개수
     @Column(name = "schedule_done_count", nullable = false)
     private Integer scheduleDoneCount;
 
@@ -56,4 +54,39 @@ public class DailyActivitySummary extends BaseEntity {
             scale = 2
     )
     private BigDecimal scheduleCompletionRate;
+
+    @Builder(builderMethodName = "internalBuilder")
+    private DailyActivitySummary(
+            WeeklyReport weeklyReport,
+            Short dayOfWeek,
+            Integer scheduleCount,
+            Integer taskCount,
+            Integer scheduleDoneCount,
+            BigDecimal scheduleCompletionRate
+    ) {
+        this.weeklyReport = weeklyReport;
+        this.dayOfWeek = dayOfWeek;
+        this.scheduleCount = scheduleCount;
+        this.taskCount = taskCount;
+        this.scheduleDoneCount = scheduleDoneCount;
+        this.scheduleCompletionRate = scheduleCompletionRate;
+    }
+
+    public static DailyActivitySummary of(
+            WeeklyReport weeklyReport,
+            Short dayOfWeek,
+            Integer scheduleCount,
+            Integer taskCount,
+            Integer scheduleDoneCount,
+            BigDecimal scheduleCompletionRate
+    ) {
+        return DailyActivitySummary.internalBuilder()
+                .weeklyReport(weeklyReport)
+                .dayOfWeek(dayOfWeek)
+                .scheduleCount(scheduleCount)
+                .taskCount(taskCount)
+                .scheduleDoneCount(scheduleDoneCount)
+                .scheduleCompletionRate(scheduleCompletionRate)
+                .build();
+    }
 }
