@@ -44,7 +44,7 @@ public class ScheduleCategoryService {
 
         // 비즈니스 검증: 같은 유저 내 이름 중복 금지
         if (scheduleCategoryRepository.existsByUserAndName(user, req.name())) {
-            throw new CustomException(ScheduleErrorCode.SCHEDULE_DUPLICATED);
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_CATEGORY_DUPLICATED);
         }
         ScheduleCategory category = ScheduleCategory.of(
                 req.name(),
@@ -70,7 +70,7 @@ public class ScheduleCategoryService {
         // 이름 변경 시에만 중복 검사
         if (!category.getName().equals(req.name())
                 && scheduleCategoryRepository.existsByUserAndName(user, req.name())) {
-            throw new CustomException(ScheduleErrorCode.SCHEDULE_DUPLICATED);
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_CATEGORY_DUPLICATED);
         }
 
         // 카테고리 업데이트
