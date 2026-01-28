@@ -1,7 +1,7 @@
 package app.tamingo.domain.auth.service;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.ErrorCode;
+import app.tamingo.common.response.error.AuthErrorCode;
 import app.tamingo.common.security.JwtTokenProvider;
 import app.tamingo.domain.auth.redis.RefreshToken;
 import app.tamingo.domain.auth.redis.RefreshTokenRepository;
@@ -22,10 +22,10 @@ public class LogoutService {
     public void logout(String accessToken, String refreshToken) {
 
         if (accessToken == null || accessToken.isBlank()) {
-            throw new CustomException(ErrorCode.TOKEN_MISSING);
+            throw new CustomException(AuthErrorCode.TOKEN_MISSING);
         }
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new CustomException(ErrorCode.TOKEN_MISSING);
+            throw new CustomException(AuthErrorCode.TOKEN_MISSING);
         }
 
         validateOrThrow(accessToken);
@@ -35,17 +35,17 @@ public class LogoutService {
         Long userIdFromRefresh = jwtTokenProvider.getUserId(refreshToken);
 
         if (!userIdFromAccess.equals(userIdFromRefresh)) {
-            throw new CustomException(ErrorCode.TOKEN_INVALID);
+            throw new CustomException(AuthErrorCode.TOKEN_INVALID);
         }
 
         // Redis refresh 존재/일치 확인
         String key = "refresh:" + userIdFromAccess;
 
         RefreshToken saved = refreshTokenRepository.findById(key)
-                .orElseThrow(() -> new CustomException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND));
 
         if (!refreshToken.equals(saved.getToken())) {
-            throw new CustomException(ErrorCode.REFRESH_TOKEN_MISMATCH);
+            throw new CustomException(AuthErrorCode.REFRESH_TOKEN_MISMATCH);
         }
 
         // Refresh Token 삭제 (로그아웃)
@@ -56,9 +56,9 @@ public class LogoutService {
         try {
             jwtTokenProvider.getUserId(token);
         } catch (ExpiredJwtException e) {
-            throw new CustomException(ErrorCode.TOKEN_EXPIRED);
+            throw new CustomException(AuthErrorCode.TOKEN_EXPIRED);
         } catch (JwtException | IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.TOKEN_INVALID);
+            throw new CustomException(AuthErrorCode.TOKEN_INVALID);
         }
     }
 }

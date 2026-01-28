@@ -1,7 +1,8 @@
 package app.tamingo.domain.onboarding.service;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.ErrorCode;
+import app.tamingo.common.response.error.OnboardingErrorCode;
+import app.tamingo.common.response.error.UserErrorCode;
 import app.tamingo.domain.onboarding.dto.OnboardingRequest;
 import app.tamingo.domain.onboarding.entity.*;
 import app.tamingo.domain.onboarding.repository.*;
@@ -51,7 +52,7 @@ public class OnboardingService {
 
     private User getUserOrThrow(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
     }
 
     // 활동 시간
@@ -62,7 +63,7 @@ public class OnboardingService {
         LocalTime end = parseTimeOrThrow(at.endTime());
 
         if (!end.isAfter(start)) {
-            throw new CustomException(ErrorCode.ONBOARDING_ACTIVE_TIME_RANGE_INVALID);
+            throw new CustomException(OnboardingErrorCode.ONBOARDING_ACTIVE_TIME_RANGE_INVALID);
         }
         return new ActiveTimeValue(start, end);
     }
@@ -71,7 +72,7 @@ public class OnboardingService {
         try {
             return LocalTime.parse(s); // expects "HH:mm"
         } catch (DateTimeParseException e) {
-            throw new CustomException(ErrorCode.ONBOARDING_ACTIVE_TIME_FORMAT_INVALID);
+            throw new CustomException(OnboardingErrorCode.ONBOARDING_ACTIVE_TIME_FORMAT_INVALID);
         }
     }
 
@@ -104,10 +105,10 @@ public class OnboardingService {
     // 자주 가는 장소
     private void validateFavoritePlaces(List<OnboardingRequest.FavoritePlace> list) {
         if (list == null || list.isEmpty()) {
-            throw new CustomException(ErrorCode.ONBOARDING_FAVORITE_PLACES_EMPTY);
+            throw new CustomException(OnboardingErrorCode.ONBOARDING_FAVORITE_PLACES_EMPTY);
         }
         if (list.size() > MAX_FAVORITE_PLACES) {
-            throw new CustomException(ErrorCode.ONBOARDING_FAVORITE_PLACES_LIMIT_EXCEEDED);
+            throw new CustomException(OnboardingErrorCode.ONBOARDING_FAVORITE_PLACES_LIMIT_EXCEEDED);
         }
     }
 
@@ -129,7 +130,7 @@ public class OnboardingService {
     // 선호 이동 수단
     private void validateTransportPreferences(List<OnboardingRequest.TransportPref> list) {
         if (list == null || list.size() != 3) {
-            throw new CustomException(ErrorCode.ONBOARDING_TRANSPORT_PREFERENCES_INVALID);
+            throw new CustomException(OnboardingErrorCode.ONBOARDING_TRANSPORT_PREFERENCES_INVALID);
         }
 
         Set<TransportType> types = new HashSet<>();
@@ -137,7 +138,7 @@ public class OnboardingService {
 
         for (OnboardingRequest.TransportPref tp : list) {
             if (tp.transport() == null) {
-                throw new CustomException(ErrorCode.ONBOARDING_TRANSPORT_PREFERENCES_INVALID);
+                throw new CustomException(OnboardingErrorCode.ONBOARDING_TRANSPORT_PREFERENCES_INVALID);
             }
             types.add(tp.transport());
             ranks.add(tp.rank());
@@ -154,7 +155,7 @@ public class OnboardingService {
                 && ranks.contains(3);
 
         if (!hasAllTypes || !hasAllRanks) {
-            throw new CustomException(ErrorCode.ONBOARDING_TRANSPORT_PREFERENCES_INVALID);
+            throw new CustomException(OnboardingErrorCode.ONBOARDING_TRANSPORT_PREFERENCES_INVALID);
         }
     }
 
@@ -178,7 +179,7 @@ public class OnboardingService {
             return AlertMinute.MIN_10;
         }
         if (s.departAlertMinutes() == null) {
-            throw new CustomException(ErrorCode.ONBOARDING_NOTIFICATION_MINUTE_REQUIRED);
+            throw new CustomException(OnboardingErrorCode.ONBOARDING_NOTIFICATION_MINUTE_REQUIRED);
         }
         return s.departAlertMinutes();
     }

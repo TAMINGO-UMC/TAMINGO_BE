@@ -1,7 +1,7 @@
 package app.tamingo.domain.auth.service;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.ErrorCode;
+import app.tamingo.common.response.error.AuthErrorCode;
 import app.tamingo.common.security.JwtTokenProvider;
 import app.tamingo.domain.auth.entity.AuthIdentity;
 import app.tamingo.domain.auth.entity.AuthProvider;
@@ -26,14 +26,14 @@ public class LoginService {
     public LoginResult login(String email, String password) {
         AuthIdentity ai = authIdentityRepository
                 .findByProviderAndEmail(AuthProvider.LOCAL, email)
-                .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_EMAIL_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(AuthErrorCode.LOGIN_EMAIL_NOT_FOUND));
 
         if (ai.getPasswordHash() == null || ai.getPasswordHash().isBlank()) {
-            throw new CustomException(ErrorCode.LOGIN_PASSWORD_NOT_SET);
+            throw new CustomException(AuthErrorCode.LOGIN_PASSWORD_NOT_SET);
         }
 
         if (!passwordEncoder.matches(password, ai.getPasswordHash())) {
-            throw new CustomException(ErrorCode.LOGIN_PASSWORD_INVALID);
+            throw new CustomException(AuthErrorCode.LOGIN_PASSWORD_INVALID);
         }
 
         Long userId = ai.getUser().getId();
