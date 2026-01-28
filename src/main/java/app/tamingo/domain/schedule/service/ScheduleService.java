@@ -4,6 +4,7 @@ import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
 import app.tamingo.domain.schedule.dto.CreateScheduleResponse;
 import app.tamingo.domain.schedule.dto.CreateScheduleRequest;
+import app.tamingo.domain.schedule.dto.ScheduleListResponse;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleCategory;
 import app.tamingo.domain.schedule.repository.ScheduleCategoryRepository;
@@ -16,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -52,5 +56,21 @@ public class ScheduleService {
         }
         return new CreateScheduleResponse(schedule.getId());
 
+    }
+
+    // 특정 날짜 일정 목록 조회
+    public List<ScheduleListResponse> getDailySchedules(Long userId, LocalDate date) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 해당 날짜의 00:00 ~ 23:59:59 범위 설정
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        // 조회 및 DTO 변환
+        return scheduleRepository.findAllByUserAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(user, startOfDay, endOfDay)
+                .stream()
+                .map(ScheduleListResponse::from)
+                .toList();
     }
 }

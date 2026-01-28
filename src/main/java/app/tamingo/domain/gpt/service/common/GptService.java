@@ -77,7 +77,7 @@ public class GptService {
     }
 
     // json으로 파싱
-    private <T> T parseJson(String rawContent, Class<T> clazz) {
+    public <T> T parseJson(String rawContent, Class<T> clazz) {
         try {
             ObjectMapper mapper = new ObjectMapper()
                     .configure(

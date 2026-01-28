@@ -3,13 +3,13 @@ package app.tamingo.domain.gpt.service.schedule;
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
 import app.tamingo.common.response.gpt.GptErrorCode;
-import app.tamingo.domain.gpt.client.GptClient;
 import app.tamingo.domain.gpt.dto.GptRequest;
 import app.tamingo.domain.gpt.dto.GptResponse;
 import app.tamingo.domain.gpt.prompt.common.DataPrompt;
 import app.tamingo.domain.gpt.prompt.common.GeneralSystemPrompt;
 import app.tamingo.domain.gpt.prompt.common.PromptTemplate;
 import app.tamingo.domain.gpt.prompt.schedule.ScheduleInferencePrompt;
+import app.tamingo.domain.gpt.service.common.GptService;
 import app.tamingo.domain.kakao.dto.KakaoPlaceDto;
 import app.tamingo.domain.kakao.service.KakaoSearchService;
 import app.tamingo.domain.schedule.dto.AiInferenceResponse;
@@ -23,7 +23,6 @@ import app.tamingo.domain.schedule.service.PlaceContextService;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,9 +44,8 @@ public class AiScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final ScheduleCategoryRepository scheduleCategoryRepository;
     private final PlaceContextService placeContextService;
-    private final GptClient gptClient;
+    private final GptService gptService;
     private final ScheduleInferencePrompt scheduleInferencePrompt;
-    private final ObjectMapper objectMapper;
     private final KakaoSearchService kakaoSearchService;
 
     public AiInferenceResponse inferSchedule(Long userId, String inputTitle){
@@ -70,16 +68,21 @@ public class AiScheduleService {
         String fullPromptContent = finalSystemPrompt.render() + "\n\n[User Input]\n" + userMessage;
         GptRequest request = new GptRequest(fullPromptContent, 1000);
 
-        GptResponse response = gptClient.requestCompletion(request);
+        String rawResponse = gptService.callGpt(request);
 
-        // 응답 추출
-        String jsonResponse = response.firstContent();
-        if (jsonResponse == null || jsonResponse.isBlank()) {
+        if (rawResponse == null || rawResponse.isBlank()) {
             throw new CustomException(GptErrorCode.GPT_UNKNOWN_ERROR);
         }
 
-        // 응답 변환
-        AiPlaceInfo aiPlaceInfo = parseGptResponse(jsonResponse);
+        String cleanJson = rawResponse
+                .replace("```json", "")
+                .replace("```", "")
+                .trim();
+
+        log.info("Cleaned GPT JSON Response: {}", cleanJson);
+
+        AiPlaceInfo aiPlaceInfo =
+                gptService.parseJson(cleanJson, AiPlaceInfo.class);
 
         // 주소, 좌표 보정
         if (aiPlaceInfo.placeName() != null && !aiPlaceInfo.placeName().isBlank()) {
@@ -154,21 +157,5 @@ public class AiScheduleService {
             %s
             """, categoryList, historyData);
 
-    }
-    // JSON 파싱 (예외처리 포함)
-    private AiPlaceInfo parseGptResponse(String jsonString) {
-        try {
-            // [추가] GPT가 응답 앞뒤에 붙이는 ```json, ``` 같은 마크다운 기호를 제거합니다.
-            String cleanJson = jsonString.replace("```json", "")
-                    .replace("```", "")
-                    .trim();
-
-            log.info("Cleaned JSON from GPT: {}", cleanJson); // 로그로 확인하면 더 좋습니다.
-
-            return objectMapper.readValue(cleanJson, AiPlaceInfo.class);
-        } catch (JsonProcessingException e) {
-            log.error("GPT Response Parsing Error. Raw: {}", jsonString, e);
-            throw new CustomException(GptErrorCode.GPT_PARSE_ERROR);
-        }
     }
 }
