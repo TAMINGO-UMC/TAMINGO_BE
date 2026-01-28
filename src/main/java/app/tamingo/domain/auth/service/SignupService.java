@@ -28,6 +28,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +36,10 @@ import java.util.UUID;
 public class SignupService {
 
     private static final long SIGNUP_TTL_SEC = 900L; // 15분
+    private static final int NICKNAME_MAX_LEN = 10;
+
+    private static final Pattern PASSWORD_POLICY =
+            Pattern.compile("^[A-Za-z0-9!@#$%^&*()_+\\-=[\\]{};':\",.<>/?\\\\|`~]{8,16}$");
 
     private final SignupSessionRepository signupSessionRepository;
     private final TermsRepository termsRepository;
@@ -125,12 +130,22 @@ public class SignupService {
             throw new CustomException(CommonErrorCode.INVALID_REQUEST);
         }
 
+        // 닉네임 검증
         if (nickname == null || nickname.isBlank()) {
             throw new CustomException(AuthErrorCode.SIGNUP_NICKNAME_REQUIRED);
         }
 
+        if (nickname.length() > NICKNAME_MAX_LEN) {
+            throw new CustomException(AuthErrorCode.SIGNUP_NICKNAME_TOO_LONG);
+        }
+
+        // 비밀번호 검증
         if (password == null || password.isBlank()) {
             throw new CustomException(AuthErrorCode.SIGNUP_PASSWORD_REQUIRED);
+        }
+
+        if (!PASSWORD_POLICY.matcher(password).matches()) {
+            throw new CustomException(AuthErrorCode.SIGNUP_PASSWORD_POLICY_INVALID);
         }
 
         if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.LOCAL, email)) {
