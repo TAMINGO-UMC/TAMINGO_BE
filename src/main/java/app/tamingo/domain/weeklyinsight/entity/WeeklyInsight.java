@@ -1,14 +1,13 @@
 package app.tamingo.domain.weeklyinsight.entity;
 
 import app.tamingo.BaseEntity;
+import app.tamingo.domain.weeklyinsight.enums.WeeklyInsightType;
 import app.tamingo.domain.weeklyreport.entity.WeeklyReport;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         name = "weekly_insight",
@@ -21,26 +20,58 @@ public class WeeklyInsight extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    //주간 리포트 FK
+
+    // 주간 리포트 FK
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "weekly_report_id", nullable = false)
     private WeeklyReport weeklyReport;
 
-    //인사이트 타입
+    // 인사이트 타입
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 30)
-    private String type;
+    private WeeklyInsightType type;
 
-    //제목
+    // 제목
     @Column(name = "title", nullable = false, length = 100)
     private String title;
 
-    //내용
+    // 내용
     @Lob
     @Column(name = "content", nullable = false)
     private String content;
 
-    //모델 버전
+    // 모델 버전
     @Column(name = "model_version", nullable = false, length = 50)
     private String modelVersion;
+
+    @Builder(builderMethodName = "internalBuilder")
+    private WeeklyInsight(
+            WeeklyReport weeklyReport,
+            WeeklyInsightType type,
+            String title,
+            String content,
+            String modelVersion
+    ) {
+        this.weeklyReport = weeklyReport;
+        this.type = type;
+        this.title = title;
+        this.content = content;
+        this.modelVersion = modelVersion;
+    }
+
+    public static WeeklyInsight of(
+            WeeklyReport weeklyReport,
+            WeeklyInsightType type,
+            String title,
+            String content,
+            String modelVersion
+    ) {
+        return WeeklyInsight.internalBuilder()
+                .weeklyReport(weeklyReport)
+                .type(type)
+                .title(title)
+                .content(content)
+                .modelVersion(modelVersion)
+                .build();
+    }
 }
