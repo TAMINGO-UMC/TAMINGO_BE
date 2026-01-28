@@ -1,4 +1,4 @@
-package app.tamingo.domain.userlearning.entity;
+package app.tamingo.domain.userlearning.entity.enums;
 
 public enum RouteType {
     WALK,               // 도보

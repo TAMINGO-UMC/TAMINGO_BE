@@ -8,7 +8,6 @@ import java.sql.Time;
 
 @Entity
 @Getter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
@@ -45,4 +44,39 @@ public class DepartureAlarm {
 
     @Column(name = "arrival_buffer_minutes", nullable = false)
     private int arrivalBufferMinutes;
+
+    @Builder(builderMethodName = "internalBuilder")
+    private DepartureAlarm(
+            User user,
+            Integer baseEta,
+            double usfApplied,
+            Integer finalEta,
+            Time notifyAt,
+            int arrivalBufferMinutes
+    ) {
+        this.user = user;
+        this.baseEta = baseEta;
+        this.usfApplied = usfApplied;
+        this.finalEta = finalEta;
+        this.notifyAt = notifyAt;
+        this.arrivalBufferMinutes = arrivalBufferMinutes;
+    }
+
+    public static DepartureAlarm of(
+            User user,
+            Integer baseEta,
+            double usfApplied,
+            Integer finalEta,
+            Time notifyAt,
+            int arrivalBufferMinutes
+    ) {
+        return DepartureAlarm.internalBuilder()
+                .user(user)
+                .baseEta(baseEta)
+                .usfApplied(usfApplied)
+                .finalEta(finalEta)
+                .notifyAt(notifyAt)
+                .arrivalBufferMinutes(arrivalBufferMinutes)
+                .build();
+    }
 }

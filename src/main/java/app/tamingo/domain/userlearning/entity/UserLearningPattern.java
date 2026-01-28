@@ -1,7 +1,8 @@
 package app.tamingo.domain.userlearning.entity;
 
-import app.tamingo.domain.home.entity.TimeSlot;
+import app.tamingo.domain.home.entity.enums.TimeSlot;
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.userlearning.entity.enums.RouteType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,7 +10,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
@@ -52,4 +52,42 @@ public class UserLearningPattern {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Builder(builderMethodName = "internalBuilder")
+    private UserLearningPattern(
+            User user,
+            TimeSlot timeSlot,
+            RouteType routeType,
+            int avgEtaDiff,
+            int sampleCount,
+            double accuracyRate,
+            LocalDateTime updatedAt) {
+        this.user = user;
+        this.timeSlot = timeSlot;
+        this.routeType = routeType;
+        this.avgEtaDiff = avgEtaDiff;
+        this.sampleCount = sampleCount;
+        this.accuracyRate = accuracyRate;
+        this.updatedAt = updatedAt;
+    }
+
+    public static UserLearningPattern of(
+            User user,
+            TimeSlot timeSlot,
+            RouteType routeType,
+            int avgEtaDiff,
+            int sampleCount,
+            double accuracyRate,
+            LocalDateTime updatedAt
+    ) {
+        return UserLearningPattern.internalBuilder()
+                .user(user)
+                .timeSlot(timeSlot)
+                .routeType(routeType)
+                .avgEtaDiff(avgEtaDiff)
+                .sampleCount(sampleCount)
+                .accuracyRate(accuracyRate)
+                .updatedAt(updatedAt)
+                .build();
+    }
 }

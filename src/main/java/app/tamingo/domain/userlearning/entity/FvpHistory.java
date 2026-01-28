@@ -1,6 +1,7 @@
 package app.tamingo.domain.userlearning.entity;
 
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.userlearning.entity.enums.FvpType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,7 +9,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "fvp_history",
@@ -40,4 +40,38 @@ public class FvpHistory {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Builder(builderMethodName = "internalBuilder")
+    private FvpHistory(
+            User user,
+            String name,
+            double latitude,
+            double longitude,
+            FvpType fvpType,
+            LocalDateTime createdAt) {
+        this.user = user;
+        this.name = name;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.fvpType = fvpType;
+        this.createdAt = createdAt;
+    }
+
+    public static FvpHistory of(
+            User user,
+            String name,
+            double latitude,
+            double longitude,
+            FvpType fvpType,
+            LocalDateTime createdAt
+    ) {
+        return FvpHistory.internalBuilder()
+                .user(user)
+                .name(name)
+                .latitude(latitude)
+                .longitude(longitude)
+                .fvpType(fvpType)
+                .createdAt(createdAt)
+                .build();
+    }
 }

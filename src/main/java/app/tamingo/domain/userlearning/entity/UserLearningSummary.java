@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
@@ -38,4 +37,34 @@ public class UserLearningSummary {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Builder(builderMethodName = "internalBuilder")
+    private UserLearningSummary(
+            User user,
+            long sampleCount,
+            double avgAccuracyRate,
+            int fvpCount,
+            LocalDateTime updatedAt) {
+        this.user = user;
+        this.sampleCount = sampleCount;
+        this.avgAccuracyRate = avgAccuracyRate;
+        this.fvpCount = fvpCount;
+        this.updatedAt = updatedAt;
+    }
+
+    public static UserLearningSummary of(
+            User user,
+            long sampleCount,
+            double avgAccuracyRate,
+            int fvpCount,
+            LocalDateTime updatedAt
+    ) {
+        return UserLearningSummary.internalBuilder()
+                .user(user)
+                .sampleCount(sampleCount)
+                .avgAccuracyRate(avgAccuracyRate)
+                .fvpCount(fvpCount)
+                .updatedAt(updatedAt)
+                .build();
+    }
 }

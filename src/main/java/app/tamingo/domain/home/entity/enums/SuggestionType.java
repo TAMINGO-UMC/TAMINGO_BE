@@ -1,4 +1,4 @@
-package app.tamingo.domain.home.entity;
+package app.tamingo.domain.home.entity.enums;
 
 public enum SuggestionType {
     GAP_TIME,

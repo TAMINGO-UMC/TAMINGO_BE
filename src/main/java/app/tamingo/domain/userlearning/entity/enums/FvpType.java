@@ -1,4 +1,4 @@
-package app.tamingo.domain.userlearning.entity;
+package app.tamingo.domain.userlearning.entity.enums;
 
 public enum FvpType {
     USER_REGISTERED,

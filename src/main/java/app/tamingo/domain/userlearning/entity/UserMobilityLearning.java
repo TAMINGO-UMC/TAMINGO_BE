@@ -1,17 +1,14 @@
 package app.tamingo.domain.userlearning.entity;
 
 import app.tamingo.BaseEntity;
-import app.tamingo.domain.home.entity.ArrivedStatus;
-import app.tamingo.domain.home.entity.TimeSlot;
+import app.tamingo.domain.home.entity.enums.ArrivedStatus;
+import app.tamingo.domain.home.entity.enums.TimeSlot;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Getter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
@@ -49,4 +46,42 @@ public class UserMobilityLearning extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @Builder(builderMethodName = "internalBuilder")
+    private UserMobilityLearning(
+            TimeSlot timeSlot,
+            int predictedTime,
+            int actualTime,
+            double usfBefore,
+            double usfAfter,
+            ArrivedStatus arrivedStatus,
+            User user) {
+        this.timeSlot = timeSlot;
+        this.predictedTime = predictedTime;
+        this.actualTime = actualTime;
+        this.usfBefore = usfBefore;
+        this.usfAfter = usfAfter;
+        this.arrivedStatus = arrivedStatus;
+        this.user = user;
+    }
+
+    public static UserMobilityLearning of(
+            TimeSlot timeSlot,
+            int predictedTime,
+            int actualTime,
+            double usfBefore,
+            double usfAfter,
+            ArrivedStatus arrivedStatus,
+            User user
+    ) {
+        return UserMobilityLearning.internalBuilder()
+                .timeSlot(timeSlot)
+                .predictedTime(predictedTime)
+                .actualTime(actualTime)
+                .usfBefore(usfBefore)
+                .usfAfter(usfAfter)
+                .arrivedStatus(arrivedStatus)
+                .user(user)
+                .build();
+    }
 }
