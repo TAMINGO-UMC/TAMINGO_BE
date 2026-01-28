@@ -21,4 +21,15 @@ public class WebClientConfig {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
+    @Bean(name = "kakaoWebClient")
+    WebClient kakaoWebClient(
+            @Value("${kakao.api.key}") String apiKey,
+            @Value("${kakao.api.url}") String baseUrl
+    ) {
+        return WebClient.builder()
+                .baseUrl(baseUrl) // [변경] 직접 입력 -> 변수 사용
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "KakaoAK " + apiKey)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+    }
 }

@@ -28,4 +28,7 @@ public interface FavoritePlaceStandardRepository extends JpaRepository<FavoriteP
                             @Param("name") String name,
                             @Param("address") String address,
                             @Param("id") Long id);
+
+    // 특정 유저가 장소명'name'으로 저장한 장소가 있는지 확인
+    boolean existsByUserAndName(User user, String name);
 }
