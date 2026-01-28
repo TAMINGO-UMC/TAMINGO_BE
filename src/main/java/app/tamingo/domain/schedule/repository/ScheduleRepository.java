@@ -1,6 +1,7 @@
 package app.tamingo.domain.schedule.repository;
 
 import app.tamingo.domain.schedule.entity.Schedule;
+import app.tamingo.domain.schedule.entity.ScheduleCategory;
 import app.tamingo.domain.user.entity.User;
 import jakarta.validation.constraints.Null;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,4 +29,8 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             LocalDateTime startOfDay,
             LocalDateTime endOfDay
     );
+
+    //스케줄 카테고리가 사용 중이면 삭제 불가
+    boolean existsByUserAndScheduleCategory(User user, ScheduleCategory scheduleCategory);
+
 }

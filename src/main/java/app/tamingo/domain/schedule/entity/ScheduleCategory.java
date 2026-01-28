@@ -55,4 +55,11 @@ public class ScheduleCategory extends BaseEntity {
                 .user(user)
                 .build();
     }
+    //수정 기능
+    public void update(String name, String iconCode, String colorCode) {
+        this.name = name;
+        this.iconCode = iconCode;
+        this.colorCode = colorCode;
+    }
+
 }
