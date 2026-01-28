@@ -13,10 +13,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.regex.Pattern;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class LoginService {
+
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     private final AuthIdentityRepository authIdentityRepository;
     private final PasswordEncoder passwordEncoder;
@@ -24,6 +29,10 @@ public class LoginService {
     private final RefreshTokenRepository refreshTokenRepository;
 
     public LoginResult login(String email, String password) {
+        if (email == null || email.isBlank() || !EMAIL_PATTERN.matcher(email).matches()) {
+            throw new CustomException(AuthErrorCode.LOGIN_EMAIL_FORMAT_INVALID);
+        }
+
         AuthIdentity ai = authIdentityRepository
                 .findByProviderAndEmail(AuthProvider.LOCAL, email)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.LOGIN_EMAIL_NOT_FOUND));
