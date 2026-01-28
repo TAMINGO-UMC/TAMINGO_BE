@@ -1,5 +1,6 @@
 package app.tamingo.domain.userlearning.entity;
 
+import app.tamingo.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.userlearning.entity.enums.FvpType;
 import jakarta.persistence.*;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
         indexes = {
                 @Index(name = "idx_fvp_user", columnList = "user_id")
         })
-public class FvpHistory {
+public class FvpHistory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,7 +55,6 @@ public class FvpHistory {
         this.latitude = latitude;
         this.longitude = longitude;
         this.fvpType = fvpType;
-        this.createdAt = createdAt;
     }
 
     public static FvpHistory of(
@@ -62,8 +62,7 @@ public class FvpHistory {
             String name,
             double latitude,
             double longitude,
-            FvpType fvpType,
-            LocalDateTime createdAt
+            FvpType fvpType
     ) {
         return FvpHistory.internalBuilder()
                 .user(user)
@@ -71,7 +70,6 @@ public class FvpHistory {
                 .latitude(latitude)
                 .longitude(longitude)
                 .fvpType(fvpType)
-                .createdAt(createdAt)
                 .build();
     }
 }

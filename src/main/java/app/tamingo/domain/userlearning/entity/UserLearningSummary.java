@@ -1,5 +1,6 @@
 package app.tamingo.domain.userlearning.entity;
 
+import app.tamingo.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_learning_summary_user", columnList = "user_id")
         }
 )
-public class UserLearningSummary {
+public class UserLearningSummary extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,9 +36,6 @@ public class UserLearningSummary {
     @Column(name = "fvp_count", nullable = false)
     private int fvpCount;
 
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     @Builder(builderMethodName = "internalBuilder")
     private UserLearningSummary(
             User user,
@@ -49,22 +47,19 @@ public class UserLearningSummary {
         this.sampleCount = sampleCount;
         this.avgAccuracyRate = avgAccuracyRate;
         this.fvpCount = fvpCount;
-        this.updatedAt = updatedAt;
     }
 
     public static UserLearningSummary of(
             User user,
             long sampleCount,
             double avgAccuracyRate,
-            int fvpCount,
-            LocalDateTime updatedAt
+            int fvpCount
     ) {
         return UserLearningSummary.internalBuilder()
                 .user(user)
                 .sampleCount(sampleCount)
                 .avgAccuracyRate(avgAccuracyRate)
                 .fvpCount(fvpCount)
-                .updatedAt(updatedAt)
                 .build();
     }
 }

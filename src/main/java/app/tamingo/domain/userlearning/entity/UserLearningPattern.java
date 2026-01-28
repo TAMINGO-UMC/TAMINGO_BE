@@ -1,5 +1,6 @@
 package app.tamingo.domain.userlearning.entity;
 
+import app.tamingo.BaseEntity;
 import app.tamingo.domain.home.entity.enums.TimeSlot;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.userlearning.entity.enums.RouteType;
@@ -19,7 +20,7 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_learning_pattern_slot_route", columnList = "time_slot, route_type")
         }
 )
-public class UserLearningPattern {
+public class UserLearningPattern extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,9 +51,6 @@ public class UserLearningPattern {
     @Column(name = "accuracy_rate", nullable = false)
     private double accuracyRate;
 
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     @Builder(builderMethodName = "internalBuilder")
     private UserLearningPattern(
             User user,
@@ -68,7 +66,6 @@ public class UserLearningPattern {
         this.avgEtaDiff = avgEtaDiff;
         this.sampleCount = sampleCount;
         this.accuracyRate = accuracyRate;
-        this.updatedAt = updatedAt;
     }
 
     public static UserLearningPattern of(
@@ -77,8 +74,7 @@ public class UserLearningPattern {
             RouteType routeType,
             int avgEtaDiff,
             int sampleCount,
-            double accuracyRate,
-            LocalDateTime updatedAt
+            double accuracyRate
     ) {
         return UserLearningPattern.internalBuilder()
                 .user(user)
@@ -87,7 +83,6 @@ public class UserLearningPattern {
                 .avgEtaDiff(avgEtaDiff)
                 .sampleCount(sampleCount)
                 .accuracyRate(accuracyRate)
-                .updatedAt(updatedAt)
                 .build();
     }
 }
