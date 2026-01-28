@@ -7,6 +7,7 @@ import app.tamingo.domain.schedule.dto.CreateScheduleRequest;
 import app.tamingo.domain.schedule.dto.ScheduleListResponse;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleCategory;
+import app.tamingo.domain.schedule.exception.ScheduleErrorCode;
 import app.tamingo.domain.schedule.repository.ScheduleCategoryRepository;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.todo.entity.Todo;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -41,7 +43,7 @@ public class ScheduleService {
         ScheduleCategory category = null;
         if (request.scheduleCategoryId() != null) {
             category = scheduleCategoryRepository.findById(request.scheduleCategoryId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+                    .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_CATEGORY_NOT_FOUND));
         }
 
         Schedule schedule = scheduleRepository.save(request.toEntity(user,category));
@@ -59,7 +61,20 @@ public class ScheduleService {
     }
 
     // 특정 날짜 일정 목록 조회
-    public List<ScheduleListResponse> getDailySchedules(Long userId, LocalDate date) {
+    public List<ScheduleListResponse> getDailySchedules(Long userId, String dateStr) {
+
+        if (userId == null || dateStr == null || dateStr.isBlank()) {
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_INVALID_REQUEST);
+        }
+        LocalDate date;
+
+        // 날짜 파싱 및 유효성 검증
+        try {
+            date = LocalDate.parse(dateStr); // yyyy-MM-dd 형식이 아니면 예외 발생
+        } catch (DateTimeParseException e) {
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_INVALID_DATE);
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -68,7 +83,8 @@ public class ScheduleService {
         LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
 
         // 조회 및 DTO 변환
-        return scheduleRepository.findAllByUserAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(user, startOfDay, endOfDay)
+        return scheduleRepository
+                .findAllByUserAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(user, startOfDay, endOfDay)
                 .stream()
                 .map(ScheduleListResponse::from)
                 .toList();

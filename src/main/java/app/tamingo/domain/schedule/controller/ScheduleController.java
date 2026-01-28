@@ -27,8 +27,8 @@ public class ScheduleController {
     // 일정 생성 API
     @PostMapping("/create")
     public ApiResponse<CreateScheduleResponse> createSchedule(
+            @AuthenticationPrincipal Long userId,
             @RequestBody @Valid CreateScheduleRequest request){
-        Long userId = 1L;
 
         CreateScheduleResponse response = scheduleService.createSchedule(userId,request);
         return ApiResponse.onSuccess(response, SuccessCode.OK);
@@ -63,7 +63,7 @@ public class ScheduleController {
     @GetMapping
     public ApiResponse<List<ScheduleListResponse>> getDailySchedules(
             @AuthenticationPrincipal Long userId,
-            @RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
+            @RequestParam("date") String date
     ) {
         List<ScheduleListResponse> response = scheduleService.getDailySchedules(userId, date);
         return ApiResponse.onSuccess(response, SuccessCode.OK);
