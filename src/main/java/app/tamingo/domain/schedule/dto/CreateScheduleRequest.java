@@ -1,7 +1,9 @@
 package app.tamingo.domain.schedule.dto;
 
+import app.tamingo.common.exception.CustomException;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleCategory;
+import app.tamingo.domain.schedule.exception.ScheduleErrorCode;
 import app.tamingo.domain.todo.enums.RepeatType;
 import app.tamingo.domain.user.entity.User;
 import jakarta.validation.constraints.NotNull;
@@ -52,7 +54,7 @@ public record CreateScheduleRequest(
 
         // 종료 시간이 시작 시간보다 빠르면 에러
         if(endLocalTime.isBefore(startLocalTime)){
-            throw new IllegalArgumentException("종료시간은 시작시간보다 빠를 수 없습니다.");
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_PERIOD_INVALID);
         }
 
         // 날짜+시간을 통해 LocalDateTime 생성
