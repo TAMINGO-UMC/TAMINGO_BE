@@ -8,6 +8,7 @@ import app.tamingo.domain.favoriteplace.entity.FavoritePlaceStandard;
 import app.tamingo.domain.favoriteplace.exception.FavoritePlaceErrorCode;
 import app.tamingo.domain.favoriteplace.repository.FavoritePlaceStandardRepository;
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class FavoritePlaceService {
     public Long save(Long userId, FavoritePlaceRequest.SaveDto request) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
         // 이미 등록된 이름이나 주소인지 확인
         if (favoritePlaceRepository.existsByDuplicate(user, request.name(), request.address())) {
@@ -48,7 +49,7 @@ public class FavoritePlaceService {
     // 특정 유저의 자주 가는 장소 목록 조회
     public List<FavoritePlaceResponse> findAll(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
         return favoritePlaceRepository.findAllByUser(user).stream()
                 .map(FavoritePlaceResponse::from)

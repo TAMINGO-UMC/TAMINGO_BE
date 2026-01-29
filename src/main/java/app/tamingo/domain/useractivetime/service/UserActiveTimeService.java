@@ -3,6 +3,7 @@ package app.tamingo.domain.useractivetime.service;
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
 import app.tamingo.domain.useractivetime.dto.UserActiveTimeRequest;
 import app.tamingo.domain.useractivetime.dto.UserActiveTimeResponse;
@@ -25,7 +26,7 @@ public class UserActiveTimeService {
 
         // 유저 존재 여부 확인
         userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
         // 유저 설정 존재 여부 확인
         return userActiveTimeRepository.findById(userId)
@@ -46,7 +47,7 @@ public class UserActiveTimeService {
 
         // 유저 확인
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
         // 설정 존재 확인
         UserActiveTime activeTime = userActiveTimeRepository.findById(userId)
