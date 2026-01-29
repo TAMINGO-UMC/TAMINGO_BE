@@ -2,6 +2,8 @@ package app.tamingo.domain.auth.service;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
+import app.tamingo.domain.auth.exception.AuthErrorCode;
+import app.tamingo.domain.terms.exception.TermsErrorCode;
 import app.tamingo.common.security.JwtTokenProvider;
 import app.tamingo.domain.auth.entity.AuthIdentity;
 import app.tamingo.domain.auth.entity.AuthProvider;
@@ -26,6 +28,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,10 @@ import java.util.UUID;
 public class SignupService {
 
     private static final long SIGNUP_TTL_SEC = 900L; // 15분
+    private static final int NICKNAME_MAX_LEN = 10;
+
+    private static final Pattern PASSWORD_POLICY =
+            Pattern.compile("^[A-Za-z0-9!@#$%^&*()_+\\-=[\\]{};':\",.<>/?\\\\|`~]{8,16}$");
 
     private final SignupSessionRepository signupSessionRepository;
     private final TermsRepository termsRepository;
@@ -55,7 +62,7 @@ public class SignupService {
         List<Terms> requiredTerms = termsRepository.findAllByIsRequiredTrue();
         for (Terms t : requiredTerms) {
             if (!Boolean.TRUE.equals(safeMap.get(t.getCode()))) {
-                throw new CustomException(ErrorCode.REQUIRED_TERMS_NOT_AGREED);
+                throw new CustomException(TermsErrorCode.REQUIRED_TERMS_NOT_AGREED);
             }
         }
 
@@ -77,7 +84,7 @@ public class SignupService {
 
         // 이미 가입된 이메일일 경우
         if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.LOCAL, email)) {
-            throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS);
+            throw new CustomException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         // 인증번호 발송
@@ -97,13 +104,13 @@ public class SignupService {
 
         // 세션에 저장된 이메일과 요청 이메일이 다를 경우
         if (session.getEmail() == null || !session.getEmail().equals(email)) {
-            throw new CustomException(ErrorCode.SIGNUP_EMAIL_NOT_MATCHED);
+            throw new CustomException(AuthErrorCode.SIGNUP_EMAIL_NOT_MATCHED);
         }
 
         // 인증번호 확인 실패 시
         boolean ok = emailVerificationService.verifyCode(email, code);
         if (!ok) {
-            throw new CustomException(ErrorCode.SIGNUP_EMAIL_CODE_INVALID);
+            throw new CustomException(AuthErrorCode.SIGNUP_EMAIL_CODE_INVALID);
         }
 
         session.markEmailVerified();
@@ -115,7 +122,7 @@ public class SignupService {
         SignupSession session = getSessionOrThrow(signupSessionId);
 
         if (!session.isEmailVerified()) {
-            throw new CustomException(ErrorCode.SIGNUP_EMAIL_NOT_VERIFIED);
+            throw new CustomException(AuthErrorCode.SIGNUP_EMAIL_NOT_VERIFIED);
         }
 
         String email = session.getEmail();
@@ -123,16 +130,26 @@ public class SignupService {
             throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
 
+        // 닉네임 검증
         if (nickname == null || nickname.isBlank()) {
-            throw new CustomException(ErrorCode.SIGNUP_NICKNAME_REQUIRED);
+            throw new CustomException(AuthErrorCode.SIGNUP_NICKNAME_REQUIRED);
         }
 
+        if (nickname.length() > NICKNAME_MAX_LEN) {
+            throw new CustomException(AuthErrorCode.SIGNUP_NICKNAME_TOO_LONG);
+        }
+
+        // 비밀번호 검증
         if (password == null || password.isBlank()) {
-            throw new CustomException(ErrorCode.SIGNUP_PASSWORD_REQUIRED);
+            throw new CustomException(AuthErrorCode.SIGNUP_PASSWORD_REQUIRED);
+        }
+
+        if (!PASSWORD_POLICY.matcher(password).matches()) {
+            throw new CustomException(AuthErrorCode.SIGNUP_PASSWORD_POLICY_INVALID);
         }
 
         if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.LOCAL, email)) {
-            throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS);
+            throw new CustomException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         // 유저 생성
@@ -175,7 +192,7 @@ public class SignupService {
             throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
         return signupSessionRepository.findById(signupSessionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.SIGNUP_SESSION_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(AuthErrorCode.SIGNUP_SESSION_NOT_FOUND));
     }
 
     private Map<TermsCode, Boolean> toSafeEnumMap(Map<TermsCode, Boolean> source) {

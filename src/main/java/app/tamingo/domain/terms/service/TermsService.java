@@ -1,11 +1,11 @@
 package app.tamingo.domain.terms.service;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.ErrorCode;
 import app.tamingo.domain.terms.dto.TermsDetailResponse;
 import app.tamingo.domain.terms.dto.TermsSummaryResponse;
 import app.tamingo.domain.terms.entity.Terms;
 import app.tamingo.domain.terms.entity.TermsCode;
+import app.tamingo.domain.terms.exception.TermsErrorCode;
 import app.tamingo.domain.terms.repository.TermsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class TermsService {
 
     public TermsDetailResponse getTermsDetail(TermsCode code) {
         Terms terms = termsRepository.findByCode(code)
-                .orElseThrow(() -> new CustomException(ErrorCode.TERMS_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(TermsErrorCode.TERMS_NOT_FOUND));
         return TermsDetailResponse.from(terms);
     }
 }
