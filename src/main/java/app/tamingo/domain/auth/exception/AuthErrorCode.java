@@ -1,4 +1,4 @@
-package app.tamingo.common.response.error;
+package app.tamingo.domain.auth.exception;
 
 import app.tamingo.common.response.BaseCode;
 import lombok.AllArgsConstructor;

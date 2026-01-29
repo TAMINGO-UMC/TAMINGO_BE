@@ -1,9 +1,9 @@
 package app.tamingo.domain.auth.service;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.error.AuthErrorCode;
-import app.tamingo.common.response.error.CommonErrorCode;
-import app.tamingo.common.response.error.TermsErrorCode;
+import app.tamingo.common.response.ErrorCode;
+import app.tamingo.domain.auth.exception.AuthErrorCode;
+import app.tamingo.domain.terms.exception.TermsErrorCode;
 import app.tamingo.common.security.JwtTokenProvider;
 import app.tamingo.domain.auth.entity.AuthIdentity;
 import app.tamingo.domain.auth.entity.AuthProvider;
@@ -79,7 +79,7 @@ public class SignupService {
         SignupSession session = getSessionOrThrow(signupSessionId);
 
         if (email == null || email.isBlank()) {
-            throw new CustomException(CommonErrorCode.INVALID_REQUEST);
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
 
         // 이미 가입된 이메일일 경우
@@ -99,7 +99,7 @@ public class SignupService {
         SignupSession session = getSessionOrThrow(signupSessionId);
 
         if (email == null || email.isBlank() || code == null || code.isBlank()) {
-            throw new CustomException(CommonErrorCode.INVALID_REQUEST);
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
 
         // 세션에 저장된 이메일과 요청 이메일이 다를 경우
@@ -127,7 +127,7 @@ public class SignupService {
 
         String email = session.getEmail();
         if (email == null || email.isBlank()) {
-            throw new CustomException(CommonErrorCode.INVALID_REQUEST);
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
 
         // 닉네임 검증
@@ -189,7 +189,7 @@ public class SignupService {
 
     private SignupSession getSessionOrThrow(String signupSessionId) {
         if (signupSessionId == null || signupSessionId.isBlank()) {
-            throw new CustomException(CommonErrorCode.INVALID_REQUEST);
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
         return signupSessionRepository.findById(signupSessionId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.SIGNUP_SESSION_NOT_FOUND));

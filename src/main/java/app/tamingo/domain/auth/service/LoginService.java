@@ -1,7 +1,7 @@
 package app.tamingo.domain.auth.service;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.error.AuthErrorCode;
+import app.tamingo.domain.auth.exception.AuthErrorCode;
 import app.tamingo.common.security.JwtTokenProvider;
 import app.tamingo.domain.auth.entity.AuthIdentity;
 import app.tamingo.domain.auth.entity.AuthProvider;

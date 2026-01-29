@@ -1,8 +1,8 @@
 package app.tamingo.domain.onboarding.service;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.error.OnboardingErrorCode;
-import app.tamingo.common.response.error.UserErrorCode;
+import app.tamingo.domain.onboarding.exception.OnboardingErrorCode;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.onboarding.dto.OnboardingRequest;
 import app.tamingo.domain.onboarding.entity.*;
 import app.tamingo.domain.onboarding.repository.*;
