@@ -18,8 +18,8 @@ public class DailyPlanItemConverter {
     ){
         int leftMinute = 0;
 
-        // 남은 시간을 분으로 변환
-        if(isNextSchedule && schedule.getStartTime().toLocalTime().isAfter(now)){
+        // 지나간 일정은 0, 남은 일정은 모두 분으로 표시
+        if (schedule.getStartTime().toLocalTime().isAfter(now)) {
             leftMinute = (int) Duration
                     .between(now, schedule.getStartTime().toLocalTime())
                     .toMinutes();
