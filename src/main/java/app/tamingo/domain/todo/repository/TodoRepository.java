@@ -53,4 +53,17 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 
     // 할일 카테고리가 사용 중이면 삭제 불가
     boolean existsByUserAndTodoCategory(User user, TodoCategory todoCategory);
+
+    @Query("""
+    select t
+    from Todo t
+    where t.user = :user
+        and t.targetDate = :date
+    order by t.targetDate asc
+""")
+    List<Todo> findAllTodayTodos(
+            @Param("user") User user,
+            @Param("date")LocalDate date
+    );
+
 }
