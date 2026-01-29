@@ -1,5 +1,6 @@
 package app.tamingo.domain.home.entity;
 
+import app.tamingo.domain.home.entity.enums.StartSourceType;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.home.entity.enums.StartSourceType;
 import jakarta.persistence.*;

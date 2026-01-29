@@ -65,6 +65,10 @@ public class Schedule extends BaseEntity {
     @Column(name = "longitude", nullable = false)
     private Double longitude;
 
+    // 길찾기 기능 해제 여부, 기본 true로 설정
+    @Column(name = "is_navigation_enabled", nullable = false)
+    private Boolean isNavigationEnabled = true;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "repeat_type", nullable = false)
     private RepeatType repeatType = RepeatType.NONE;
@@ -132,5 +136,10 @@ public class Schedule extends BaseEntity {
                 .repeatEndDate(repeatEndDate)
                 .memo(memo)
                 .build();
+    }
+
+    // 길찾기 기능 해제
+    public void disableNavigation() {
+        this.isNavigationEnabled = false;
     }
 }

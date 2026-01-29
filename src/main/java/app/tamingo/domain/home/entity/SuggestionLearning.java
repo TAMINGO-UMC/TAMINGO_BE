@@ -36,6 +36,9 @@ public class SuggestionLearning {
     @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;
 
+    @Column(name = "title", nullable = false, length = 20)
+    private String title;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "suggestion_type", nullable = false)
     private SuggestionType suggestionType;
@@ -43,9 +46,6 @@ public class SuggestionLearning {
     @Enumerated(EnumType.STRING)
     @Column(name = "plan_type")
     private SuggestionPlanType planType;
-
-    @Column(name = "accepted", nullable = false)
-    private Boolean accepted = true;
 
     @Column(name = "place_name", nullable = false, length = 30)
     private String placeName;
@@ -77,13 +77,18 @@ public class SuggestionLearning {
     @Column(name = "linked_todo_id")
     private Long linkedTodoId;
 
+    // AI 추천 카테고리 ID
+    @Column(name = "suggested_category_id")
+    private Long suggestedCategoryId;
+
+
     @Builder(builderMethodName = "internalBuilder")
     private SuggestionLearning(
             User user,
+            String title,
             Schedule schedule,
             SuggestionType suggestionType,
             SuggestionPlanType planType,
-            boolean accepted,
             String placeName,
             double latitude,
             double longitude,
@@ -92,21 +97,28 @@ public class SuggestionLearning {
             LocalDateTime endTime,
             Integer duration,
             Integer detourMinutes,
-            Long linkedTodoId) {
+            Long linkedTodoId,
+            Long suggestedCategoryId) {
         this.user = user;
+        this.title = title;
         this.schedule = schedule;
         this.suggestionType = suggestionType;
         this.planType = planType;
-        this.accepted = accepted;
         this.placeName = placeName;
         this.latitude = latitude;
         this.longitude = longitude;
         this.aiComment = aiComment;
         this.startTime = startTime;
+        this.endTime = endTime;
+        this.duration = duration;
+        this.detourMinutes = detourMinutes;
+        this.linkedTodoId = linkedTodoId;
+        this.suggestedCategoryId = suggestedCategoryId;
     }
 
     public static SuggestionLearning of(
             User user,
+            String title,
             Schedule schedule,
             SuggestionType suggestionType,
             SuggestionPlanType planType,
@@ -118,11 +130,13 @@ public class SuggestionLearning {
             LocalDateTime endTime,
             Integer duration,
             Integer detourMinutes,
-            Long linkedTodoId
+            Long linkedTodoId,
+            Long suggestedCategoryId
 
     ){
         return SuggestionLearning.internalBuilder()
                 .user(user)
+                .title(title)
                 .schedule(schedule)
                 .suggestionType(suggestionType)
                 .planType(planType)
@@ -135,11 +149,8 @@ public class SuggestionLearning {
                 .duration(duration)
                 .detourMinutes(detourMinutes)
                 .linkedTodoId(linkedTodoId)
+                .suggestedCategoryId(suggestedCategoryId)
                 .build();
-    }
-
-    public void acceptSuggestion() {
-        this.accepted = true;
     }
 
 }
