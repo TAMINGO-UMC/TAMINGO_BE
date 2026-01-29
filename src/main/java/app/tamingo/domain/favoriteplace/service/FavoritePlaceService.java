@@ -8,12 +8,15 @@ import app.tamingo.domain.favoriteplace.entity.FavoritePlaceStandard;
 import app.tamingo.domain.favoriteplace.exception.FavoritePlaceErrorCode;
 import app.tamingo.domain.favoriteplace.repository.FavoritePlaceStandardRepository;
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
@@ -85,5 +88,48 @@ public class FavoritePlaceService {
                 .orElseThrow(() -> new CustomException(FavoritePlaceErrorCode.FAVORITE_PLACE_NOT_FOUND));
 
         favoritePlaceRepository.delete(favoritePlaceStandard);
+    }
+
+    // 온보딩 초기 세팅: 자주 가는 장소 등록
+    @Transactional
+    public void replaceAll(Long userId, List<FavoritePlaceRequest.SaveDto> list, int maxLimit) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+        // null이면 그냥 아무 것도 안 함
+        if (list == null || list.isEmpty()) {
+            favoritePlaceRepository.deleteAllByUser(user);
+            return;
+        }
+
+        // 5개 제한
+        if (list.size() > maxLimit) {
+            throw new CustomException(FavoritePlaceErrorCode.FAVORITE_PLACE_LIMIT_EXCEEDED);
+        }
+
+        // 요청 내부 중복 방지 (name, address)
+        Set<String> names = new HashSet<>();
+        Set<String> addresses = new HashSet<>();
+
+        for (FavoritePlaceRequest.SaveDto p : list) {
+            if (!names.add(p.name()) || !addresses.add(p.address())) {
+                throw new CustomException(FavoritePlaceErrorCode.FAVORITE_PLACE_ALREADY_EXISTS);
+            }
+        }
+
+        favoritePlaceRepository.deleteAllByUser(user);
+
+        for (FavoritePlaceRequest.SaveDto p : list) {
+            favoritePlaceRepository.save(
+                    FavoritePlaceStandard.of(
+                            user,
+                            p.name(),
+                            p.address(),
+                            p.latitude(),
+                            p.longitude()
+                    )
+            );
+        }
     }
 }
