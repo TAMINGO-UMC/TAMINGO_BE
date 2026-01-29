@@ -46,7 +46,7 @@ public class TransportPreference extends BaseEntity {
         this.rank = rank;
     }
 
-    public static TransportPreference create(User user, TransportType transport, int rank) {
+    public static TransportPreference of(User user, TransportType transport, int rank) {
         return TransportPreference.internalBuilder()
                 .user(user)
                 .transport(transport)

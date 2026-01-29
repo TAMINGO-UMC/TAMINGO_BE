@@ -72,7 +72,7 @@ public class UserActiveTimeSetting extends BaseEntity {
         this.weekendEnabled = weekendEnabled;
     }
 
-    public static UserActiveTimeSetting create(
+    public static UserActiveTimeSetting of(
             User user,
             LocalTime startTime,
             LocalTime endTime,

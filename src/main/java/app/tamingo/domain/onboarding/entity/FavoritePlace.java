@@ -46,7 +46,7 @@ public class FavoritePlace extends BaseEntity {
         this.longitude = longitude;
     }
 
-    public static FavoritePlace create(User user, String name, String address, Double latitude, Double longitude) {
+    public static FavoritePlace of(User user, String name, String address, Double latitude, Double longitude) {
         return FavoritePlace.internalBuilder()
                 .user(user)
                 .name(name)

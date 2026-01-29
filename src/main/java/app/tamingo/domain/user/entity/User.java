@@ -44,7 +44,7 @@ public class User extends BaseEntity {
     }
 
     // 생성 메서드
-    public static User create(String email, String nickname) {
+    public static User of(String email, String nickname) {
         return User.internalBuilder()
                 .email(email)
                 .nickname(nickname)

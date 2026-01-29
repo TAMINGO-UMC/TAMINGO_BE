@@ -41,8 +41,7 @@ public class NotificationSetting extends BaseEntity {
         this.departAlertMinute = departAlertMinute;
     }
 
-
-    public static NotificationSetting create(User user, boolean enabled, AlertMinute minute) {
+    public static NotificationSetting of(User user, boolean enabled, AlertMinute minute) {
         return NotificationSetting.internalBuilder()
                 .user(user)
                 .departAlertEnabled(enabled)

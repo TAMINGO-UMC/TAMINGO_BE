@@ -153,7 +153,7 @@ public class SignupService {
         }
 
         // 유저 생성
-        User user = User.create(email, nickname);
+        User user = User.of(email, nickname);
         userRepository.save(user);
 
         // LOCAL 인증 정보 저장
