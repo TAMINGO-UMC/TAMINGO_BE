@@ -91,15 +91,15 @@ public class ScheduleService {
         }
 
         // 로그 엔티티 생성 및 저장
-        ScheduleAiLog log = ScheduleAiLog.builder()
-                .user(user)
-                .schedule(schedule)
-                .aiSuggestedPlace(aiPlace)
-                .aiSuggestedCategory(aiCategory)
-                .userSelectedPlace(userPlace)
-                .userSelectedCategory(userCategory)
-                .score(score)
-                .build();
+        ScheduleAiLog log = ScheduleAiLog.of(
+                user,
+                schedule,
+                aiPlace,
+                aiCategory,
+                userPlace,
+                userCategory,
+                score
+        );
 
         scheduleAiLogRepository.save(log);
     }

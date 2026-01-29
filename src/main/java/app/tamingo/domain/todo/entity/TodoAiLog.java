@@ -42,8 +42,8 @@ public class TodoAiLog extends BaseEntity {
     @Column(name = "score")
     private int score;
 
-    @Builder
-    public TodoAiLog(User user, Todo todo, String aiSuggestedCategory, String aiSuggestedPlace, String userSelectedCategory, String userSelectedPlace, int score) {
+    @Builder(builderMethodName = "internalBuilder")
+    private TodoAiLog(User user, Todo todo, String aiSuggestedCategory, String aiSuggestedPlace, String userSelectedCategory, String userSelectedPlace, int score) {
         this.user = user;
         this.todo = todo;
         this.aiSuggestedCategory = aiSuggestedCategory;
@@ -51,6 +51,21 @@ public class TodoAiLog extends BaseEntity {
         this.userSelectedCategory = userSelectedCategory;
         this.userSelectedPlace = userSelectedPlace;
         this.score = score;
+    }
+
+    public static TodoAiLog of(
+            User user, Todo todo, String aiSuggestedCategory,
+            String aiSuggestedPlace, String userSelectedCategory,
+            String userSelectedPlace, int score) {
+        return TodoAiLog.internalBuilder()
+                .user(user)
+                .todo(todo)
+                .aiSuggestedCategory(aiSuggestedCategory)
+                .aiSuggestedPlace(aiSuggestedPlace)
+                .userSelectedCategory(userSelectedCategory)
+                .userSelectedPlace(userSelectedPlace)
+                .score(score)
+                .build();
     }
 
 }

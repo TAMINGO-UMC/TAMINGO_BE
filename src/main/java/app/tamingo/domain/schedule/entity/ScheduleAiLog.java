@@ -43,8 +43,8 @@ public class ScheduleAiLog extends BaseEntity {
     @Column(name = "score", nullable = false)
     private int score;
 
-    @Builder
-    public ScheduleAiLog(User user, Schedule schedule, String aiSuggestedCategory, String aiSuggestedPlace, String userSelectedCategory, String userSelectedPlace, int score) {
+    @Builder(builderMethodName = "internalBuilder")
+    private ScheduleAiLog(User user, Schedule schedule, String aiSuggestedCategory, String aiSuggestedPlace, String userSelectedCategory, String userSelectedPlace, int score) {
         this.user = user;
         this.schedule = schedule;
         this.aiSuggestedCategory = aiSuggestedCategory;
@@ -52,6 +52,22 @@ public class ScheduleAiLog extends BaseEntity {
         this.userSelectedCategory = userSelectedCategory;
         this.userSelectedPlace = userSelectedPlace;
         this.score = score;
+    }
+
+    // [추가] 정적 팩토리 메서드
+    public static ScheduleAiLog of(
+            User user, Schedule schedule,
+            String aiSuggestedCategory, String aiSuggestedPlace,
+            String userSelectedCategory, String userSelectedPlace, int score) {
+        return ScheduleAiLog.internalBuilder()
+                .user(user)
+                .schedule(schedule)
+                .aiSuggestedCategory(aiSuggestedCategory)
+                .aiSuggestedPlace(aiSuggestedPlace)
+                .userSelectedCategory(userSelectedCategory)
+                .userSelectedPlace(userSelectedPlace)
+                .score(score)
+                .build();
     }
 
 }
