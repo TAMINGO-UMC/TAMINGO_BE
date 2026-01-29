@@ -1,6 +1,8 @@
 package app.tamingo.domain.onboarding.service;
 
 import app.tamingo.common.exception.CustomException;
+import app.tamingo.domain.favoriteplace.dto.FavoritePlaceRequest;
+import app.tamingo.domain.favoriteplace.service.FavoritePlaceService;
 import app.tamingo.domain.onboarding.exception.OnboardingErrorCode;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.onboarding.dto.OnboardingRequest;
@@ -28,9 +30,10 @@ public class OnboardingService {
     private final UserRepository userRepository;
 
     private final UserActiveTimeSettingRepository activeTimeRepo;
-    private final FavoritePlaceRepository favoritePlaceRepo;
     private final TransportPreferenceRepository transportPreferenceRepo;
     private final NotificationSettingRepository notificationSettingRepo;
+
+    private final FavoritePlaceService favoritePlaceService;
 
     public void saveOnboarding(Long userId, OnboardingRequest req) {
         User user = getUserOrThrow(userId);
@@ -38,8 +41,8 @@ public class OnboardingService {
         ActiveTimeValue activeTime = validateAndParseActiveTime(req.activeTime());
         upsertActiveTime(user, activeTime, req.activeTime());
 
-        validateFavoritePlaces(req.favoritePlaces());
-        replaceFavoritePlaces(user, req.favoritePlaces());
+        List<FavoritePlaceRequest.SaveDto> places = toSaveDtos(req.favoritePlaces());
+        favoritePlaceService.replaceAll(userId, places, MAX_FAVORITE_PLACES);
 
         validateTransportPreferences(req.transportPreferences());
         replaceTransportPreferences(user, req.transportPreferences());
@@ -103,28 +106,17 @@ public class OnboardingService {
     }
 
     // 자주 가는 장소
-    private void validateFavoritePlaces(List<OnboardingRequest.FavoritePlace> list) {
-        if (list == null || list.isEmpty()) {
-            throw new CustomException(OnboardingErrorCode.ONBOARDING_FAVORITE_PLACES_EMPTY);
-        }
-        if (list.size() > MAX_FAVORITE_PLACES) {
-            throw new CustomException(OnboardingErrorCode.ONBOARDING_FAVORITE_PLACES_LIMIT_EXCEEDED);
-        }
-    }
-
-    private void replaceFavoritePlaces(User user, List<OnboardingRequest.FavoritePlace> list) {
-        Long userId = user.getId();
-
-        favoritePlaceRepo.deleteAllByUserId(userId);
-        for (OnboardingRequest.FavoritePlace p : list) {
-            favoritePlaceRepo.save(FavoritePlace.of(
-                    user,
-                    p.name(),
-                    p.address(),
-                    p.latitude(),
-                    p.longitude()
-            ));
-        }
+    // 온보딩 DTO -> FavoritePlace 저장 DTO로 변환
+    private List<FavoritePlaceRequest.SaveDto> toSaveDtos(List<OnboardingRequest.FavoritePlace> list) {
+        if (list == null || list.isEmpty()) return List.of();
+        return list.stream()
+                .map(p -> new FavoritePlaceRequest.SaveDto(
+                        p.name(),
+                        p.address(),
+                        p.latitude(),
+                        p.longitude()
+                ))
+                .toList();
     }
 
     // 선호 이동 수단
