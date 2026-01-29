@@ -50,7 +50,7 @@ public class FavoritePlaceStandard extends BaseEntity {
         this.longitude = longitude;
     }
 
-    public static FavoritePlaceStandard create(User user, String name, String address, Double latitude, Double longitude) {
+    public static FavoritePlaceStandard of(User user, String name, String address, Double latitude, Double longitude) {
         return FavoritePlaceStandard.builder()
                 .user(user)
                 .name(name)

@@ -34,7 +34,7 @@ public class FavoritePlaceService {
             throw new CustomException(FavoritePlaceErrorCode.FAVORITE_PLACE_ALREADY_EXISTS);
         }
 
-        FavoritePlaceStandard favoritePlaceStandard =  FavoritePlaceStandard.create(
+        FavoritePlaceStandard favoritePlaceStandard =  FavoritePlaceStandard.of(
                 user,
                 request.name(),
                 request.address(),
