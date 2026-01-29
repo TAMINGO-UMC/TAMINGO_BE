@@ -6,6 +6,7 @@ import app.tamingo.common.response.ErrorCode;
 import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.auth.dto.login.LoginRequest;
 import app.tamingo.domain.auth.dto.login.LoginResponse;
+import app.tamingo.domain.auth.exception.AuthErrorCode;
 import app.tamingo.domain.auth.service.LoginService;
 import app.tamingo.domain.auth.service.LogoutService;
 import jakarta.validation.Valid;
@@ -41,10 +42,10 @@ public class LoginOutController {
 
     private String extractBearerOrThrow(String header) {
         if (header == null || header.isBlank()) {
-            throw new CustomException(ErrorCode.TOKEN_MISSING);
+            throw new CustomException(AuthErrorCode.TOKEN_MISSING);
         }
         if (!header.startsWith("Bearer ")) {
-            throw new CustomException(ErrorCode.TOKEN_INVALID);
+            throw new CustomException(AuthErrorCode.TOKEN_INVALID);
         }
         return header.substring(7).trim();
     }
