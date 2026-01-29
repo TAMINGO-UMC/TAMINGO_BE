@@ -39,7 +39,7 @@ public class SignupService {
     private static final int NICKNAME_MAX_LEN = 10;
 
     private static final Pattern PASSWORD_POLICY =
-            Pattern.compile("^[A-Za-z0-9!@#$%^&*()_+\\-=[\\]{};':\",.<>/?\\\\|`~]{8,16}$");
+            Pattern.compile("^[\\x21-\\x7E]{8,16}$");
 
     private final SignupSessionRepository signupSessionRepository;
     private final TermsRepository termsRepository;
