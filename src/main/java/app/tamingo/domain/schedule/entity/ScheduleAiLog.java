@@ -54,7 +54,6 @@ public class ScheduleAiLog extends BaseEntity {
         this.score = score;
     }
 
-    // [추가] 정적 팩토리 메서드
     public static ScheduleAiLog of(
             User user, Schedule schedule,
             String aiSuggestedCategory, String aiSuggestedPlace,

@@ -69,5 +69,14 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
+    @GetMapping("/{scheduleId}")
+    public ApiResponse<ScheduleDetailResponse> getScheduleDetail(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable("scheduleId") Long scheduleId
+    ) {
+        ScheduleDetailResponse response = scheduleService.getScheduleDetail(userId, scheduleId);
+        return ApiResponse.onSuccess(response, SuccessCode.OK);
+    }
+
 
 }
