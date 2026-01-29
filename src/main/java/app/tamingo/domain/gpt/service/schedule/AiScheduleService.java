@@ -21,6 +21,7 @@ import app.tamingo.domain.schedule.repository.ScheduleCategoryRepository;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.schedule.service.PlaceContextService;
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +51,7 @@ public class AiScheduleService {
 
     public AiInferenceResponse inferSchedule(Long userId, String inputTitle){
         User user = userRepository.findById(userId)
-                .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(()-> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
         // 프롬프트에 넣을 데이터 (카테고리 + 과거 기록)
         String contextDataString = prepareContextData(user, inputTitle);

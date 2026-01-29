@@ -35,8 +35,15 @@ public record CreateScheduleRequest(
         RepeatType repeatType,
         LocalDate repeatEndDate,
 
-        List<Long> linkedTodoIds
+        List<Long> linkedTodoIds,
+
+        AiInferenceSource aiInferenceSource
 ) {
+    public record AiInferenceSource(
+            String aiSuggestedPlaceName,
+            String aiSuggestedCategoryName
+    ) {}
+
     public Schedule toEntity(User user, ScheduleCategory category){
         // String 시간을 localtime 으로 변환
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");

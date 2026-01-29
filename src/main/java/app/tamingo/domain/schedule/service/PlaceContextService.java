@@ -9,6 +9,7 @@ import app.tamingo.domain.todo.dto.TodoSummaryResponse;
 import app.tamingo.domain.todo.entity.Todo;
 import app.tamingo.domain.todo.repository.TodoRepository;
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class PlaceContextService {
 
     public RecommendTodoResponse getPlaceContext(Long userId, String placeName, Double latitude, Double longitude){
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
         // [List A] 2km 범위 할 일 조회
         double radius = 0.02;
