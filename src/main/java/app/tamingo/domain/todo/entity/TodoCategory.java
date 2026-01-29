@@ -12,6 +12,12 @@ import lombok.*;
         name = "todo_category",
         indexes = {
                 @Index(name = "idx_todo_category_user_id", columnList = "user_id")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_todo_category_user_name",
+                        columnNames = {"user_id", "name"}
+                )
         }
 )
 public class TodoCategory extends BaseEntity {
@@ -58,5 +64,11 @@ public class TodoCategory extends BaseEntity {
                 .colorCode(colorCode)
                 .user(user)
                 .build();
+    }
+    //수정 메서드
+    public void update(String name, String iconCode, String colorCode) {
+        this.name = name;
+        this.iconCode = iconCode;
+        this.colorCode = colorCode;
     }
 }
