@@ -8,7 +8,7 @@ import java.util.List;
 
 public record OnboardingRequest(
         @Valid @NotNull ActiveTime activeTime,
-        @Valid @NotNull @Size(max = 5) List<FavoritePlace> favoritePlaces,
+        @Valid @Size(max = 5) List<FavoritePlace> favoritePlaces,
         @Valid @NotNull @Size(min = 3, max = 3, message = "transportPreferences는 3개여야 합니다.")
         List<TransportPref> transportPreferences,
         @Valid @NotNull NotificationSetting notificationSetting

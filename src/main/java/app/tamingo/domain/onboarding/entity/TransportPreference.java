@@ -4,6 +4,7 @@ import app.tamingo.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -34,11 +35,22 @@ public class TransportPreference extends BaseEntity {
     @Column(nullable = false)
     private int rank;
 
-    public static TransportPreference create(User user, TransportType transport, int rank) {
-        TransportPreference p = new TransportPreference();
-        p.user = user;
-        p.transport = transport;
-        p.rank = rank;
-        return p;
+    @Builder(builderMethodName = "internalBuilder")
+    private TransportPreference(
+            User user,
+            TransportType transport,
+            int rank
+    ) {
+        this.user = user;
+        this.transport = transport;
+        this.rank = rank;
+    }
+
+    public static TransportPreference of(User user, TransportType transport, int rank) {
+        return TransportPreference.internalBuilder()
+                .user(user)
+                .transport(transport)
+                .rank(rank)
+                .build();
     }
 }

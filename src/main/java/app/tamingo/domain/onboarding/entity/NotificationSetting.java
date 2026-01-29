@@ -4,6 +4,7 @@ import app.tamingo.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,12 +30,23 @@ public class NotificationSetting extends BaseEntity {
     @Column(name = "depart_alert_minutes", nullable = false, length = 10)
     private AlertMinute departAlertMinute;
 
-    public static NotificationSetting create(User user, boolean enabled, AlertMinute minute) {
-        NotificationSetting s = new NotificationSetting();
-        s.user = user;
-        s.departAlertEnabled = enabled;
-        s.departAlertMinute = minute;
-        return s;
+    @Builder(builderMethodName = "internalBuilder")
+    private NotificationSetting(
+            User user,
+            boolean departAlertEnabled,
+            AlertMinute departAlertMinute
+    ) {
+        this.user = user;
+        this.departAlertEnabled = departAlertEnabled;
+        this.departAlertMinute = departAlertMinute;
+    }
+
+    public static NotificationSetting of(User user, boolean enabled, AlertMinute minute) {
+        return NotificationSetting.internalBuilder()
+                .user(user)
+                .departAlertEnabled(enabled)
+                .departAlertMinute(minute)
+                .build();
     }
 
     public void update(boolean enabled, AlertMinute minute) {

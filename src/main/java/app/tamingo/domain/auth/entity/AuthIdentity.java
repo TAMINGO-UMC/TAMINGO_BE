@@ -4,6 +4,7 @@ import app.tamingo.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -39,12 +40,28 @@ public class AuthIdentity extends BaseEntity {
     @Column(name="provider_user_id", length = 255)
     private String providerUserId;
 
+    @Builder(builderMethodName = "internalBuilder")
+    private AuthIdentity(
+            User user,
+            AuthProvider provider,
+            String email,
+            String passwordHash,
+            String providerUserId
+    ) {
+        this.user = user;
+        this.provider = provider;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.providerUserId = providerUserId;
+    }
+
     public static AuthIdentity createLocal(User user, String email, String passwordHash) {
-        AuthIdentity ai = new AuthIdentity();
-        ai.user = user;
-        ai.provider = AuthProvider.LOCAL;
-        ai.email = email;
-        ai.passwordHash = passwordHash;
-        return ai;
+        return AuthIdentity.internalBuilder()
+                .user(user)
+                .provider(AuthProvider.LOCAL)
+                .email(email)
+                .passwordHash(passwordHash)
+                .providerUserId(null)
+                .build();
     }
 }

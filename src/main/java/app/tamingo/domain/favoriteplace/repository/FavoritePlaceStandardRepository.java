@@ -31,4 +31,10 @@ public interface FavoritePlaceStandardRepository extends JpaRepository<FavoriteP
 
     // 특정 유저가 장소명'name'으로 저장한 장소가 있는지 확인
     boolean existsByUserAndName(User user, String name);
+
+    // 자주 가는 장소 삭제
+    void deleteAllByUser(User user);
+
+    // 자주 가는 장소 개수 확인
+    long countByUser(User user);
 }
