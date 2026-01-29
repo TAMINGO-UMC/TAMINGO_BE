@@ -12,6 +12,12 @@ import lombok.*;
         name = "schedule_category",
         indexes = {
                 @Index(name = "idx_schedule_category_user_id", columnList = "user_id")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_schedule_category_user_name",
+                        columnNames = {"user_id", "name"}
+                )
         }
 )
 public class ScheduleCategory extends BaseEntity {
