@@ -25,7 +25,7 @@ public class EmailVerification {
         this.ttl = ttl;
     }
 
-    public static EmailVerification create(String email, String code, long ttl) {
+    public static EmailVerification of(String email, String code, long ttl) {
         return EmailVerification.internalBuilder()
                 .email(email)
                 .code(code)

@@ -16,7 +16,7 @@ public class EmailVerificationService {
 
     public void sendCode(String email) {
         String code = generateCode();
-        repository.save(EmailVerification.create(email, code, EMAIL_CODE_TTL));
+        repository.save(EmailVerification.of(email, code, EMAIL_CODE_TTL));
         emailSender.send(email, code);
     }
 
