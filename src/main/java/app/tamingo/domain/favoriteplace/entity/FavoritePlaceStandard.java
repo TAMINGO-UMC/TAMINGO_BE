@@ -7,9 +7,7 @@ import lombok.*;
 
 
 @Entity
-@Builder
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         name="favorite_place_standard",
@@ -42,6 +40,25 @@ public class FavoritePlaceStandard extends BaseEntity {
 
     // 장소의 경도
     private Double longitude;
+
+    @Builder
+    private FavoritePlaceStandard(User user, String name, String address, Double latitude, Double longitude) {
+        this.user = user;
+        this.name = name;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    public static FavoritePlaceStandard of(User user, String name, String address, Double latitude, Double longitude) {
+        return FavoritePlaceStandard.builder()
+                .user(user)
+                .name(name)
+                .address(address)
+                .latitude(latitude)
+                .longitude(longitude)
+                .build();
+    }
 
     // 업데이트 더티체킹
     public void update(String name, String address, Double latitude, Double longitude) {

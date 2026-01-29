@@ -5,6 +5,7 @@ import app.tamingo.common.response.ErrorCode;
 import app.tamingo.domain.favoriteplace.dto.FavoritePlaceRequest;
 import app.tamingo.domain.favoriteplace.dto.FavoritePlaceResponse;
 import app.tamingo.domain.favoriteplace.entity.FavoritePlaceStandard;
+import app.tamingo.domain.favoriteplace.exception.FavoritePlaceErrorCode;
 import app.tamingo.domain.favoriteplace.repository.FavoritePlaceStandardRepository;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.repository.UserRepository;
@@ -30,16 +31,17 @@ public class FavoritePlaceService {
 
         // 이미 등록된 이름이나 주소인지 확인
         if (favoritePlaceRepository.existsByDuplicate(user, request.name(), request.address())) {
-            throw new CustomException(ErrorCode.FAVORITE_PLACE_ALREADY_EXISTS);
+            throw new CustomException(FavoritePlaceErrorCode.FAVORITE_PLACE_ALREADY_EXISTS);
         }
 
-        FavoritePlaceStandard favoritePlaceStandard =  FavoritePlaceStandard.builder()
-                .user(user)
-                .name(request.name())
-                .address(request.address())
-                .latitude(request.latitude())
-                .longitude(request.longitude())
-                .build();
+        FavoritePlaceStandard favoritePlaceStandard =  FavoritePlaceStandard.of(
+                user,
+                request.name(),
+                request.address(),
+                request.latitude(),
+                request.longitude()
+                );
+
         return favoritePlaceRepository.save(favoritePlaceStandard).getId();
     }
 
@@ -57,7 +59,7 @@ public class FavoritePlaceService {
     @Transactional
     public void update(Long id, FavoritePlaceRequest.UpdateDto request) {
         FavoritePlaceStandard favoritePlaceStandard = favoritePlaceRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.FAVORITE_PLACE_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(FavoritePlaceErrorCode.FAVORITE_PLACE_NOT_FOUND));
 
         // 이미 등록된 주소나 장소로 변경하는지 확인 (자신은 제외)
         if (favoritePlaceRepository.existsForUpdate(
@@ -65,7 +67,7 @@ public class FavoritePlaceService {
                 request.name(),
                 request.address(),
                 id)) {
-            throw new CustomException(ErrorCode.FAVORITE_PLACE_ALREADY_EXISTS);        }
+            throw new CustomException(FavoritePlaceErrorCode.FAVORITE_PLACE_ALREADY_EXISTS);        }
 
         // 엔티티 변경시 트랜잭션 종료와 함께 자동 db 반영
         favoritePlaceStandard.update(
@@ -80,7 +82,7 @@ public class FavoritePlaceService {
     @Transactional
     public void delete(Long id) {
         FavoritePlaceStandard favoritePlaceStandard = favoritePlaceRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.FAVORITE_PLACE_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(FavoritePlaceErrorCode.FAVORITE_PLACE_NOT_FOUND));
 
         favoritePlaceRepository.delete(favoritePlaceStandard);
     }
