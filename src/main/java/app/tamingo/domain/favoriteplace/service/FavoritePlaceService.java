@@ -33,13 +33,14 @@ public class FavoritePlaceService {
             throw new CustomException(ErrorCode.FAVORITE_PLACE_ALREADY_EXISTS);
         }
 
-        FavoritePlaceStandard favoritePlaceStandard =  FavoritePlaceStandard.builder()
-                .user(user)
-                .name(request.name())
-                .address(request.address())
-                .latitude(request.latitude())
-                .longitude(request.longitude())
-                .build();
+        FavoritePlaceStandard favoritePlaceStandard =  FavoritePlaceStandard.create(
+                user,
+                request.name(),
+                request.address(),
+                request.latitude(),
+                request.longitude()
+                );
+
         return favoritePlaceRepository.save(favoritePlaceStandard).getId();
     }
 
