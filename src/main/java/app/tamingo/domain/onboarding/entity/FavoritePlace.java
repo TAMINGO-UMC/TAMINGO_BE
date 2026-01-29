@@ -4,6 +4,7 @@ import app.tamingo.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,13 +31,28 @@ public class FavoritePlace extends BaseEntity {
     private Double latitude;
     private Double longitude;
 
-    public static FavoritePlace create(User user, String name, String address, Double latitude, Double longitude) {
-        FavoritePlace p = new FavoritePlace();
-        p.user = user;
-        p.name = name;
-        p.address = address;
-        p.latitude = latitude;
-        p.longitude = longitude;
-        return p;
+    @Builder(builderMethodName = "internalBuilder")
+    private FavoritePlace(
+            User user,
+            String name,
+            String address,
+            Double latitude,
+            Double longitude
+    ) {
+        this.user = user;
+        this.name = name;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    public static FavoritePlace of(User user, String name, String address, Double latitude, Double longitude) {
+        return FavoritePlace.internalBuilder()
+                .user(user)
+                .name(name)
+                .address(address)
+                .latitude(latitude)
+                .longitude(longitude)
+                .build();
     }
 }

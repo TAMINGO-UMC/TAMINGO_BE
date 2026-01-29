@@ -3,6 +3,7 @@ package app.tamingo.domain.user.entity;
 import app.tamingo.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,12 +30,27 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 20)
     private UserStatus status = UserStatus.ACTIVE;
 
+    @Builder(builderMethodName = "internalBuilder")
+    private User(
+            String email,
+            String nickname,
+            boolean onboardingCompleted,
+            UserStatus status
+    ) {
+        this.email = email;
+        this.nickname = nickname;
+        this.onboardingCompleted = onboardingCompleted;
+        this.status = (status != null) ? status : UserStatus.ACTIVE;
+    }
+
     // 생성 메서드
-    public static User create(String email, String nickname) {
-        User user = new User();
-        user.email = email;
-        user.nickname = nickname;
-        return user;
+    public static User of(String email, String nickname) {
+        return User.internalBuilder()
+                .email(email)
+                .nickname(nickname)
+                .onboardingCompleted(false)
+                .status(UserStatus.ACTIVE)
+                .build();
     }
 
     public void completeOnboarding() {

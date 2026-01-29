@@ -4,6 +4,7 @@ import app.tamingo.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -48,7 +49,8 @@ public class UserActiveTimeSetting extends BaseEntity {
     @Column(name = "weekend_enabled", nullable = false)
     private boolean weekendEnabled;
 
-    public static UserActiveTimeSetting create(
+    @Builder(builderMethodName = "internalBuilder")
+    private UserActiveTimeSetting(
             User user,
             LocalTime startTime,
             LocalTime endTime,
@@ -59,17 +61,39 @@ public class UserActiveTimeSetting extends BaseEntity {
             boolean friEnabled,
             boolean weekendEnabled
     ) {
-        UserActiveTimeSetting s = new UserActiveTimeSetting();
-        s.user = user;
-        s.startTime = startTime;
-        s.endTime = endTime;
-        s.monEnabled = monEnabled;
-        s.tueEnabled = tueEnabled;
-        s.wedEnabled = wedEnabled;
-        s.thuEnabled = thuEnabled;
-        s.friEnabled = friEnabled;
-        s.weekendEnabled = weekendEnabled;
-        return s;
+        this.user = user;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.monEnabled = monEnabled;
+        this.tueEnabled = tueEnabled;
+        this.wedEnabled = wedEnabled;
+        this.thuEnabled = thuEnabled;
+        this.friEnabled = friEnabled;
+        this.weekendEnabled = weekendEnabled;
+    }
+
+    public static UserActiveTimeSetting of(
+            User user,
+            LocalTime startTime,
+            LocalTime endTime,
+            boolean monEnabled,
+            boolean tueEnabled,
+            boolean wedEnabled,
+            boolean thuEnabled,
+            boolean friEnabled,
+            boolean weekendEnabled
+    ) {
+        return UserActiveTimeSetting.internalBuilder()
+                .user(user)
+                .startTime(startTime)
+                .endTime(endTime)
+                .monEnabled(monEnabled)
+                .tueEnabled(tueEnabled)
+                .wedEnabled(wedEnabled)
+                .thuEnabled(thuEnabled)
+                .friEnabled(friEnabled)
+                .weekendEnabled(weekendEnabled)
+                .build();
     }
 
     public void update(

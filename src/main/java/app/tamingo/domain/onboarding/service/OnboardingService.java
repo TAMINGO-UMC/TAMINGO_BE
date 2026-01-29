@@ -89,7 +89,7 @@ public class OnboardingService {
                         at.friEnabled(),
                         at.weekendEnabled()
                 ),
-                () -> activeTimeRepo.save(UserActiveTimeSetting.create(
+                () -> activeTimeRepo.save(UserActiveTimeSetting.of(
                         user,
                         v.start(), v.end(),
                         at.monEnabled(),
@@ -117,7 +117,7 @@ public class OnboardingService {
 
         favoritePlaceRepo.deleteAllByUserId(userId);
         for (OnboardingRequest.FavoritePlace p : list) {
-            favoritePlaceRepo.save(FavoritePlace.create(
+            favoritePlaceRepo.save(FavoritePlace.of(
                     user,
                     p.name(),
                     p.address(),
@@ -164,7 +164,7 @@ public class OnboardingService {
 
         transportPreferenceRepo.deleteAllByUserId(userId);
         for (OnboardingRequest.TransportPref tp : list) {
-            transportPreferenceRepo.save(TransportPreference.create(
+            transportPreferenceRepo.save(TransportPreference.of(
                     user,
                     tp.transport(),
                     tp.rank()
@@ -189,7 +189,7 @@ public class OnboardingService {
 
         notificationSettingRepo.findById(userId).ifPresentOrElse(
                 existing -> existing.update(enabled, minute),
-                () -> notificationSettingRepo.save(NotificationSetting.create(user, enabled, minute))
+                () -> notificationSettingRepo.save(NotificationSetting.of(user, enabled, minute))
         );
     }
 }
