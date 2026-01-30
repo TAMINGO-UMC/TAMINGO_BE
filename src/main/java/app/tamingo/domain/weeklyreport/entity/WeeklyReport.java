@@ -151,7 +151,7 @@ public class WeeklyReport extends BaseEntity {
     private ProductivityGrade productivityGrade;
 
     /**
-     * 활성 일수 D (1~7)
+     * 활성 일수 D (0~7) 0은 아무 활동 안한걸로 침
      * - 일주일 중 타밍고를 통해 일정/할 일을 1개라도 처리한 날짜 수
      * - 생산성 점수 감점/가중 계산에 사용
      */
@@ -263,4 +263,38 @@ public class WeeklyReport extends BaseEntity {
                 .avgLateMinutes(avgLateMinutes)
                 .build();
     }
+
+    //업데이트 메서드
+    public void updateMetrics(
+            LocalDate weekEndDate,
+            BigDecimal onTimeRate,
+            BigDecimal onTimeScore,
+            BigDecimal onTimeDiff,
+            BigDecimal taskCompletionRate,
+            BigDecimal taskScore,
+            BigDecimal taskCompletionDiff,
+            Integer taskDoneCount,
+            Integer taskTotalCount,
+            Integer productivityScore,
+            ProductivityGrade productivityGrade,
+            Integer activeDays,
+            Integer navigationBonus,
+            Integer avgLateMinutes
+    ) {
+        this.weekEndDate = weekEndDate;
+        this.onTimeRate = onTimeRate;
+        this.onTimeScore = onTimeScore;
+        this.onTimeDiff = onTimeDiff;
+        this.taskCompletionRate = taskCompletionRate;
+        this.taskScore = taskScore;
+        this.taskCompletionDiff = taskCompletionDiff;
+        this.taskDoneCount = taskDoneCount;
+        this.taskTotalCount = taskTotalCount;
+        this.productivityScore = productivityScore;
+        this.productivityGrade = productivityGrade;
+        this.activeDays = activeDays;
+        this.navigationBonus = navigationBonus;
+        this.avgLateMinutes = avgLateMinutes;
+    }
+
 }
