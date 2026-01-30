@@ -216,7 +216,7 @@ public class ScheduleService {
             todo.disconnectSchedule();
         }
 
-        // 5-2. 새로운 연결
+        // 새로 연결
         if (request.linkedTodoIds() != null && !request.linkedTodoIds().isEmpty()) {
             List<Todo> newTodos = todoRepository.findAllById(request.linkedTodoIds());
             for (Todo todo : newTodos) {
