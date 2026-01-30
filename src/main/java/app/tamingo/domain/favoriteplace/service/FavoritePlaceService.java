@@ -1,12 +1,11 @@
 package app.tamingo.domain.favoriteplace.service;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.ErrorCode;
 import app.tamingo.domain.favoriteplace.dto.FavoritePlaceRequest;
 import app.tamingo.domain.favoriteplace.dto.FavoritePlaceResponse;
 import app.tamingo.domain.favoriteplace.entity.FavoritePlaceStandard;
 import app.tamingo.domain.favoriteplace.exception.FavoritePlaceErrorCode;
-import app.tamingo.domain.favoriteplace.repository.FavoritePlaceStandardRepository;
+import app.tamingo.domain.favoriteplace.repository.FavoritePlaceRepository;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
@@ -22,7 +21,7 @@ import java.util.Set;
 @Service
 @Transactional(readOnly = true)
 public class FavoritePlaceService {
-    private final FavoritePlaceStandardRepository favoritePlaceRepository;
+    private final FavoritePlaceRepository favoritePlaceRepository;
     private final UserRepository userRepository;
 
     // 자주 가는 장소 등록

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface FavoritePlaceStandardRepository extends JpaRepository<FavoritePlaceStandard, Long> {
+public interface FavoritePlaceRepository extends JpaRepository<FavoritePlaceStandard, Long> {
 
     // 유저가 등록한 모든 자주 가는 장소 목록 조회
     List<FavoritePlaceStandard> findAllByUser(User user);
