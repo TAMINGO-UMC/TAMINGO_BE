@@ -41,13 +41,18 @@ public class FavoritePlaceStandard extends BaseEntity {
     // 장소의 경도
     private Double longitude;
 
+    // AI 추론 장소 여부 (기본값 false)
+    @Column(nullable = false)
+    private boolean isAiSuggested;
+
     @Builder
-    private FavoritePlaceStandard(User user, String name, String address, Double latitude, Double longitude) {
+    private FavoritePlaceStandard(User user, String name, String address, Double latitude, Double longitude,boolean isAiSuggested) {
         this.user = user;
         this.name = name;
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.isAiSuggested = isAiSuggested;
     }
 
     public static FavoritePlaceStandard of(User user, String name, String address, Double latitude, Double longitude) {
@@ -57,6 +62,7 @@ public class FavoritePlaceStandard extends BaseEntity {
                 .address(address)
                 .latitude(latitude)
                 .longitude(longitude)
+                .isAiSuggested(false)
                 .build();
     }
 
@@ -66,6 +72,20 @@ public class FavoritePlaceStandard extends BaseEntity {
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    // AI 여부를 포함하는 생성 메서드
+    public static FavoritePlaceStandard create(
+            User user, String name, String address,
+            Double latitude, Double longitude, boolean isAiSuggested) {
+        return FavoritePlaceStandard.builder()
+                .user(user)
+                .name(name)
+                .address(address)
+                .latitude(latitude)
+                .longitude(longitude)
+                .isAiSuggested(isAiSuggested)
+                .build();
     }
 
 }

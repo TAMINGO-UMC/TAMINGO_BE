@@ -114,7 +114,8 @@ public class OnboardingService {
                         p.name(),
                         p.address(),
                         p.latitude(),
-                        p.longitude()
+                        p.longitude(),
+                        false
                 ))
                 .toList();
     }

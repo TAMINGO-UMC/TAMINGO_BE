@@ -12,7 +12,8 @@ public class FavoritePlaceRequest {
             String address,
 
             Double latitude,
-            Double longitude
+            Double longitude,
+            boolean isAiSuggested
     ) {}
 
     public record UpdateDto(
