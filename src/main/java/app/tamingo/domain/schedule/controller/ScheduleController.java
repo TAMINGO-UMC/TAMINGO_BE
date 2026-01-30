@@ -59,7 +59,7 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
-    // 일정 목록 조회 api
+    // 일정 목록 조회 API
     @GetMapping
     public ApiResponse<List<ScheduleListResponse>> getDailySchedules(
             @AuthenticationPrincipal Long userId,
@@ -69,6 +69,7 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
+    // 특정 일정 조회 API
     @GetMapping("/{scheduleId}")
     public ApiResponse<ScheduleDetailResponse> getScheduleDetail(
             @AuthenticationPrincipal Long userId,
@@ -78,5 +79,15 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
+    // 일정 수정 API
+    @PutMapping("/{scheduleId}")
+    public ApiResponse<String> updateSchedule(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable("scheduleId") Long scheduleId,
+            @RequestBody @Valid UpdateScheduleRequest request
+    ) {
+        scheduleService.updateSchedule(userId, scheduleId, request);
+        return ApiResponse.onSuccess("일정이 성공적으로 수정되었습니다.", SuccessCode.OK);
+    }
 
 }

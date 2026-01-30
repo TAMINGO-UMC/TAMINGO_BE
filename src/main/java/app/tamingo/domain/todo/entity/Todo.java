@@ -85,5 +85,10 @@ public class Todo extends BaseEntity {
         this.targetDate = schedule.getStartTime().toLocalDate();
     }
 
+    // 연결 해제
+    public void disconnectSchedule() {
+        this.schedule = null;
+        // targetDate는 유지 (일정이 없어져도 할 일은 삭제x)
+    }
 
 }

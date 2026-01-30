@@ -142,4 +142,30 @@ public class Schedule extends BaseEntity {
     public void disableNavigation() {
         this.isNavigationEnabled = false;
     }
+
+    public void update(
+            ScheduleCategory scheduleCategory,
+            String title,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            String placeName,
+            String address,
+            Double latitude,
+            Double longitude,
+            RepeatType repeatType,
+            LocalDate repeatEndDate,
+            String memo
+    ) {
+        this.scheduleCategory = scheduleCategory;
+        this.title = title;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.placeName = placeName;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.repeatType = repeatType;
+        this.repeatEndDate = repeatEndDate;
+        this.memo = memo;
+    }
 }
