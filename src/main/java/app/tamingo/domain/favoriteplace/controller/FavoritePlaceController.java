@@ -1,5 +1,7 @@
 package app.tamingo.domain.favoriteplace.controller;
 
+import app.tamingo.common.response.ApiResponse;
+import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.favoriteplace.dto.FavoritePlaceRequest;
 import app.tamingo.domain.favoriteplace.dto.FavoritePlaceResponse;
 import app.tamingo.domain.favoriteplace.service.FavoritePlaceService;
@@ -19,34 +21,36 @@ public class FavoritePlaceController {
 
     // 자주 가는 장소 등록
     @PostMapping
-    public ResponseEntity<Long> save(
+    public ApiResponse<Long> save(
             @RequestBody @Valid FavoritePlaceRequest.SaveDto request) {
             // 테스트용 유저 - 추후 수정 예정
             Long userId = 1L;
-        return ResponseEntity.ok(favoritePlaceService.save(userId, request));
+            Long response = favoritePlaceService.save(userId, request);
+        return ApiResponse.onSuccess(response, SuccessCode.CREATED);
     }
 
     // 자주 가는 장소 목록 조회
     @GetMapping
-    public ResponseEntity<List<FavoritePlaceResponse>> findAll() {
+    public ApiResponse<List<FavoritePlaceResponse>> findAll() {
             // 테스트용 유저 - 추후 수정 예정
             Long userId = 1L;
-        return ResponseEntity.ok(favoritePlaceService.findAll(userId));
+        List<FavoritePlaceResponse> places = favoritePlaceService.findAll(userId);
+        return ApiResponse.onSuccess(places, SuccessCode.OK);
     }
 
     // 자주 가는 장소 수정
     @PatchMapping("/{placeId}")
-    public ResponseEntity<Void> update(
+    public ApiResponse<Void> update(
             @PathVariable Long placeId,
             @RequestBody @Valid FavoritePlaceRequest.UpdateDto request) {
         favoritePlaceService.update(placeId, request);
-        return ResponseEntity.ok().build();
+        return ApiResponse.onSuccess(null, SuccessCode.NO_CONTENT);
     }
 
     // 자주 가는 장소 삭제
     @DeleteMapping("/{placeId}")
-    public ResponseEntity<Void> delete(@PathVariable Long placeId) {
+    public ApiResponse<Void> delete(@PathVariable Long placeId) {
         favoritePlaceService.delete(placeId);
-        return ResponseEntity.ok().build();
+        return ApiResponse.onSuccess(null, SuccessCode.NO_CONTENT);
     }
 }
