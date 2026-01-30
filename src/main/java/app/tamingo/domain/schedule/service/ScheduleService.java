@@ -23,6 +23,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
@@ -174,5 +175,56 @@ public class ScheduleService {
                 .toList();
 
         return ScheduleDetailResponse.of(schedule, linkedTodos, candidateTodos);
+    }
+
+    @Transactional
+    public void updateSchedule(Long userId, Long scheduleId, UpdateScheduleRequest request) {
+
+        request.validateTime();
+
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_NOT_FOUND));
+
+        if (!schedule.getUser().getId().equals(userId)) {
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_NOT_OWNER);
+        }
+
+        ScheduleCategory category = null;
+        if (request.scheduleCategoryId() != null) {
+            category = scheduleCategoryRepository.findById(request.scheduleCategoryId())
+                    .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_CATEGORY_NOT_FOUND));
+        }
+
+        schedule.update(
+                category,
+                request.title(),
+                request.toStartDateTime(),
+                request.toEndDateTime(),
+                request.placeName(),
+                request.address(),
+                request.latitude(),
+                request.longitude(),
+                request.repeatType(),
+                request.repeatEndDate(),
+                request.memo()
+        );
+
+        // 할 일 연결 업데이트
+        // 기존 연결 해제
+        List<Todo> currentLinkedTodos = schedule.getTodoList();
+        for (Todo todo : currentLinkedTodos) {
+            todo.disconnectSchedule();
+        }
+
+        // 새로 연결
+        if (request.linkedTodoIds() != null && !request.linkedTodoIds().isEmpty()) {
+            List<Todo> newTodos = todoRepository.findAllById(request.linkedTodoIds());
+            for (Todo todo : newTodos) {
+                if (!todo.getUser().getId().equals(userId)) {
+                    throw new CustomException(ErrorCode.INVALID_REQUEST);
+                }
+                todo.connectSchedule(schedule);
+            }
+        }
     }
 }

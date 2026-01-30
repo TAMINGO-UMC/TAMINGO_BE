@@ -6,6 +6,7 @@ import app.tamingo.domain.schedule.entity.ScheduleCategory;
 import app.tamingo.domain.schedule.exception.ScheduleErrorCode;
 import app.tamingo.domain.todo.enums.RepeatType;
 import app.tamingo.domain.user.entity.User;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
@@ -15,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public record CreateScheduleRequest(
+        @NotBlank(message = "제목은 필수입니다.")
         String title,
 
         @NotNull(message = "날짜는 필수입니다.")
