@@ -3,6 +3,7 @@ package app.tamingo.domain.favoriteplace.service;
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.domain.favoriteplace.dto.FavoritePlaceRequest;
 import app.tamingo.domain.favoriteplace.dto.FavoritePlaceResponse;
+import app.tamingo.domain.favoriteplace.dto.FavoritePlaceSimpleResponse;
 import app.tamingo.domain.favoriteplace.entity.FavoritePlaceStandard;
 import app.tamingo.domain.favoriteplace.exception.FavoritePlaceErrorCode;
 import app.tamingo.domain.favoriteplace.repository.FavoritePlaceRepository;
@@ -131,4 +132,38 @@ public class FavoritePlaceService {
             );
         }
     }
+
+    // ai 추론 포함 저장
+    @Transactional
+    public Long aiSave(Long userId, FavoritePlaceRequest.SaveDto request) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+        if (favoritePlaceRepository.existsByDuplicate(user, request.name(), request.address())) {
+            throw new CustomException(FavoritePlaceErrorCode.FAVORITE_PLACE_ALREADY_EXISTS);
+        }
+
+        FavoritePlaceStandard favoritePlaceStandard = FavoritePlaceStandard.create(
+                user,
+                request.name(),
+                request.address(),
+                request.latitude(),
+                request.longitude(),
+                request.isAiSuggested()
+        );
+
+        return favoritePlaceRepository.save(favoritePlaceStandard).getId();
+    }
+
+    // 일정/할 일에서 선택용 목록 조회
+    public List<FavoritePlaceSimpleResponse> findAllSimple(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+        return favoritePlaceRepository.findAllByUser(user).stream()
+                .map(FavoritePlaceSimpleResponse::from)
+                .toList();
+    }
+
 }

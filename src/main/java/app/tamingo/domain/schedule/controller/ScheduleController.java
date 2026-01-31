@@ -6,6 +6,7 @@ import app.tamingo.domain.gpt.service.schedule.AiScheduleService;
 import app.tamingo.domain.schedule.dto.*;
 import app.tamingo.domain.schedule.service.PlaceContextService;
 import app.tamingo.domain.schedule.service.ScheduleService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,6 +26,7 @@ public class ScheduleController {
     private final AiScheduleService aiScheduleService;
 
     // 일정 생성 API
+    @Operation(summary = "일정 생성 API",description = "일정 생성")
     @PostMapping("/create")
     public ApiResponse<CreateScheduleResponse> createSchedule(
             @AuthenticationPrincipal Long userId,
@@ -34,7 +36,8 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
-    // 일정 추천 API
+    // 사용자 장소 수정 시 할 일 추천 API
+    @Operation(summary = "사용자 장소 수정 시 할 일 추천 API", description = "사용자가 직접 장소 수정 시 할 일 리스트 추천")
     @PostMapping("/recommend-todos")
     public ApiResponse<RecommendTodoResponse> getRecommendTodos(
             @AuthenticationPrincipal Long userId,
@@ -50,6 +53,7 @@ public class ScheduleController {
     }
 
     // ai 일정 추론 API (제목 -> 장소/할일 추론)
+    @Operation(summary = "제목 기반 AI 일정 추론 API",description = "장소&카테고리&자주 가는 장소 추가 여부")
     @PostMapping("/ai-inference")
     public ApiResponse<AiInferenceResponse> inferSchedule(
             @AuthenticationPrincipal Long userId,
@@ -59,7 +63,8 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
-    // 일정 목록 조회 API
+    // 특정 일자 일정 목록 조회 API
+    @Operation(summary = "특정 일자 일정 목록 API", description = "yyyy-mm-dd 형태로 조회")
     @GetMapping
     public ApiResponse<List<ScheduleListResponse>> getDailySchedules(
             @AuthenticationPrincipal Long userId,
@@ -69,7 +74,8 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
-    // 특정 일정 조회 API
+    // 특정 일정 상세 조회 API
+    @Operation(summary = "특정 일정 상세 조회 API",description = "특정 일정에 대한 정보 조회")
     @GetMapping("/{scheduleId}")
     public ApiResponse<ScheduleDetailResponse> getScheduleDetail(
             @AuthenticationPrincipal Long userId,
@@ -80,6 +86,7 @@ public class ScheduleController {
     }
 
     // 일정 수정 API
+    @Operation(summary = "일정 수정 API",description = "수정된 정보 저장")
     @PutMapping("/{scheduleId}")
     public ApiResponse<String> updateSchedule(
             @AuthenticationPrincipal Long userId,
