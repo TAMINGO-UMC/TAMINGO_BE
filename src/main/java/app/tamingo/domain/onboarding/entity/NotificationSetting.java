@@ -8,8 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "notification_setting")
+@Entity(name = "NotificationOnSetting")
+@Table(name = "notification_on_setting")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationSetting extends BaseEntity {

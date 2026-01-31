@@ -31,7 +31,7 @@ public class OnboardingService {
 
     private final UserActiveTimeSettingRepository activeTimeRepo;
     private final TransportPreferenceRepository transportPreferenceRepo;
-    private final NotificationSettingRepository notificationSettingRepo;
+    private final NotificationSettingOnRepository notificationSettingRepo;
 
     private final FavoritePlaceService favoritePlaceService;
 
