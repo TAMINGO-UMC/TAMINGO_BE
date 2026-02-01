@@ -23,11 +23,9 @@ public class LoginOutController {
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest req) {
-        LoginService.LoginResult r = loginService.login(req.email(), req.password());
-        return ApiResponse.onSuccess(
-                new LoginResponse(r.userId(), r.accessToken(), r.refreshToken()),
-                SuccessCode.OK
-        );
+        LoginResponse response = loginService.login(req.email(), req.password());
+
+        return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
     @PostMapping("/logout")
