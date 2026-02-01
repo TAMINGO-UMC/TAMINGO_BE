@@ -1,4 +1,7 @@
 package app.tamingo.domain.auth.dto.login;
 
-public class KakaoLoginRequest {
-}
+import jakarta.validation.constraints.NotBlank;
+
+public record KakaoLoginRequest(
+        @NotBlank String accessToken
+) {}

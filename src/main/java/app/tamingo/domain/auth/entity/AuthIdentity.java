@@ -63,4 +63,14 @@ public class AuthIdentity extends BaseEntity {
                 .providerUserId(null)
                 .build();
     }
+
+    public static AuthIdentity createKakao(User user, String providerUserId, String email) {
+        return AuthIdentity.internalBuilder()
+                .user(user)
+                .provider(AuthProvider.KAKAO)
+                .providerUserId(providerUserId)
+                .email(email) // null 허용
+                .passwordHash(null)
+                .build();
+    }
 }
