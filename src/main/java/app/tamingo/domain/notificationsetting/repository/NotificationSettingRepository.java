@@ -1,6 +1,6 @@
-package app.tamingo.domain.onboarding.repository;
+package app.tamingo.domain.notificationsetting.repository;
 
-import app.tamingo.domain.onboarding.entity.NotificationSetting;
+import app.tamingo.domain.notificationsetting.entity.NotificationSetting;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface NotificationSettingRepository extends JpaRepository<NotificationSetting, Long> {
