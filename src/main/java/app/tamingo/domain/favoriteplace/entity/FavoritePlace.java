@@ -112,20 +112,4 @@ public class FavoritePlace extends BaseEntity {
         this.longitude = longitude;
     }
 
-    // AI 여부를 포함하는 생성 메서드
-    public static FavoritePlace create(
-            User user, String name, String address,
-            Double latitude, Double longitude, boolean isAiSuggested) {
-        return FavoritePlace.builder()
-                .user(user)
-                .name(name)
-                .address(address)
-                .latitude(latitude)
-                .longitude(longitude)
-                .isAiSuggested(isAiSuggested)
-                .weeklyVisitCount(0)
-                .weekStartDate(currentWeekStart())
-                .build();
-    }
-
 }

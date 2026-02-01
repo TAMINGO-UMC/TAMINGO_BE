@@ -151,29 +151,6 @@ public class FavoritePlaceService {
         }
     }
 
-    // ai 추론 포함 저장
-    @Transactional
-    public Long aiSave(Long userId, FavoritePlaceRequest.SaveDto request) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
-
-        if (favoritePlaceRepository.existsByDuplicate(user, request.name(), request.address())) {
-            throw new CustomException(FavoritePlaceErrorCode.FAVORITE_PLACE_ALREADY_EXISTS);
-        }
-
-        FavoritePlace favoritePlace = FavoritePlace.create(
-                user,
-                request.name(),
-                request.address(),
-                request.latitude(),
-                request.longitude(),
-                request.isAiSuggested()
-        );
-
-        return favoritePlaceRepository.save(favoritePlace).getId();
-    }
-
     // 일정/할 일에서 선택용 목록 조회
     public List<FavoritePlaceSimpleResponse> findAllSimple(Long userId) {
         User user = userRepository.findById(userId)
