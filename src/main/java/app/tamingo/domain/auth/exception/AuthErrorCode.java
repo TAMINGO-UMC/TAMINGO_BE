@@ -28,11 +28,13 @@ public enum AuthErrorCode implements BaseCode {
     LOGIN_PASSWORD_INVALID(HttpStatus.BAD_REQUEST, "AUTH-022", "비밀번호가 올바르지 않습니다."),
     LOGIN_PASSWORD_NOT_SET(HttpStatus.BAD_REQUEST, "AUTH-023", "비밀번호가 설정되지 않은 계정입니다."),
 
-    TOKEN_MISSING(HttpStatus.BAD_REQUEST, "AUTH-031", "토큰이 필요합니다."),
-    TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "AUTH-032", "토큰이 유효하지 않습니다."),
-    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTH-033", "토큰이 만료되었습니다."),
-    REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "AUTH-034", "리프레시 토큰이 존재하지 않습니다."),
-    REFRESH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "AUTH-035", "리프레시 토큰이 일치하지 않습니다.");
+    TOKEN_MISSING(HttpStatus.BAD_REQUEST, "AUTH-030", "토큰이 필요합니다."),
+    TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "AUTH-031", "토큰이 유효하지 않습니다."),
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTH-032", "토큰이 만료되었습니다."),
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "AUTH-033", "리프레시 토큰이 존재하지 않습니다."),
+    REFRESH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "AUTH-034", "리프레시 토큰이 일치하지 않습니다."),
+
+    KAKAO_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "AUTH-040", "유효하지 않은 카카오 액세스 토큰입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
