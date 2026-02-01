@@ -1,4 +1,4 @@
-package app.tamingo.domain.onboarding.entity;
+package app.tamingo.domain.notificationsetting.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

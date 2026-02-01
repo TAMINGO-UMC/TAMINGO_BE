@@ -1,5 +1,6 @@
 package app.tamingo.domain.onboarding.dto;
 
+import app.tamingo.domain.notificationsetting.entity.AlertMinute;
 import app.tamingo.domain.onboarding.entity.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
