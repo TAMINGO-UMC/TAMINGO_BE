@@ -56,17 +56,6 @@ public class FavoritePlaceController {
         return ApiResponse.onSuccess(null, SuccessCode.NO_CONTENT);
     }
 
-    // 자주 가는 장소 등록(ai 여부 포함)
-    @Operation(summary = "자주 가는 장소 등록(ai 추론 여부 포함) API",description = "ai 추론 여부 포함")
-    @PostMapping("/ai")
-    public ApiResponse<Long> aiSave(
-            @AuthenticationPrincipal Long userId,
-            @RequestBody @Valid FavoritePlaceRequest.SaveDto request) {
-
-        Long response = favoritePlaceService.aiSave(userId, request);
-        return ApiResponse.onSuccess(response, SuccessCode.CREATED);
-    }
-
     // 일정,할일에서 자주 가는 장소 목록 조회
     @Operation(summary = "일정, 할 일 자주 가는 장소 조회 API",description = "일정, 할 일에서 사용")
     @GetMapping("/simple")

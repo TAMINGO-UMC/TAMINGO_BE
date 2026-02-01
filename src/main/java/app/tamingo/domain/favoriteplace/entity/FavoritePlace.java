@@ -5,18 +5,22 @@ import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
-        name="favorite_place_standard",
+        name="favorite_place",
         indexes = {
                 // 유저별 장소 조회시 인덱스
                 @Index(name = "idx_favorite_place_user_id", columnList = "user_id")
         }
 )
-public class FavoritePlaceStandard extends BaseEntity {
+public class FavoritePlace extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,26 +47,60 @@ public class FavoritePlaceStandard extends BaseEntity {
 
     // AI 추론 장소 여부 (기본값 false)
     @Column(nullable = false)
-    private boolean isAiSuggested;
+    private boolean isAiSuggested = false;
+
+    // 이번주 방문 횟수
+    @Column(nullable = false)
+    private int weeklyVisitCount = 0;
+
+    // 날짜
+    @Column(nullable = false)
+    private LocalDate weekStartDate;
 
     @Builder
-    private FavoritePlaceStandard(User user, String name, String address, Double latitude, Double longitude,boolean isAiSuggested) {
+    private FavoritePlace(
+            User user,
+            String name,
+            String address,
+            Double latitude,
+            Double longitude,
+            boolean isAiSuggested,
+            int weeklyVisitCount,
+            LocalDate weekStartDate) {
+
         this.user = user;
         this.name = name;
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
         this.isAiSuggested = isAiSuggested;
+        this.weekStartDate = weekStartDate;
+        this.weeklyVisitCount = weeklyVisitCount;
     }
 
-    public static FavoritePlaceStandard of(User user, String name, String address, Double latitude, Double longitude) {
-        return FavoritePlaceStandard.builder()
+    // 이번 주 월요일 계산 메서드
+    private static LocalDate currentWeekStart() {
+        return LocalDate.now()
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+    }
+
+    public static FavoritePlace of(
+            User user,
+            String name,
+            String address,
+            Double latitude,
+            Double longitude,
+            boolean isAiSuggested) {
+
+        return FavoritePlace.builder()
                 .user(user)
                 .name(name)
                 .address(address)
                 .latitude(latitude)
                 .longitude(longitude)
-                .isAiSuggested(false)
+                .isAiSuggested(isAiSuggested)
+                .weeklyVisitCount(0)
+                .weekStartDate(currentWeekStart())
                 .build();
     }
 
@@ -72,20 +110,6 @@ public class FavoritePlaceStandard extends BaseEntity {
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
-    }
-
-    // AI 여부를 포함하는 생성 메서드
-    public static FavoritePlaceStandard create(
-            User user, String name, String address,
-            Double latitude, Double longitude, boolean isAiSuggested) {
-        return FavoritePlaceStandard.builder()
-                .user(user)
-                .name(name)
-                .address(address)
-                .latitude(latitude)
-                .longitude(longitude)
-                .isAiSuggested(isAiSuggested)
-                .build();
     }
 
 }
