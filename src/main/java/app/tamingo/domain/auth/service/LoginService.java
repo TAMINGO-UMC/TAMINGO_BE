@@ -8,6 +8,8 @@ import app.tamingo.domain.auth.entity.AuthProvider;
 import app.tamingo.domain.auth.redis.RefreshToken;
 import app.tamingo.domain.auth.redis.RefreshTokenRepository;
 import app.tamingo.domain.auth.repository.AuthIdentityRepository;
+import app.tamingo.domain.user.entity.UserStatus;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,10 @@ public class LoginService {
         AuthIdentity ai = authIdentityRepository
                 .findByProviderAndEmail(AuthProvider.LOCAL, email)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.LOGIN_EMAIL_NOT_FOUND));
+
+        if (ai.getUser().getStatus() == UserStatus.DELETED) {
+            throw new CustomException(UserErrorCode.USER_DELETED);
+        }
 
         if (ai.getPasswordHash() == null || ai.getPasswordHash().isBlank()) {
             throw new CustomException(AuthErrorCode.LOGIN_PASSWORD_NOT_SET);

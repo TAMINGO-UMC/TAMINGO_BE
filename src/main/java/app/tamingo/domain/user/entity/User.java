@@ -56,4 +56,8 @@ public class User extends BaseEntity {
     public void completeOnboarding() {
         this.onboardingCompleted = true;
     }
+
+    public void withdraw() {
+        this.status = UserStatus.DELETED;
+    }
 }
