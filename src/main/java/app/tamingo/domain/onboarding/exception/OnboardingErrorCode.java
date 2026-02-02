@@ -11,8 +11,7 @@ public enum OnboardingErrorCode implements BaseCode {
 
     ONBOARDING_ACTIVE_TIME_FORMAT_INVALID(HttpStatus.BAD_REQUEST, "ONB-001", "활동 시간 형식이 올바르지 않습니다. (HH:mm)"),
     ONBOARDING_ACTIVE_TIME_RANGE_INVALID(HttpStatus.BAD_REQUEST, "ONB-002", "활동 종료 시간은 시작 시간 이후여야 합니다."),
-    ONBOARDING_TRANSPORT_PREFERENCES_INVALID(HttpStatus.BAD_REQUEST, "ONB-005", "이동 수단 선호 설정이 올바르지 않습니다."),
-    ONBOARDING_NOTIFICATION_MINUTE_REQUIRED(HttpStatus.BAD_REQUEST, "ONB-006", "알림이 활성화된 경우, 목표 도착 시간을 선택해야 합니다.");
+    ONBOARDING_TRANSPORT_PREFERENCES_INVALID(HttpStatus.BAD_REQUEST, "ONB-005", "이동 수단 선호 설정이 올바르지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

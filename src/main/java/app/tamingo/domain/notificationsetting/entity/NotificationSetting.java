@@ -87,4 +87,9 @@ public class NotificationSetting extends BaseEntity {
         this.routineAlertEnabled = routineAlertEnabled;
     }
 
+    // 온보딩 전용 메서드
+    public void updateDepartureAlert(boolean enabled, int leadMinutes) {
+        this.departureAlertEnabled = enabled;
+        this.departureLeadMinutes = leadMinutes;
+    }
 }
