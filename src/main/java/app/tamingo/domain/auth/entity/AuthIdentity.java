@@ -76,7 +76,7 @@ public class AuthIdentity extends BaseEntity {
                 .user(user)
                 .provider(AuthProvider.KAKAO)
                 .providerUserId(providerUserId)
-                .email(email) // null 허용
+                .email(email)
                 .passwordHash(null)
                 .build();
     }
