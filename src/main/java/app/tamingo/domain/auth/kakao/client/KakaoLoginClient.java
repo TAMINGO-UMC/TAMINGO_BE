@@ -1,6 +1,7 @@
-package app.tamingo.domain.auth.kakao;
+package app.tamingo.domain.auth.kakao.client;
 
 import app.tamingo.common.webclient.ApiClient;
+import app.tamingo.domain.auth.kakao.dto.KakaoUserResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;

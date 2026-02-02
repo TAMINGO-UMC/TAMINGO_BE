@@ -2,11 +2,11 @@ package app.tamingo.domain.auth.controller;
 
 import app.tamingo.common.response.ApiResponse;
 import app.tamingo.common.response.SuccessCode;
-import app.tamingo.domain.auth.dto.login.KakaoLoginRequest;
+import app.tamingo.domain.auth.kakao.dto.KakaoLoginRequest;
 import app.tamingo.domain.auth.dto.login.LoginRequest;
 import app.tamingo.domain.auth.dto.login.LoginResponse;
-import app.tamingo.domain.auth.service.KakaoLoginService;
-import app.tamingo.domain.auth.service.LoginService;
+import app.tamingo.domain.auth.service.auth.KakaoLoginService;
+import app.tamingo.domain.auth.service.auth.LoginService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;

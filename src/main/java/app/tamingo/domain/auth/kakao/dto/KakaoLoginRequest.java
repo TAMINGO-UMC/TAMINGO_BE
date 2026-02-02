@@ -1,4 +1,4 @@
-package app.tamingo.domain.auth.dto.login;
+package app.tamingo.domain.auth.kakao.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

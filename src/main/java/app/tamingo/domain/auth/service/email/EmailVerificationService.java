@@ -1,4 +1,4 @@
-package app.tamingo.domain.auth.service;
+package app.tamingo.domain.auth.service.email;
 
 import app.tamingo.domain.auth.entity.EmailVerification;
 import app.tamingo.domain.auth.redis.EmailVerificationRepository;
