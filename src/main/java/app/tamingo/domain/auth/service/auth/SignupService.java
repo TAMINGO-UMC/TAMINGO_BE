@@ -84,7 +84,7 @@ public class SignupService {
         }
 
         // 이미 가입된 이메일일 경우
-        if (authIdentityRepository.existsLocalByEmail(email)) {
+        if (userRepository.existsByEmail(email)) {
             throw new CustomException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
@@ -149,7 +149,7 @@ public class SignupService {
             throw new CustomException(AuthErrorCode.SIGNUP_PASSWORD_POLICY_INVALID);
         }
 
-        if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.LOCAL, email)) {
+        if (userRepository.existsByEmail(email)) {
             throw new CustomException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
