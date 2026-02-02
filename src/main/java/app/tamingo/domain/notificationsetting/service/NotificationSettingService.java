@@ -4,6 +4,7 @@ import app.tamingo.common.exception.CustomException;
 import app.tamingo.domain.notificationsetting.dto.NotificationSettingRequest;
 import app.tamingo.domain.notificationsetting.dto.NotificationSettingResponse;
 import app.tamingo.domain.notificationsetting.exception.NotificationSettingException;
+import app.tamingo.domain.notificationsetting.entity.AlertMinute;
 import app.tamingo.domain.notificationsetting.entity.NotificationSetting;
 import app.tamingo.domain.notificationsetting.repository.NotificationSettingRepository;
 import app.tamingo.domain.user.entity.User;
@@ -53,5 +54,19 @@ public class NotificationSettingService {
                 .orElseGet(() -> notificationSettingRepository.save(NotificationSetting.of(user)));
 
         return NotificationSettingResponse.from(setting);
+    }
+
+    // 온보딩 페이지 알림 설정
+    public void applyOnboarding(Long userId, boolean enabled, AlertMinute minute) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+        NotificationSetting setting = notificationSettingRepository.findById(userId)
+                .orElseGet(() -> notificationSettingRepository.save(NotificationSetting.of(user)));
+
+        int leadMinutes = minute.getMinutes();
+
+        setting.updateDepartureAlert(enabled, leadMinutes);
     }
 }
