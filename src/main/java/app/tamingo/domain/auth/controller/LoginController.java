@@ -5,6 +5,7 @@ import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.auth.dto.login.KakaoLoginRequest;
 import app.tamingo.domain.auth.dto.login.LoginRequest;
 import app.tamingo.domain.auth.dto.login.LoginResponse;
+import app.tamingo.domain.auth.service.KakaoLoginService;
 import app.tamingo.domain.auth.service.LoginService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
