@@ -24,15 +24,17 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
+        String refreshKey = "refresh:" + userId;
+
         // 이미 탈퇴한 경우 멱등 처리
         if (user.getStatus() == UserStatus.DELETED) {
-            refreshTokenRepository.deleteById(userId.toString());
+            refreshTokenRepository.deleteById(refreshKey);
             return;
         }
 
         // 재가입 허용
         authIdentityRepository.deleteAllByUserId(userId);
-        refreshTokenRepository.deleteById(userId.toString());
+        refreshTokenRepository.deleteById(refreshKey);
 
         user.withdraw();
     }

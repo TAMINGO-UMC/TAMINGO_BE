@@ -64,9 +64,14 @@ public class User extends BaseEntity {
 
     public void withdraw() {
         this.status = UserStatus.DELETED;
+    }
 
-        // 원래 이메일을 재가입에 쓸 수 있게 익명화
-        this.email = "deleted_" + this.id + "@tamingo.invalid";
-        this.nickname = "Deleted User";
+    public void reactivate() {
+        this.status = UserStatus.ACTIVE;
+        this.onboardingCompleted = false;
+    }
+
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
     }
 }

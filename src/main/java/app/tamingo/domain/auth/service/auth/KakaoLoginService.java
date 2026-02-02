@@ -55,11 +55,6 @@ public class KakaoLoginService {
                 .orElseGet(() -> linkOrCreateByEmail(email, nickname, providerUserId));
 
         User user = identity.getUser();
-
-        if (user.getStatus() == UserStatus.DELETED) {
-            throw new CustomException(UserErrorCode.USER_DELETED);
-        }
-
         Long userId = user.getId();
 
         // 토큰 발급
@@ -84,11 +79,16 @@ public class KakaoLoginService {
      */
     private AuthIdentity linkOrCreateByEmail(String email, String nickname, String providerUserId) {
 
+        // 같은 이메일로 이미 KAKAO가 연결돼 있으면 막기
+        if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.KAKAO, email)) {
+            throw new CustomException(AuthErrorCode.KAKAO_ALREADY_LINKED);
+        }
+
         return userRepository.findByEmail(email)
                 .map(user -> {
-                    // 같은 이메일로 이미 KAKAO가 연결돼 있으면 막기
-                    if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.KAKAO, email)) {
-                        throw new CustomException(AuthErrorCode.KAKAO_ALREADY_LINKED);
+                    if (user.getStatus() == UserStatus.DELETED) {
+                        user.reactivate();
+                        user.changeNickname(nickname);
                     }
                     return authIdentityRepository.save(
                             AuthIdentity.createKakao(user, providerUserId, email)

@@ -80,4 +80,8 @@ public class AuthIdentity extends BaseEntity {
                 .passwordHash(null)
                 .build();
     }
+
+    public void updatePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
 }
