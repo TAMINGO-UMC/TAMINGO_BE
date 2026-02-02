@@ -24,6 +24,7 @@ public class KakaoLoginService {
     private final JwtTokenProvider jwtTokenProvider;
 
     public LoginResponse login(String kakaoAccessToken) {
+
         KakaoUserResponse me = kakaoLoginClient.getMe(kakaoAccessToken);
 
         String providerUserId = String.valueOf(me.id());
