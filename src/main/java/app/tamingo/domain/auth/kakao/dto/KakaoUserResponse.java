@@ -1,10 +1,21 @@
 package app.tamingo.domain.auth.kakao.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record KakaoUserResponse(
-        String id,
-        KakaoAccount kakao_account
+        Long id,
+        @JsonProperty("kakao_account") KakaoAccount kakaoAccount
 ) {
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record KakaoAccount(
-            String email
+            String email,
+            Profile profile
+    ) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Profile(
+            String nickname
     ) {}
 }
