@@ -1,4 +1,4 @@
-package app.tamingo.domain.auth.service;
+package app.tamingo.domain.auth.service.email;
 
 public interface EmailSender {
     void send(String toEmail, String code);

@@ -1,4 +1,4 @@
-package app.tamingo.domain.auth.service;
+package app.tamingo.domain.auth.service.email;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
