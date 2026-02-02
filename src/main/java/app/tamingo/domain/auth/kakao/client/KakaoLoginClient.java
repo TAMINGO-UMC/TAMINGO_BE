@@ -15,7 +15,7 @@ public class KakaoLoginClient extends ApiClient {
         super(webClient);
     }
 
-    public KakaoUserResponse getUserInfo(String kakaoAccessToken) {
+    public KakaoUserResponse getMe(String kakaoAccessToken) {
         return get(
                 uri -> uri.path("/v2/user/me").build(),
                 KakaoUserResponse.class,
