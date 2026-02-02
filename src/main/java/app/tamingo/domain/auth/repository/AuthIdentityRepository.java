@@ -8,17 +8,8 @@ import java.util.Optional;
 public interface AuthIdentityRepository extends JpaRepository<AuthIdentity, Long> {
 
     Optional<AuthIdentity> findByProviderAndEmail(AuthProvider provider, String email);
-
     boolean existsByProviderAndEmail(AuthProvider provider, String email);
 
     Optional<AuthIdentity> findByProviderAndProviderUserId(AuthProvider provider, String providerUserId);
-
-    // LOCAL 전용 헬퍼
-    default Optional<AuthIdentity> findLocalByEmail(String email) {
-        return findByProviderAndEmail(AuthProvider.LOCAL, email);
-    }
-
-    default boolean existsLocalByEmail(String email) {
-        return existsByProviderAndEmail(AuthProvider.LOCAL, email);
-    }
+    boolean existsByProviderAndProviderUserId(AuthProvider provider, String providerUserId);
 }
