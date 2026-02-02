@@ -36,7 +36,8 @@ public enum AuthErrorCode implements BaseCode {
 
     // 카카오 로그인
     KAKAO_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "AUTH-040", "카카오 액세스 토큰이 유효하지 않습니다."),
-    KAKAO_API_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH-041", "카카오 사용자 정보를 가져오지 못했습니다.");
+    KAKAO_API_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH-041", "카카오 사용자 정보를 가져오지 못했습니다."),
+    KAKAO_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "AUTH-042", "카카오 이메일 제공에 동의해 주세요.");
 
     private final HttpStatus httpStatus;
     private final String code;
