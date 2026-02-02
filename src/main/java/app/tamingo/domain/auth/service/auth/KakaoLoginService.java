@@ -37,7 +37,6 @@ public class KakaoLoginService {
         String providerUserId = String.valueOf(me.id());
         KakaoUserResponse.KakaoAccount account = me.kakaoAccount();
 
-        // 이메일 필수 정책
         String email = (account != null) ? account.email() : null;
         if (email == null || email.isBlank()) {
             throw new CustomException(AuthErrorCode.KAKAO_EMAIL_REQUIRED);
@@ -56,6 +55,11 @@ public class KakaoLoginService {
                 .orElseGet(() -> linkOrCreateByEmail(email, nickname, providerUserId));
 
         User user = identity.getUser();
+
+        if (user.getStatus() == UserStatus.DELETED) {
+            throw new CustomException(UserErrorCode.USER_DELETED);
+        }
+
         Long userId = user.getId();
 
         // 토큰 발급
@@ -66,9 +70,9 @@ public class KakaoLoginService {
         refreshTokenRepository.save(RefreshToken.create(userId, refresh, refreshTtlSec));
 
         return new LoginResponse(
-                user.getId(),
-                jwtTokenProvider.createAccessToken(user.getId()),
-                jwtTokenProvider.createRefreshToken(user.getId()),
+                userId,
+                access,
+                refresh,
                 user.isOnboardingCompleted()
         );
     }
@@ -80,18 +84,21 @@ public class KakaoLoginService {
      */
     private AuthIdentity linkOrCreateByEmail(String email, String nickname, String providerUserId) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseGet(() -> userRepository.save(User.of(email, nickname)));
-
-        // 이미 이 User가 카카오 identity를 갖고 있으면 중복 방어
-        if (authIdentityRepository.existsByProviderAndProviderUserId(AuthProvider.KAKAO, providerUserId)) {
-            return authIdentityRepository
-                    .findByProviderAndProviderUserId(AuthProvider.KAKAO, providerUserId)
-                    .orElseThrow(); // 사실상 안 탐
-        }
-
-        return authIdentityRepository.save(
-                AuthIdentity.createKakao(user, providerUserId, email)
-        );
+        return userRepository.findByEmail(email)
+                .map(user -> {
+                    // 같은 이메일로 이미 KAKAO가 연결돼 있으면 막기
+                    if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.KAKAO, email)) {
+                        throw new CustomException(AuthErrorCode.KAKAO_ALREADY_LINKED);
+                    }
+                    return authIdentityRepository.save(
+                            AuthIdentity.createKakao(user, providerUserId, email)
+                    );
+                })
+                .orElseGet(() -> {
+                    User user = userRepository.save(User.of(email, nickname));
+                    return authIdentityRepository.save(
+                            AuthIdentity.createKakao(user, providerUserId, email)
+                    );
+                });
     }
 }
