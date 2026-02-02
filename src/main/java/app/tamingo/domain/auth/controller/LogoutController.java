@@ -2,31 +2,21 @@ package app.tamingo.domain.auth.controller;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ApiResponse;
-import app.tamingo.common.response.ErrorCode;
 import app.tamingo.common.response.SuccessCode;
-import app.tamingo.domain.auth.dto.login.LoginRequest;
-import app.tamingo.domain.auth.dto.login.LoginResponse;
 import app.tamingo.domain.auth.exception.AuthErrorCode;
-import app.tamingo.domain.auth.service.LoginService;
 import app.tamingo.domain.auth.service.LogoutService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
-public class LoginOutController {
+public class LogoutController {
 
-    private final LoginService loginService;
     private final LogoutService logoutService;
-
-    @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest req) {
-        LoginResponse response = loginService.login(req.email(), req.password());
-
-        return ApiResponse.onSuccess(response, SuccessCode.OK);
-    }
 
     @PostMapping("/logout")
     public ApiResponse<Void> logout(
