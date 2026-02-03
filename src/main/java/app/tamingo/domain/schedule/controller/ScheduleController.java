@@ -69,5 +69,4 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
-
 }

@@ -62,4 +62,10 @@ public class UserLearningSummary extends BaseEntity {
                 .fvpCount(fvpCount)
                 .build();
     }
+
+    public void update(long sampleCount, double avgAccuracyRate, int fvpCount) {
+        this.sampleCount = sampleCount;
+        this.avgAccuracyRate = avgAccuracyRate;
+        this.fvpCount = fvpCount;
+    }
 }

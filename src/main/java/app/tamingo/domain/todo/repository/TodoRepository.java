@@ -1,5 +1,6 @@
 package app.tamingo.domain.todo.repository;
 
+import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.todo.entity.Todo;
 import app.tamingo.domain.todo.entity.TodoCategory;
 import app.tamingo.domain.user.entity.User;
@@ -66,4 +67,17 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
             @Param("date")LocalDate date
     );
 
+    // 위치정보가 있는 todo를 스케줄로 탐색
+    @Query("""
+    select t 
+    from Todo t
+    where t.schedule = :schedule
+    and t.latitude is not null
+    and t.latitude > 0 
+    and t.longitude is not null
+    and t.longitude > 0
+    """)
+    List<Todo> findAllByScheduleAndLocation(Schedule schedule);
+
+    List<Todo> findAllBySchedule(Schedule schedule);
 }

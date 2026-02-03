@@ -33,6 +33,7 @@ public class DailyPlanResponse {
         private final boolean isNextSchedule;
         private final String placeName;
         private final int leftMinute;
+        private final int duration;
 
         public ScheduleItem(
                 Long scheduleId,
@@ -40,7 +41,8 @@ public class DailyPlanResponse {
                 LocalTime startTime,
                 boolean isNextSchedule,
                 String placeName,
-                int leftMinute
+                int leftMinute,
+                int duration
         ) {
             super(DailyPlanItemType.SCHEDULE);
             this.scheduleId = scheduleId;
@@ -49,6 +51,7 @@ public class DailyPlanResponse {
             this.isNextSchedule = isNextSchedule;
             this.placeName = placeName;
             this.leftMinute = leftMinute;
+            this.duration = duration;
         }
     }
 
