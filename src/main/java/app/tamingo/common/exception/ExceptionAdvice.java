@@ -1,11 +1,13 @@
 package app.tamingo.common.exception;
 
 import app.tamingo.common.response.ApiResponse;
+import app.tamingo.common.response.BaseCode;
 import app.tamingo.common.response.ErrorCode;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +21,19 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @RestControllerAdvice(annotations = {RestController.class})
 public class ExceptionAdvice extends ResponseEntityExceptionHandler {
+
+    private final List<DataIntegrityMapper> dataIntegrityMappers;
+
+    public ExceptionAdvice(Optional<List<DataIntegrityMapper>> mappers) {
+        this.dataIntegrityMappers = mappers.orElseGet(List::of);
+    }
 
     // @RequestParam, @PathVariable 등 Bean Validation 실패
     @ExceptionHandler(ConstraintViolationException.class)
@@ -65,6 +74,56 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                 request);
     }
 
+    // 도메인 CustomException
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<Object> handleCustomException(CustomException e, HttpServletRequest request) {
+        ApiResponse<Object> body = ApiResponse.onFailure(e.getErrorCode(),null);
+        WebRequest webRequest = new ServletWebRequest(request);
+        return handleExceptionInternal(e, body, new HttpHeaders(), e.getErrorCode().getHttpStatus(), webRequest);
+    }
+
+    // 데이터 무결성 제약조건 핸들러
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Object> handleDataIntegrityViolation(
+            DataIntegrityViolationException e,
+            WebRequest request
+    ) {
+        // 기본은 메시지
+        String key = Optional.ofNullable(e.getMostSpecificCause())
+                .map(Throwable::getMessage)
+                .orElse("");
+
+        // 원인 체인을 끝까지 훑어서 constraint name 우선 추출
+        Throwable t = e;
+        while (t != null) {
+            if (t instanceof org.hibernate.exception.ConstraintViolationException cve) {
+                String constraintName = cve.getConstraintName();
+                if (constraintName != null && !constraintName.isBlank()) {
+                    key = constraintName;
+                    break;
+                }
+            }
+            t = t.getCause();
+        }
+
+        for (DataIntegrityMapper mapper : dataIntegrityMappers) {
+            if (mapper.supports(key)) {
+                BaseCode code = mapper.errorCode();
+                ApiResponse<Object> body = ApiResponse.onFailure(code, null);
+                return handleExceptionInternal(e, body, new HttpHeaders(), code.getHttpStatus(), request);
+            }
+        }
+
+        // 매핑 못한 경우 (공통 fallback)
+        ApiResponse<Object> body = ApiResponse.onFailure(ErrorCode.DATA_INTEGRITY_VIOLATION, null);
+        return handleExceptionInternal(
+                e, body, new HttpHeaders(),
+                ErrorCode.DATA_INTEGRITY_VIOLATION.getHttpStatus(),
+                request
+        );
+    }
+
+
     // 모든 미처리 예외
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleUnknownException(Exception e, WebRequest request) {
@@ -74,13 +133,6 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                 ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus(), request);
     }
 
-    // 도메인 CustomException
-    @ExceptionHandler(CustomException.class)
-    public ResponseEntity<Object> handleCustomException(CustomException e, HttpServletRequest request) {
-        ApiResponse<Object> body = ApiResponse.onFailure(e.getErrorCode(),null);
-        WebRequest webRequest = new ServletWebRequest(request);
-        return handleExceptionInternal(e, body, new HttpHeaders(), e.getErrorCode().getHttpStatus(), webRequest);
-    }
 
     @ExceptionHandler({InvalidFormatException.class})
     public ResponseEntity<ApiResponse<Object>> handleInvalidDateFormat(InvalidFormatException ex) {
