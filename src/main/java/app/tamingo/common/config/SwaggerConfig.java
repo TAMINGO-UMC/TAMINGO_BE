@@ -32,6 +32,7 @@ public class SwaggerConfig implements WebMvcConfigurer {
                 .components(new Components().addSecuritySchemes("BearerAuth", securityScheme))
                 .addSecurityItem(securityRequirement)
                 .addServersItem(new Server().url("/").description("로컬 서버"))
+                .addServersItem(new Server().url("https://tamingo.cloud").description("배포 서버"))
                 .info(new Info()
                         .title("TAMINGO API 명세서")
                         .description("TAMINGO API 명세서입니다.")
