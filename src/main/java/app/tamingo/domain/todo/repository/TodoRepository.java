@@ -66,6 +66,12 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
             @Param("date")LocalDate date
     );
 
+    /**
+     * 주간 리포트(할일) 집계 대상 조회
+     * - 기준: targetDate가 주간 범위(start~end) 안에 있는 Todo만 포함
+     */
+    List<Todo> findAllByUserIdAndTargetDateBetween(Long userId, LocalDate start, LocalDate end);
+
     // 검색어 포함 최신순 20개
     List<Todo> findTop20ByUserAndTitleContainingOrderByIdDesc(User user, String title);
 
