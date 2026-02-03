@@ -1,10 +1,8 @@
 package app.tamingo.domain.gpt.service.schedule;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.ErrorCode;
 import app.tamingo.common.response.gpt.GptErrorCode;
 import app.tamingo.domain.gpt.dto.GptRequest;
-import app.tamingo.domain.gpt.dto.GptResponse;
 import app.tamingo.domain.gpt.prompt.common.DataPrompt;
 import app.tamingo.domain.gpt.prompt.common.GeneralSystemPrompt;
 import app.tamingo.domain.gpt.prompt.common.PromptTemplate;
@@ -23,7 +21,6 @@ import app.tamingo.domain.schedule.service.PlaceContextService;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

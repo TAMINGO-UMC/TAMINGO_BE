@@ -103,9 +103,13 @@ public class Schedule extends BaseEntity {
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.repeatType = (repeatType != null) ? repeatType : RepeatType.NONE;
-        this.repeatEndDate = repeatEndDate;
         this.memo = memo;
+
+        // RepeatType 설정 및 EndDate 정제
+        this.repeatType = (repeatType != null) ? repeatType : RepeatType.NONE;
+
+        // NONE이면 날짜가 들어와도 무시하고 null 저장
+        this.repeatEndDate = (this.repeatType == RepeatType.NONE) ? null : repeatEndDate;
     }
 
     public static Schedule of(
@@ -164,8 +168,9 @@ public class Schedule extends BaseEntity {
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.repeatType = repeatType;
-        this.repeatEndDate = repeatEndDate;
         this.memo = memo;
+
+        this.repeatType = (repeatType != null) ? repeatType : RepeatType.NONE;
+        this.repeatEndDate = (this.repeatType == RepeatType.NONE) ? null : repeatEndDate;
     }
 }
