@@ -1,6 +1,6 @@
 package app.tamingo.domain.favoriteplace.dto;
 
-import app.tamingo.domain.favoriteplace.entity.FavoritePlaceStandard;
+import app.tamingo.domain.favoriteplace.entity.FavoritePlace;
 
 public record FavoritePlaceResponse (
     Long id,
@@ -9,7 +9,7 @@ public record FavoritePlaceResponse (
     Double latitude,
     Double longitude
 ) {
-    public static FavoritePlaceResponse from(FavoritePlaceStandard entity) {
+    public static FavoritePlaceResponse from(FavoritePlace entity) {
         return new FavoritePlaceResponse(
                 entity.getId(),
                 entity.getName(),
