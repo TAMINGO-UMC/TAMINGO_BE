@@ -72,4 +72,10 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
      */
     List<Todo> findAllByUserIdAndTargetDateBetween(Long userId, LocalDate start, LocalDate end);
 
+    // 검색어 포함 최신순 20개
+    List<Todo> findTop20ByUserAndTitleContainingOrderByIdDesc(User user, String title);
+
+    // 전체 최신순 20개
+    List<Todo> findTop20ByUserOrderByIdDesc(User user);
+
 }

@@ -10,6 +10,7 @@ import app.tamingo.domain.schedule.exception.ScheduleErrorCode;
 import app.tamingo.domain.schedule.repository.ScheduleAiLogRepository;
 import app.tamingo.domain.schedule.repository.ScheduleCategoryRepository;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
+import app.tamingo.domain.todo.dto.TodoSummaryResponse;
 import app.tamingo.domain.todo.entity.Todo;
 import app.tamingo.domain.todo.repository.TodoRepository;
 import app.tamingo.domain.user.entity.User;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
@@ -148,8 +148,8 @@ public class ScheduleService {
         // Linked Todos
         List<Todo> linkedTodoList = schedule.getTodoList();
 
-        List<ScheduleTodoResponse> linkedTodos = linkedTodoList.stream()
-                .map(ScheduleTodoResponse::from)
+        List<TodoSummaryResponse> linkedTodos = linkedTodoList.stream()
+                .map(TodoSummaryResponse::from)
                 .toList();
 
         Set<Long> linkedTodoIds = linkedTodoList.stream()
@@ -162,13 +162,13 @@ public class ScheduleService {
         LocalDate startOfWeek = scheduleDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate endOfWeek = scheduleDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 
-        List<ScheduleTodoResponse> candidateTodos = todoRepository.findCandidateTodos(
+        List<TodoSummaryResponse> candidateTodos = todoRepository.findCandidateTodos(
                         userId,
                         startOfWeek,
                         endOfWeek
                 ).stream()
                 .filter(todo -> !linkedTodoIds.contains(todo.getId())) // 여기서 중복 제거
-                .map(ScheduleTodoResponse::from)
+                .map(TodoSummaryResponse::from)
                 .toList();
 
         return ScheduleDetailResponse.of(schedule, linkedTodos, candidateTodos);

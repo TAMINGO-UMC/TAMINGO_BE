@@ -12,8 +12,6 @@ import java.time.LocalDate;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         name="todo",
@@ -65,30 +63,127 @@ public class Todo extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "repeat_type", nullable = false)
-    @Builder.Default
     private RepeatType repeatType= RepeatType.NONE;
 
     @Column(name = "repeat_end_date")
     private LocalDate repeatEndDate;
 
     @Column(name = "is_checked", nullable = false)
-    @Builder.Default
     private boolean isChecked = false;
 
     @Column(name = "is_location_confirmed", nullable = false)
-    @Builder.Default
     private boolean isLocationConfirmed = false;
+
+    @Builder(builderMethodName = "internalBuilder")
+    private Todo(
+            User user,
+            Schedule schedule,
+            TodoCategory todoCategory,
+            String title,
+            LocalDate targetDate,
+            String placeName,
+            String address,
+            Double latitude,
+            Double longitude,
+            Integer duration,
+            RepeatType repeatType,
+            LocalDate repeatEndDate,
+            boolean isChecked,
+            boolean isLocationConfirmed
+    ) {
+        this.user = user;
+        this.schedule = schedule;
+        this.todoCategory = todoCategory;
+        this.title = title;
+        this.targetDate = targetDate;
+        this.placeName = placeName;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.duration = duration;
+        this.isChecked = isChecked;
+        this.isLocationConfirmed = isLocationConfirmed;
+
+        // RepeatType이 NONE이면 repeatEndDate는 무조건 null
+        this.repeatType = (repeatType != null) ? repeatType : RepeatType.NONE;
+        this.repeatEndDate = (this.repeatType == RepeatType.NONE) ? null : repeatEndDate;
+    }
+
+    public static Todo of(
+            User user,
+            TodoCategory todoCategory,
+            String title,
+            LocalDate targetDate,
+            String placeName,
+            String address,
+            Double latitude,
+            Double longitude,
+            Integer duration,
+            RepeatType repeatType,
+            LocalDate repeatEndDate
+    ) {
+        return Todo.internalBuilder()
+                .user(user)
+                .todoCategory(todoCategory)
+                .title(title)
+                .targetDate(targetDate)
+                .placeName(placeName)
+                .address(address)
+                .latitude(latitude)
+                .longitude(longitude)
+                .duration(duration)
+                .repeatType(repeatType)
+                .repeatEndDate(repeatEndDate)
+                .schedule(null)            // 생성 시점엔 스케줄 연결 안 됨
+                .isChecked(false)          // 생성 시 기본값 false
+                .isLocationConfirmed(false)// 생성 시 기본값 false
+                .build();
+    }
 
     // 일정 연결 후 날짜를 일정 시작일로 동기화
     public void connectSchedule(Schedule schedule){
         this.schedule = schedule;
-        this.targetDate = schedule.getStartTime().toLocalDate();
+        // 일정이 연결되면 할 일의 날짜는 일정의 시작 날짜를 따라감
+        if (schedule != null) {
+            this.targetDate = schedule.getStartTime().toLocalDate();
+        }
     }
 
     // 연결 해제
     public void disconnectSchedule() {
         this.schedule = null;
-        // targetDate는 유지 (일정이 없어져도 할 일은 삭제x)
     }
 
+    public void update(
+            String title,
+            LocalDate targetDate,
+            TodoCategory todoCategory,
+            String placeName,
+            String address,
+            Double latitude,
+            Double longitude,
+            Integer duration,
+            RepeatType repeatType,
+            LocalDate repeatEndDate
+    ) {
+        this.title = title;
+        this.targetDate = targetDate;
+        this.todoCategory = todoCategory;
+        this.placeName = placeName;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.duration = duration;
+
+        // 반복 정보 갱신 (NONE이면 날짜 null 강제)
+        this.repeatType = (repeatType != null) ? repeatType : RepeatType.NONE;
+        this.repeatEndDate = (this.repeatType == RepeatType.NONE) ? null : repeatEndDate;
+
+        // 직접 수정/저장했으므로 true 저장
+        this.isLocationConfirmed = true;
+    }
+
+    public void updateCheckStatus(boolean isChecked) {
+        this.isChecked = isChecked;
+    }
 }

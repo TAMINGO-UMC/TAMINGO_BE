@@ -1,8 +1,10 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: tamingo
   datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -14,8 +16,8 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
   mail:
     host: ${SMTP_HOST}

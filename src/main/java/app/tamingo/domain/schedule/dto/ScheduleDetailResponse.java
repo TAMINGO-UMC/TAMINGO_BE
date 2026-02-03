@@ -1,10 +1,10 @@
 package app.tamingo.domain.schedule.dto;
 
 import app.tamingo.domain.schedule.entity.Schedule;
+import app.tamingo.domain.todo.dto.TodoSummaryResponse;
 import lombok.Builder;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -23,13 +23,13 @@ public record ScheduleDetailResponse(
         String repeatType,
         String repeatEndDate,
         String memo,
-        List<ScheduleTodoResponse> linkedTodos,
-        List<ScheduleTodoResponse> candidateTodos
+        List<TodoSummaryResponse> linkedTodos,
+        List<TodoSummaryResponse> candidateTodos
 ) {
     public static ScheduleDetailResponse of(
             Schedule schedule,
-            List<ScheduleTodoResponse> linkedTodos,
-            List<ScheduleTodoResponse> candidateTodos
+            List<TodoSummaryResponse> linkedTodos,
+            List<TodoSummaryResponse> candidateTodos
     ) {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
