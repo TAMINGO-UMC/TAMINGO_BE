@@ -13,6 +13,9 @@ import app.tamingo.domain.home.redis.RealtimeScheduleArrivalCheckRepository;
 import app.tamingo.domain.home.entity.enums.ArrivedStatus;
 import app.tamingo.domain.home.service.geoutil.GeoService;
 import app.tamingo.domain.home.service.startplace.ScheduleStartSnapshotService;
+import app.tamingo.domain.notificationsetting.entity.AlertMinute;
+import app.tamingo.domain.notificationsetting.entity.NotificationSetting;
+import app.tamingo.domain.notificationsetting.repository.NotificationSettingRepository;
 import app.tamingo.domain.tmap.dto.TmapTransitResponse;
 import app.tamingo.domain.tmap.service.DirectionService;
 import app.tamingo.domain.todo.entity.Todo;
@@ -26,9 +29,6 @@ import app.tamingo.domain.userlearning.repository.UserLearningPatternRepository;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.exception.ScheduleErrorCode;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
-import app.tamingo.domain.onboarding.entity.AlertMinute;
-import app.tamingo.domain.onboarding.entity.NotificationSetting;
-import app.tamingo.domain.onboarding.repository.NotificationSettingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -422,10 +422,10 @@ public class RealTimeScheduleService {
         NotificationSetting setting = notificationSettingRepository
                 .findById(schedule.getUser().getId())
                 .orElse(null);
-        if (setting == null || !setting.isDepartAlertEnabled() || setting.getDepartAlertMinute() == null) {
+        if (setting == null || !setting.isDepartureAlertEnabled()) {
             return AlertMinute.MIN_10.getMinutes();
         }
-        return setting.getDepartAlertMinute().getMinutes();
+        return setting.getDepartureLeadMinutes();
     }
 
     // TTL 계산
