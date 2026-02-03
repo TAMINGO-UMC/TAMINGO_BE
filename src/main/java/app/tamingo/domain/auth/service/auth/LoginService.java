@@ -1,6 +1,7 @@
-package app.tamingo.domain.auth.service;
+package app.tamingo.domain.auth.service.auth;
 
 import app.tamingo.common.exception.CustomException;
+import app.tamingo.domain.auth.dto.login.LoginResponse;
 import app.tamingo.domain.auth.exception.AuthErrorCode;
 import app.tamingo.common.security.JwtTokenProvider;
 import app.tamingo.domain.auth.entity.AuthIdentity;
@@ -8,6 +9,8 @@ import app.tamingo.domain.auth.entity.AuthProvider;
 import app.tamingo.domain.auth.redis.RefreshToken;
 import app.tamingo.domain.auth.redis.RefreshTokenRepository;
 import app.tamingo.domain.auth.repository.AuthIdentityRepository;
+import app.tamingo.domain.user.entity.UserStatus;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,7 +31,7 @@ public class LoginService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public LoginResult login(String email, String password) {
+    public LoginResponse login(String email, String password) {
         if (email == null || email.isBlank() || !EMAIL_PATTERN.matcher(email).matches()) {
             throw new CustomException(AuthErrorCode.LOGIN_EMAIL_FORMAT_INVALID);
         }
@@ -36,6 +39,10 @@ public class LoginService {
         AuthIdentity ai = authIdentityRepository
                 .findByProviderAndEmail(AuthProvider.LOCAL, email)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.LOGIN_EMAIL_NOT_FOUND));
+
+        if (ai.getUser().getStatus() == UserStatus.DELETED) {
+            throw new CustomException(UserErrorCode.USER_DELETED);
+        }
 
         if (ai.getPasswordHash() == null || ai.getPasswordHash().isBlank()) {
             throw new CustomException(AuthErrorCode.LOGIN_PASSWORD_NOT_SET);
@@ -47,14 +54,21 @@ public class LoginService {
 
         Long userId = ai.getUser().getId();
 
+        // 토큰 발급
         String access = jwtTokenProvider.createAccessToken(userId);
         String refresh = jwtTokenProvider.createRefreshToken(userId);
 
         long refreshTtlSec = jwtTokenProvider.getRefreshExpMs() / 1000;
         refreshTokenRepository.save(RefreshToken.create(userId, refresh, refreshTtlSec));
 
-        return new LoginResult(userId, access, refresh);
-    }
+        // 온보딩 완료 여부
+        boolean completed = ai.getUser().isOnboardingCompleted();
 
-    public record LoginResult(Long userId, String accessToken, String refreshToken) {}
+        return new LoginResponse(
+                userId,
+                access,
+                refresh,
+                completed
+        );
+    }
 }

@@ -4,7 +4,7 @@ import app.tamingo.common.response.ApiResponse;
 import app.tamingo.common.response.SuccessCode;
 
 import app.tamingo.domain.auth.dto.signup.*;
-import app.tamingo.domain.auth.service.SignupService;
+import app.tamingo.domain.auth.service.auth.SignupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

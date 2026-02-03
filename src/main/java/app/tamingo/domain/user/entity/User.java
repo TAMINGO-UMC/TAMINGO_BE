@@ -8,7 +8,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_users_email", columnNames = "email")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseEntity {
@@ -17,7 +22,7 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false, length = 50)
@@ -55,5 +60,18 @@ public class User extends BaseEntity {
 
     public void completeOnboarding() {
         this.onboardingCompleted = true;
+    }
+
+    public void withdraw() {
+        this.status = UserStatus.DELETED;
+    }
+
+    public void reactivate() {
+        this.status = UserStatus.ACTIVE;
+        this.onboardingCompleted = false;
+    }
+
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
     }
 }

@@ -19,10 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
@@ -226,5 +223,38 @@ public class ScheduleService {
                 todo.connectSchedule(schedule);
             }
         }
+    }
+
+    // 월간 일정 조회
+    public MonthlyScheduleResponse getMonthlySchedules(Long userId, String yearMonth) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+        LocalDateTime startOfMonth;
+        LocalDateTime endOfMonth;
+
+        try {
+            YearMonth ym = YearMonth.parse(yearMonth);
+            startOfMonth = ym.atDay(1).atStartOfDay();
+            endOfMonth = ym.atEndOfMonth().atTime(LocalTime.MAX);
+        } catch (DateTimeParseException e) {
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_INVALID_DATE);
+        }
+
+        // 해당 월 일정 조회 -> List<ScheduleListResponse> 변환
+        List<ScheduleListResponse> schedules = scheduleRepository
+                .findAllByUserAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(user, startOfMonth, endOfMonth)
+                .stream()
+                .map(ScheduleListResponse::from)
+                .toList();
+
+        // 카테고리 목록 조회
+        List<MonthlyScheduleResponse.CategoryDto> categories = scheduleCategoryRepository.findAllByUser(user)
+                .stream()
+                .map(MonthlyScheduleResponse.CategoryDto::from)
+                .toList();
+
+        // 통합 반환
+        return MonthlyScheduleResponse.of(schedules, categories);
     }
 }

@@ -1,6 +1,7 @@
 package app.tamingo.domain.onboarding.entity;
 
 import app.tamingo.BaseEntity;
+import app.tamingo.domain.notificationsetting.entity.AlertMinute;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -8,8 +9,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "notification_setting")
+@Entity(name = "NotificationOnSetting")
+@Table(name = "notification_on_setting")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationSetting extends BaseEntity {

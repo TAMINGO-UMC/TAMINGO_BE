@@ -1,8 +1,9 @@
-package app.tamingo.domain.auth.service;
+package app.tamingo.domain.auth.service.auth;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
 import app.tamingo.domain.auth.exception.AuthErrorCode;
+import app.tamingo.domain.auth.service.email.EmailVerificationService;
 import app.tamingo.domain.terms.exception.TermsErrorCode;
 import app.tamingo.common.security.JwtTokenProvider;
 import app.tamingo.domain.auth.entity.AuthIdentity;
@@ -16,6 +17,7 @@ import app.tamingo.domain.terms.entity.Terms;
 import app.tamingo.domain.terms.entity.TermsCode;
 import app.tamingo.domain.terms.repository.TermsRepository;
 import app.tamingo.domain.terms.repository.UserTermsAgreementRepository;
+import app.tamingo.domain.user.entity.UserStatus;
 import app.tamingo.domain.user.entity.UserTermsAgreement;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.repository.UserRepository;
@@ -24,10 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
@@ -83,9 +82,11 @@ public class SignupService {
         }
 
         // 이미 가입된 이메일일 경우
-        if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.LOCAL, email)) {
-            throw new CustomException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
-        }
+        userRepository.findByEmail(email).ifPresent(user -> {
+            if (user.getStatus() != UserStatus.DELETED) {
+                throw new CustomException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
+            }
+        });
 
         // 인증번호 발송
         emailVerificationService.sendCode(email);
@@ -148,17 +149,27 @@ public class SignupService {
             throw new CustomException(AuthErrorCode.SIGNUP_PASSWORD_POLICY_INVALID);
         }
 
-        if (authIdentityRepository.existsByProviderAndEmail(AuthProvider.LOCAL, email)) {
-            throw new CustomException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
-        }
-
         // 유저 생성
-        User user = User.of(email, nickname);
-        userRepository.save(user);
+        User user = userRepository.findByEmail(email)
+                .map(u -> {
+                    if (u.getStatus() != UserStatus.DELETED) {
+                        throw new CustomException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
+                    }
+                    u.reactivate();
+                    // 재가입이면 새 닉네임으로 업데이트
+                    u.changeNickname(nickname);
+                    return u;
+                })
+                .orElseGet(() -> userRepository.save(User.of(email, nickname)));
 
-        // LOCAL 인증 정보 저장
+        // LOCAL 인증 정보 저장/업데이트
         String hash = passwordEncoder.encode(password);
-        authIdentityRepository.save(AuthIdentity.createLocal(user, email, hash));
+
+        authIdentityRepository.findByProviderAndEmail(AuthProvider.LOCAL, email)
+                .ifPresentOrElse(
+                        ai -> ai.updatePasswordHash(hash),
+                        () -> authIdentityRepository.save(AuthIdentity.createLocal(user, email, hash))
+                );
 
         // 약관 동의 여부 저장
         List<Terms> currentTerms = termsRepository.findAll();

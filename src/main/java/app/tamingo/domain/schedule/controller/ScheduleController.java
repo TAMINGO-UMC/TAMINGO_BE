@@ -97,4 +97,14 @@ public class ScheduleController {
         return ApiResponse.onSuccess("일정이 성공적으로 수정되었습니다.", SuccessCode.OK);
     }
 
+    // 월간 일정 및 카테고리 조회 API
+    @Operation(summary = "월간 일정 및 카테고리 조회 API", description = "yyyy-MM 형식으로 요청 시 해당 월의 일정 리스트와 카테고리 정보를 반환합니다.")
+    @GetMapping("/calendar")
+    public ApiResponse<MonthlyScheduleResponse> getMonthlySchedules(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam("yearMonth") String yearMonth
+    ) {
+        MonthlyScheduleResponse response = scheduleService.getMonthlySchedules(userId, yearMonth);
+        return ApiResponse.onSuccess(response, SuccessCode.OK);
+    }
 }
