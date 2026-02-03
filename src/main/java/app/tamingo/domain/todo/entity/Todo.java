@@ -1,0 +1,94 @@
+package app.tamingo.domain.todo.entity;
+
+import app.tamingo.BaseEntity;
+import app.tamingo.domain.schedule.entity.Schedule;
+import app.tamingo.domain.schedule.entity.ScheduleCategory;
+import app.tamingo.domain.todo.enums.RepeatType;
+import app.tamingo.domain.user.entity.User;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Entity
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(
+        name="todo",
+        indexes = {
+                @Index(name = "idx_todo_user", columnList = "user_id"),
+                @Index(name = "idx_todo_schedule", columnList = "schedule_id"),
+                @Index(name = "idx_todo_place", columnList = "place_name")
+        }
+)
+public class Todo extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "schedule_id")
+    private Schedule schedule;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "todo_category_id")
+    private TodoCategory todoCategory;
+
+    @Column(name = "title", nullable = false,length = 20)
+    private String title;
+
+    @Column(name = "target_date")
+    private LocalDate targetDate;
+
+    @Column(name = "place_name")
+    private String placeName;
+
+    @Column(name = "address")
+    private String address;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "duration")
+    private Integer duration;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "repeat_type", nullable = false)
+    @Builder.Default
+    private RepeatType repeatType= RepeatType.NONE;
+
+    @Column(name = "repeat_end_date")
+    private LocalDate repeatEndDate;
+
+    @Column(name = "is_checked", nullable = false)
+    @Builder.Default
+    private boolean isChecked = false;
+
+    @Column(name = "is_location_confirmed", nullable = false)
+    @Builder.Default
+    private boolean isLocationConfirmed = false;
+
+    // 일정 연결 후 날짜를 일정 시작일로 동기화
+    public void connectSchedule(Schedule schedule){
+        this.schedule = schedule;
+        this.targetDate = schedule.getStartTime().toLocalDate();
+    }
+
+    // 연결 해제
+    public void disconnectSchedule() {
+        this.schedule = null;
+        // targetDate는 유지 (일정이 없어져도 할 일은 삭제x)
+    }
+
+}
