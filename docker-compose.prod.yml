@@ -2,6 +2,8 @@ version: "3.9"
 
 services:
   app:
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
     image: heezuko/tamingo-backend:latest
     container_name: tamingo-app
     restart: unless-stopped
