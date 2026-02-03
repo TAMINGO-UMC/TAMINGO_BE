@@ -2,9 +2,7 @@ package app.tamingo.domain.schedule.service;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
-import app.tamingo.domain.schedule.dto.CreateScheduleResponse;
-import app.tamingo.domain.schedule.dto.CreateScheduleRequest;
-import app.tamingo.domain.schedule.dto.ScheduleListResponse;
+import app.tamingo.domain.schedule.dto.*;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleAiLog;
 import app.tamingo.domain.schedule.entity.ScheduleCategory;
@@ -21,12 +19,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -132,5 +132,129 @@ public class ScheduleService {
                 .stream()
                 .map(ScheduleListResponse::from)
                 .toList();
+    }
+
+    // 일정 상세 조회 (Linked + Candidate 분리해서 반환)
+    public ScheduleDetailResponse getScheduleDetail(Long userId, Long scheduleId) {
+
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_NOT_FOUND));
+
+        if (!schedule.getUser().getId().equals(userId)) {
+            // 본인의 일정이 아닐 경우
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_NOT_OWNER);
+        }
+
+        // Linked Todos
+        List<Todo> linkedTodoList = schedule.getTodoList();
+
+        List<ScheduleTodoResponse> linkedTodos = linkedTodoList.stream()
+                .map(ScheduleTodoResponse::from)
+                .toList();
+
+        Set<Long> linkedTodoIds = linkedTodoList.stream()
+                .map(Todo::getId)
+                .collect(Collectors.toSet());
+
+        // Candidate Todos
+        LocalDate scheduleDate = schedule.getStartTime().toLocalDate();
+
+        LocalDate startOfWeek = scheduleDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate endOfWeek = scheduleDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+
+        List<ScheduleTodoResponse> candidateTodos = todoRepository.findCandidateTodos(
+                        userId,
+                        startOfWeek,
+                        endOfWeek
+                ).stream()
+                .filter(todo -> !linkedTodoIds.contains(todo.getId())) // 여기서 중복 제거
+                .map(ScheduleTodoResponse::from)
+                .toList();
+
+        return ScheduleDetailResponse.of(schedule, linkedTodos, candidateTodos);
+    }
+
+    @Transactional
+    public void updateSchedule(Long userId, Long scheduleId, UpdateScheduleRequest request) {
+
+        request.validateTime();
+
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_NOT_FOUND));
+
+        if (!schedule.getUser().getId().equals(userId)) {
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_NOT_OWNER);
+        }
+
+        ScheduleCategory category = null;
+        if (request.scheduleCategoryId() != null) {
+            category = scheduleCategoryRepository.findById(request.scheduleCategoryId())
+                    .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_CATEGORY_NOT_FOUND));
+        }
+
+        schedule.update(
+                category,
+                request.title(),
+                request.toStartDateTime(),
+                request.toEndDateTime(),
+                request.placeName(),
+                request.address(),
+                request.latitude(),
+                request.longitude(),
+                request.repeatType(),
+                request.repeatEndDate(),
+                request.memo()
+        );
+
+        // 할 일 연결 업데이트
+        // 기존 연결 해제
+        List<Todo> currentLinkedTodos = schedule.getTodoList();
+        for (Todo todo : currentLinkedTodos) {
+            todo.disconnectSchedule();
+        }
+
+        // 새로 연결
+        if (request.linkedTodoIds() != null && !request.linkedTodoIds().isEmpty()) {
+            List<Todo> newTodos = todoRepository.findAllById(request.linkedTodoIds());
+            for (Todo todo : newTodos) {
+                if (!todo.getUser().getId().equals(userId)) {
+                    throw new CustomException(ErrorCode.INVALID_REQUEST);
+                }
+                todo.connectSchedule(schedule);
+            }
+        }
+    }
+
+    // 월간 일정 조회
+    public MonthlyScheduleResponse getMonthlySchedules(Long userId, String yearMonth) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+        LocalDateTime startOfMonth;
+        LocalDateTime endOfMonth;
+
+        try {
+            YearMonth ym = YearMonth.parse(yearMonth);
+            startOfMonth = ym.atDay(1).atStartOfDay();
+            endOfMonth = ym.atEndOfMonth().atTime(LocalTime.MAX);
+        } catch (DateTimeParseException e) {
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_INVALID_DATE);
+        }
+
+        // 해당 월 일정 조회 -> List<ScheduleListResponse> 변환
+        List<ScheduleListResponse> schedules = scheduleRepository
+                .findAllByUserAndStartTimeBetweenOrderByStartTimeAscEndTimeAsc(user, startOfMonth, endOfMonth)
+                .stream()
+                .map(ScheduleListResponse::from)
+                .toList();
+
+        // 카테고리 목록 조회
+        List<MonthlyScheduleResponse.CategoryDto> categories = scheduleCategoryRepository.findAllByUser(user)
+                .stream()
+                .map(MonthlyScheduleResponse.CategoryDto::from)
+                .toList();
+
+        // 통합 반환
+        return MonthlyScheduleResponse.of(schedules, categories);
     }
 }

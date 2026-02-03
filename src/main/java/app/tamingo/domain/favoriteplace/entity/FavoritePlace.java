@@ -16,7 +16,7 @@ import lombok.*;
                 @Index(name = "idx_favorite_place_user_id", columnList = "user_id")
         }
 )
-public class FavoritePlace extends BaseEntity {
+public class FavoritePlaceStandard extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,7 +42,7 @@ public class FavoritePlace extends BaseEntity {
     private Double longitude;
 
     @Builder
-    private FavoritePlace(User user, String name, String address, Double latitude, Double longitude) {
+    private FavoritePlaceStandard(User user, String name, String address, Double latitude, Double longitude) {
         this.user = user;
         this.name = name;
         this.address = address;
@@ -50,8 +50,8 @@ public class FavoritePlace extends BaseEntity {
         this.longitude = longitude;
     }
 
-    public static FavoritePlace of(User user, String name, String address, Double latitude, Double longitude) {
-        return FavoritePlace.builder()
+    public static FavoritePlaceStandard of(User user, String name, String address, Double latitude, Double longitude) {
+        return FavoritePlaceStandard.builder()
                 .user(user)
                 .name(name)
                 .address(address)

@@ -2,7 +2,7 @@ package app.tamingo.domain.schedule.service;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
-import app.tamingo.domain.favoriteplace.repository.FavoritePlaceRepository;
+import app.tamingo.domain.favoriteplace.repository.FavoritePlaceStandardRepository;
 import app.tamingo.domain.schedule.dto.RecommendTodoResponse;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.todo.dto.TodoSummaryResponse;
@@ -30,7 +30,7 @@ public class PlaceContextService {
     private final UserRepository userRepository;
     private final TodoRepository todoRepository;
     private final ScheduleRepository scheduleRepository;
-    private final FavoritePlaceRepository favoritePlaceRepository;
+    private final FavoritePlaceStandardRepository favoritePlaceStandardRepository;
 
     public RecommendTodoResponse getPlaceContext(Long userId, String placeName, Double latitude, Double longitude){
         User user = userRepository.findById(userId)
@@ -83,7 +83,7 @@ public class PlaceContextService {
             return false;
         }
 
-        boolean alreadyExists = favoritePlaceRepository.existsByUserAndName(user, placeName);
+        boolean alreadyExists = favoritePlaceStandardRepository.existsByUserAndName(user, placeName);
         if(alreadyExists){
             return false;
         }

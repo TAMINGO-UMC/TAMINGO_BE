@@ -3,6 +3,8 @@ package app.tamingo.domain.onboarding.service;
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.domain.favoriteplace.dto.FavoritePlaceRequest;
 import app.tamingo.domain.favoriteplace.service.FavoritePlaceService;
+import app.tamingo.domain.notificationsetting.entity.AlertMinute;
+import app.tamingo.domain.notificationsetting.service.NotificationSettingService;
 import app.tamingo.domain.onboarding.exception.OnboardingErrorCode;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.onboarding.dto.OnboardingRequest;
@@ -31,9 +33,8 @@ public class OnboardingService {
 
     private final UserActiveTimeSettingRepository activeTimeRepo;
     private final TransportPreferenceRepository transportPreferenceRepo;
-    private final NotificationSettingRepository notificationSettingRepo;
-
     private final FavoritePlaceService favoritePlaceService;
+    private final NotificationSettingService notificationSettingService;
 
     public void saveOnboarding(Long userId, OnboardingRequest req) {
         User user = getUserOrThrow(userId);
@@ -47,8 +48,9 @@ public class OnboardingService {
         validateTransportPreferences(req.transportPreferences());
         replaceTransportPreferences(user, req.transportPreferences());
 
-        AlertMinute minute = validateAndResolveAlertMinute(req.notificationSetting());
-        upsertNotificationSetting(user, req.notificationSetting().departAlertEnabled(), minute);
+        boolean enabled = req.notificationSetting().departAlertEnabled();
+        AlertMinute minute = req.notificationSetting().departAlertMinutes();
+        notificationSettingService.applyOnboarding(userId, enabled, minute);
 
         user.completeOnboarding();
     }
@@ -114,7 +116,8 @@ public class OnboardingService {
                         p.name(),
                         p.address(),
                         p.latitude(),
-                        p.longitude()
+                        p.longitude(),
+                        false
                 ))
                 .toList();
     }
@@ -162,26 +165,5 @@ public class OnboardingService {
                     tp.rank()
             ));
         }
-    }
-
-    // 출발 전 알림 설정
-    private AlertMinute validateAndResolveAlertMinute(OnboardingRequest.NotificationSetting s) {
-        if (!s.departAlertEnabled()) {
-            // 비활성일 땐 값 의미 없지만 DB nullable=false라 기본값 고정
-            return AlertMinute.MIN_10;
-        }
-        if (s.departAlertMinutes() == null) {
-            throw new CustomException(OnboardingErrorCode.ONBOARDING_NOTIFICATION_MINUTE_REQUIRED);
-        }
-        return s.departAlertMinutes();
-    }
-
-    private void upsertNotificationSetting(User user, boolean enabled, AlertMinute minute) {
-        Long userId = user.getId();
-
-        notificationSettingRepo.findById(userId).ifPresentOrElse(
-                existing -> existing.update(enabled, minute),
-                () -> notificationSettingRepo.save(NotificationSetting.of(user, enabled, minute))
-        );
     }
 }

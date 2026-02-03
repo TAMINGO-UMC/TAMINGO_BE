@@ -12,8 +12,15 @@ public class FavoritePlaceRequest {
             String address,
 
             Double latitude,
-            Double longitude
-    ) {}
+            Double longitude,
+            Boolean isAiSuggested
+    ) {
+        public SaveDto{
+            if (isAiSuggested == null) {
+                isAiSuggested = false;
+            }
+        }
+    }
 
     public record UpdateDto(
             @NotBlank(message = "장소 이름을 입력해 주세요.")
