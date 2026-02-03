@@ -1,4 +1,4 @@
-package app.tamingo.domain.weeklyinsight.enums;
+package app.tamingo.domain.weeklyreport.enums;
 
 public enum WeeklyInsightType {
     PRODUCTIVITY,    // 생산성

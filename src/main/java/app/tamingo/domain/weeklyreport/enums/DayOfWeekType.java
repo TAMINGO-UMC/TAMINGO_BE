@@ -1,4 +1,4 @@
-package app.tamingo.domain.dailyactivity.enums;
+package app.tamingo.domain.weeklyreport.enums;
 
 public enum DayOfWeekType {
     MONDAY,
