@@ -46,3 +46,16 @@ kakao:
   api:
     key: ${KAKAO_API_KEY}
     url: https://dapi.kakao.com
+
+tmap:
+  url: https://apis.openapi.sk.com/transit
+  app-key: ${TMAP_APP_KEY}
+  format: json
+  lang: 0
+  count: 1
+
+# service-region:
+#   min-lat: 0.0
+#   max-lat: 0.0
+#   min-lng: 0.0
+#   max-lng: 0.0
