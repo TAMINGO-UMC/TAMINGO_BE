@@ -50,7 +50,7 @@ public class TodoCategoryController {
     @PatchMapping("/{categoryId}")
     public ApiResponse<TodoCategoryResponse> updateTodoCategory(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long categoryId,
+            @PathVariable("categoryId") Long categoryId,
             @Valid @RequestBody TodoCategoryUpsertRequest request
     ) {
         //할일 카테고리 서비스 호출
@@ -64,7 +64,7 @@ public class TodoCategoryController {
     @DeleteMapping("/{categoryId}")
     public ApiResponse<Void> deleteTodoCategory(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long categoryId
+            @PathVariable("categoryId") Long categoryId
     ) {
         //할일 카테고리 서비스 호출
         todoCategoryService.delete(userId, categoryId);
