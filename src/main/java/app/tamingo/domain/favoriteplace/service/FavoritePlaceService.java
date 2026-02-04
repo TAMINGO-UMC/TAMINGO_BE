@@ -48,7 +48,7 @@ public class FavoritePlaceService {
                 request.latitude(),
                 request.longitude(),
                 request.isAiSuggested()
-                );
+        );
 
         return favoritePlaceRepository.save(favoritePlace).getId();
     }

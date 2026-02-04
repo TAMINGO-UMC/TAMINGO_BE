@@ -10,6 +10,7 @@ import app.tamingo.domain.home.entity.SuggestionLearning;
 import app.tamingo.domain.home.entity.enums.SuggestionPlanType;
 import app.tamingo.domain.home.entity.enums.SuggestionType;
 import app.tamingo.domain.home.repository.SuggestionLearningRepository;
+import app.tamingo.domain.home.service.geoutil.GeoService;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleCategory;
 import app.tamingo.domain.schedule.repository.ScheduleCategoryRepository;
@@ -73,21 +74,7 @@ public class TodoMatchLinkService {
                         return;
                 }
 
-                // 2. 장소만 있을 경우 GPT가 일정 연계 적합 판단
-                if (hasLocation(todo)
-                                && gptResult.isPresent()
-                                && gptResult.get().isLinked()) {
-
-                        saveTodoBasedTodo(
-                                        user,
-                                        todo,
-                                        gptResult.get().schedule(),
-                                        aiComment,
-                                        categoryId);
-                        return;
-                }
-
-                // 3. 소요시간만 있을 경우 장소 없이 길찾기하지 않는 일정으로 저장, gpt comment 추가로 받음
+                // 2. 소요시간만 있을 경우 장소 없이 길찾기하지 않는 일정으로 저장, gpt comment 추가로 받음
                 if (!hasLocation(todo) && hasDuration(todo)) {
                         String comment = generateGapCommentWithoutLocation(todo, gap)
                                         .orElse(aiComment);
@@ -102,22 +89,14 @@ public class TodoMatchLinkService {
         protected Todo findMatchingTodo(GapTime gap, List<Todo> todos) {
                 Todo durationTodo = todos.stream()
                                 .filter(t -> !t.isChecked())
+                                .filter(t -> t.getSchedule() == null)
                                 .filter(this::hasDuration)
                                 .filter(t -> t.getDuration() <= gap.getAvailableMinutes())
                                 .sorted(Comparator.comparingInt(Todo::getDuration))
                                 .findFirst()
                                 .orElse(null);
 
-                if (durationTodo != null) {
-                        return durationTodo;
-                }
-
-                return todos.stream()
-                                .filter(t -> !t.isChecked())
-                                .filter(this::hasLocation)
-                                .filter(t -> !hasDuration(t))
-                                .findFirst()
-                                .orElse(null);
+                return durationTodo;
         }
 
         /**
@@ -264,35 +243,6 @@ public class TodoMatchLinkService {
                                                 null,
                                                 todo.getId(),
                                                 categoryId));
-        }
-
-        /**
-         * 할일 → 할일 연계
-         */
-        private void saveTodoBasedTodo(
-                        User user,
-                        Todo todo,
-                        Schedule schedule,
-                        String aiComment,
-                        Long categoryId) {
-                SuggestionLearning suggestion = SuggestionLearning.of(
-                                user,
-                                todo.getTitle(),
-                                schedule,
-                                SuggestionType.GAP_TIME,
-                                SuggestionPlanType.TODO_BASED_TODO,
-                                todo.getPlaceName(),
-                                todo.getLatitude(),
-                                todo.getLongitude(),
-                                aiComment,
-                                schedule.getStartTime(),
-                                schedule.getEndTime(),
-                                null,
-                                null,
-                                todo.getId(),
-                                categoryId);
-
-                suggestionRepository.save(suggestion);
         }
 
         /**

@@ -6,6 +6,7 @@ import app.tamingo.domain.schedule.entity.Schedule;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
+import java.sql.Time;
 import java.time.Duration;
 import java.time.LocalTime;
 
@@ -25,13 +26,20 @@ public class DailyPlanItemConverter {
                     .toMinutes();
         }
 
+        int durationMinutes = (int) Duration.between(
+                schedule.getStartTime(),
+                schedule.getEndTime()
+        ).toMinutes();
+
+
         return new DailyPlanResponse.ScheduleItem(
                 schedule.getId(),
                 schedule.getTitle(),
                 schedule.getStartTime().toLocalTime(),
                 isNextSchedule,
                 schedule.getPlaceName(),
-                leftMinute
+                leftMinute,
+                durationMinutes
         );
     }
 

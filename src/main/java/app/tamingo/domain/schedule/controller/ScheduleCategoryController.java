@@ -51,7 +51,7 @@ public class ScheduleCategoryController {
     @PatchMapping("/{categoryId}")
     public ApiResponse<ScheduleCategoryResponse> updateScheduleCategory(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long categoryId,
+            @PathVariable("categoryId") Long categoryId,
             @Valid @RequestBody ScheduleCategoryUpsertRequest request
     ) {
         //카테고리 수정
@@ -65,7 +65,7 @@ public class ScheduleCategoryController {
     @DeleteMapping("/{categoryId}")
     public ApiResponse<Void> deleteScheduleCategory(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long categoryId
+            @PathVariable("categoryId") Long categoryId
     ) {
         //카테고리 삭제
         scheduleCategoryService.delete(userId, categoryId);

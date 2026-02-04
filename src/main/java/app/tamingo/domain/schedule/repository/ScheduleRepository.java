@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
@@ -32,6 +33,24 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             LocalDateTime endOfDay
     );
 
+    List<Schedule> findAllByStartTimeBetween(
+            LocalDateTime startTime,
+            LocalDateTime endTime
+    );
+
+    @Query("""
+    select s
+    from Schedule s
+    where s.user = :user
+      and s.startTime < :startTime
+    order by s.startTime desc
+    limit 1
+    """)
+    Optional<Schedule> findBeforeStartTime(
+            User user,
+            LocalDateTime startTime
+    );
+
     //스케줄 카테고리가 사용 중이면 삭제 불가
     boolean existsByUserAndScheduleCategory(User user, ScheduleCategory scheduleCategory);
 
@@ -48,6 +67,30 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay
     );
+    //주간 범위 스케줄 조회
+    List<Schedule> findAllByUserIdAndStartTimeBetween(Long userId, LocalDateTime startInclusive, LocalDateTime endInclusive);
+
+    /**
+     * NO_SHOW 확정 대상 조회
+     * - cutoffTime 이전에 시작한 일정 중
+     *   1) schedule_result가 아예 없거나
+     *   2) schedule_result.status = PENDING 인 경우
+     */
+    @Query("""
+        select s
+        from Schedule s
+        left join ScheduleResult sr on sr.scheduleId = s.id
+        where s.startTime <= :cutoffTime
+          and (sr is null or sr.status = 'PENDING')
+    """)
+    List<Schedule> findNoShowCandidates(@Param("cutoffTime") LocalDateTime cutoffTime);
 
 
+    List<Schedule> findAllByUserIdAndStartTimeGreaterThanEqualAndStartTimeLessThan(
+            Long userId,
+            LocalDateTime startInclusive,
+            LocalDateTime endExclusive
+    );
+
+    Optional<Schedule> findByIdAndUser(Long scheduleId, User user);
 }
