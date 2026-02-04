@@ -53,16 +53,16 @@ public class Schedule extends BaseEntity {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
-    @Column(name = "place_name", nullable = false)
+    @Column(name = "place_name")
     private String placeName;
 
     @Column(name = "address")
     private String address;
 
-    @Column(name = "latitude", nullable = false)
+    @Column(name = "latitude")
     private Double latitude;
 
-    @Column(name = "longitude", nullable = false)
+    @Column(name = "longitude")
     private Double longitude;
 
     // 지도 ETA (분 단위, null 가능)

@@ -1,4 +1,4 @@
-package app.tamingo.domain.userlearning.respository;
+package app.tamingo.domain.userlearning.repository;
 
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.userlearning.entity.FvpHistory;
