@@ -19,9 +19,9 @@ public class TokenController {
     private final TokenRefreshService tokenRefreshService;
 
     @PostMapping("/refresh")
-    public ApiResponse<TokenRefreshResponse> refresh(HttpServletRequest request) {
-        String refreshToken = request.getHeader(REFRESH_HEADER);
-
+    public ApiResponse<TokenRefreshResponse> refresh(
+            @RequestHeader("X-Refresh-Token") String refreshToken
+    ) {
         TokenRefreshResponse result = tokenRefreshService.refresh(refreshToken);
         return ApiResponse.onSuccess(result, SuccessCode.OK);
     }
