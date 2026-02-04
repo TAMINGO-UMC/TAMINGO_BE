@@ -91,6 +91,49 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             LocalDateTime startInclusive,
             LocalDateTime endExclusive
     );
+           
+    // [Nearby] 반경 2km 이내 + 현재 시간 이후의 일정 조회
+    @Query(value = """
+        SELECT * FROM schedule s 
+        WHERE s.user_id = :userId 
+        AND s.start_time >= :now
+        AND s.latitude BETWEEN :minLat AND :maxLat 
+        AND s.longitude BETWEEN :minLon AND :maxLon
+        AND (6371 * acos(cos(radians(:latitude)) * cos(radians(s.latitude)) 
+        * cos(radians(s.longitude) - radians(:longitude)) 
+        + sin(radians(:latitude)) * sin(radians(s.latitude)))) <= 2.0
+        ORDER BY s.start_time ASC
+        """, nativeQuery = true)
+    List<Schedule> findNearbySchedules(
+            @Param("userId") Long userId,
+            @Param("latitude") Double latitude,
+            @Param("longitude") Double longitude,
+            @Param("minLat") Double minLat,
+            @Param("maxLat") Double maxLat,
+            @Param("minLon") Double minLon,
+            @Param("maxLon") Double maxLon,
+            @Param("now") LocalDateTime now
+    );
+
+    // [Weekly] 특정 기간(오늘 ~ 7일 후) 사이 일정 조회
+    @Query("""
+        SELECT s FROM Schedule s 
+        WHERE s.user.id = :userId 
+        AND s.startTime BETWEEN :startDate AND :endDate 
+        ORDER BY s.startTime ASC
+    """)
+    List<Schedule> findSchedulesInPeriod(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+
+    List<Schedule> findAllByUserIdAndStartTimeGreaterThanEqualAndStartTimeLessThan(
+            Long userId,
+            LocalDateTime startInclusive,
+            LocalDateTime endExclusive
+    );
 
     Optional<Schedule> findByIdAndUser(Long scheduleId, User user);
 }
