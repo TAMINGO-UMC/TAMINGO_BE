@@ -1,4 +1,4 @@
-package app.tamingo.domain.onboarding.entity;
+package app.tamingo.domain.transportpreference.entity;
 
 public enum TransportType {
     WALK,

@@ -5,11 +5,13 @@ import app.tamingo.domain.favoriteplace.dto.FavoritePlaceRequest;
 import app.tamingo.domain.favoriteplace.service.FavoritePlaceService;
 import app.tamingo.domain.notificationsetting.entity.AlertMinute;
 import app.tamingo.domain.notificationsetting.service.NotificationSettingService;
-import app.tamingo.domain.onboarding.exception.OnboardingErrorCode;
+import app.tamingo.domain.transportpreference.exception.TransportPreferenceErrorCode;
+import app.tamingo.domain.useractivetime.exception.UserActiveTimeError;
+import app.tamingo.domain.transportpreference.entity.TransportPreference;
+import app.tamingo.domain.transportpreference.entity.TransportType;
+import app.tamingo.domain.transportpreference.repository.TransportPreferenceRepository;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.onboarding.dto.OnboardingRequest;
-import app.tamingo.domain.onboarding.entity.*;
-import app.tamingo.domain.onboarding.repository.*;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.repository.UserRepository;
 import app.tamingo.domain.useractivetime.entity.UserActiveTime;
@@ -70,7 +72,7 @@ public class OnboardingService {
         LocalTime end = parseTimeOrThrow(at.endTime());
 
         if (!end.isAfter(start)) {
-            throw new CustomException(OnboardingErrorCode.ONBOARDING_ACTIVE_TIME_RANGE_INVALID);
+            throw new CustomException(UserActiveTimeError.TIME_ORDER_INVALID);
         }
         return new ActiveTimeValue(start, end);
     }
@@ -79,7 +81,7 @@ public class OnboardingService {
         try {
             return LocalTime.parse(s); // expects "HH:mm"
         } catch (DateTimeParseException e) {
-            throw new CustomException(OnboardingErrorCode.ONBOARDING_ACTIVE_TIME_FORMAT_INVALID);
+            throw new CustomException(UserActiveTimeError.TIME_FORMAT_INVALID);
         }
     }
 
@@ -129,7 +131,7 @@ public class OnboardingService {
     // 선호 이동 수단
     private void validateTransportPreferences(List<OnboardingRequest.TransportPref> list) {
         if (list == null || list.size() != 3) {
-            throw new CustomException(OnboardingErrorCode.ONBOARDING_TRANSPORT_PREFERENCES_INVALID);
+            throw new CustomException(TransportPreferenceErrorCode.TRANSPORT_PREFERENCES_INVALID);
         }
 
         Set<TransportType> types = new HashSet<>();
@@ -137,7 +139,7 @@ public class OnboardingService {
 
         for (OnboardingRequest.TransportPref tp : list) {
             if (tp.transport() == null) {
-                throw new CustomException(OnboardingErrorCode.ONBOARDING_TRANSPORT_PREFERENCES_INVALID);
+                throw new CustomException(TransportPreferenceErrorCode.TRANSPORT_PREFERENCES_INVALID);
             }
             types.add(tp.transport());
             ranks.add(tp.rank());
@@ -154,7 +156,7 @@ public class OnboardingService {
                 && ranks.contains(3);
 
         if (!hasAllTypes || !hasAllRanks) {
-            throw new CustomException(OnboardingErrorCode.ONBOARDING_TRANSPORT_PREFERENCES_INVALID);
+            throw new CustomException(TransportPreferenceErrorCode.TRANSPORT_PREFERENCES_INVALID);
         }
     }
 
