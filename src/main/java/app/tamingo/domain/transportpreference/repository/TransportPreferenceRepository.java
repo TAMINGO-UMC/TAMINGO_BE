@@ -1,7 +1,7 @@
-package app.tamingo.domain.onboarding.repository;
+package app.tamingo.domain.transportpreference.repository;
 
-import app.tamingo.domain.onboarding.entity.TransportPreference;
-import app.tamingo.domain.onboarding.entity.TransportType;
+import app.tamingo.domain.transportpreference.entity.TransportPreference;
+import app.tamingo.domain.transportpreference.entity.TransportType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
