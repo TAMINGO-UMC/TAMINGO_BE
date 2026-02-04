@@ -10,9 +10,5 @@ public interface TransportPreferenceRepository extends JpaRepository<TransportPr
 
     List<TransportPreference> findAllByUserIdOrderByRankAsc(Long userId);
 
-    boolean existsByUserIdAndTransport(Long userId, TransportType transport);
-
-    boolean existsByUserIdAndRank(Long userId, int rank);
-
     void deleteAllByUserId(Long userId);
 }
