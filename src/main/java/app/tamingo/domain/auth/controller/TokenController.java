@@ -14,11 +14,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth/token")
 public class TokenController {
 
+    private static final String REFRESH_HEADER = "X-Refresh-Token";
+
     private final TokenRefreshService tokenRefreshService;
 
     @PostMapping("/refresh")
     public ApiResponse<TokenRefreshResponse> refresh(HttpServletRequest request) {
-        String refreshToken = BearerTokenResolver.resolve(request);
+        String refreshToken = request.getHeader(REFRESH_HEADER);
 
         TokenRefreshResponse result = tokenRefreshService.refresh(refreshToken);
         return ApiResponse.onSuccess(result, SuccessCode.OK);
