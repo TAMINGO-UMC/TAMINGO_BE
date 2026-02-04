@@ -90,7 +90,7 @@ public class PlaceContextService {
         int scheduleCount = scheduleRepository.countByUserAndPlaceName(user, placeName);
         int todoCount = todoRepository.countByUserAndPlaceNameAndIsLocationConfirmedTrue(user, placeName);
 
-        return (scheduleCount + todoCount) >=3;
+        return (scheduleCount + todoCount) >=1;
     }
 
 }

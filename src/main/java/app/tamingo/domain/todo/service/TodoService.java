@@ -12,6 +12,7 @@ import app.tamingo.domain.todo.dto.UpdateTodoRequest;
 import app.tamingo.domain.todo.entity.Todo;
 import app.tamingo.domain.todo.entity.TodoAiLog;
 import app.tamingo.domain.todo.entity.TodoCategory;
+import app.tamingo.domain.todo.enums.RepeatType;
 import app.tamingo.domain.todo.exception.TodoErrorCode;
 import app.tamingo.domain.todo.repository.TodoAiLogRepository;
 import app.tamingo.domain.todo.repository.TodoCategoryRepository;
@@ -148,7 +149,7 @@ public class TodoService {
         int scheduleCount = scheduleRepository.countByUserAndPlaceName(user, placeName);
         int todoCount = todoRepository.countByUserAndPlaceNameAndIsLocationConfirmedTrue(user, placeName);
 
-        return (scheduleCount + todoCount) >= 3;
+        return (scheduleCount + todoCount) >= 1;
     }
 
     /**
@@ -165,6 +166,8 @@ public class TodoService {
         if (!todo.getUser().getId().equals(userId)) {
             throw new CustomException(TodoErrorCode.TODO_NOT_OWNER);
         }
+
+        RepeatType oldRepeatType = todo.getRepeatType();
 
         // 카테고리 조회
         TodoCategory category = null;
@@ -205,6 +208,60 @@ public class TodoService {
 
         // AI 로그 업데이트
         updateAiLogScore(todo, category, request);
+
+        // 반복 할 일 생성 로직 (NONE -> REPEAT 변경 시에만 작동)
+        if (oldRepeatType == RepeatType.NONE
+                && request.repeatType() != null
+                && request.repeatType() != RepeatType.NONE
+                && request.repeatEndDate() != null
+                && todo.getTargetDate() != null) {
+
+            createRecurringTodos(user, todo, request.repeatType(), request.repeatEndDate());
+        }
+    }
+
+    private void createRecurringTodos(User user, Todo original, RepeatType repeatType, LocalDate repeatEndDate) {
+        List<Todo> newTodos = new ArrayList<>();
+        LocalDate currentDate = original.getTargetDate();
+
+        // 최대 1년까지만 생성 (무한 루프 방지)
+        LocalDate limitDate = original.getTargetDate().plusYears(1);
+        LocalDate effectiveEndDate = repeatEndDate.isAfter(limitDate) ? limitDate : repeatEndDate;
+
+        // 첫 번째 반복 날짜 계산 (수정된 원본의 다음 주기부터 생성)
+        currentDate = getNextDate(currentDate, repeatType);
+
+        while (!currentDate.isAfter(effectiveEndDate)) {
+            Todo newTodo = Todo.createRecurring(
+                    user,
+                    original.getTodoCategory(),
+                    original.getTitle(),
+                    currentDate,
+                    original.getPlaceName(),
+                    original.getAddress(),
+                    original.getLatitude(),
+                    original.getLongitude(),
+                    original.getDuration(),
+                    repeatType,
+                    repeatEndDate,
+                    true
+            );
+
+            newTodos.add(newTodo);
+
+            currentDate = getNextDate(currentDate, repeatType);
+        }
+
+        if (!newTodos.isEmpty()) {
+            todoRepository.saveAll(newTodos);
+        }
+    }
+
+    private LocalDate getNextDate(LocalDate current, RepeatType type) {
+        if (type == RepeatType.DAILY) return current.plusDays(1);
+        if (type == RepeatType.WEEKLY) return current.plusWeeks(1);
+        if (type == RepeatType.MONTHLY) return current.plusMonths(1);
+        return current.plusDays(1); // 기본값 (도달하지 않음)
     }
 
     private void updateAiLogScore(Todo todo, TodoCategory category, UpdateTodoRequest request) {
