@@ -129,11 +129,5 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     );
 
 
-    List<Schedule> findAllByUserIdAndStartTimeGreaterThanEqualAndStartTimeLessThan(
-            Long userId,
-            LocalDateTime startInclusive,
-            LocalDateTime endExclusive
-    );
-
     Optional<Schedule> findByIdAndUser(Long scheduleId, User user);
 }
