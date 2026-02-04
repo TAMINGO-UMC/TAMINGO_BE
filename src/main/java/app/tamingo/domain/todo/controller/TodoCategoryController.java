@@ -5,6 +5,7 @@ import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.todo.dto.TodoCategoryResponse;
 import app.tamingo.domain.todo.dto.TodoCategoryUpsertRequest;
 import app.tamingo.domain.todo.service.TodoCategoryService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,6 +23,7 @@ public class TodoCategoryController {
     /**
      * 할일 카테고리 목록 조회
      */
+    @Operation(summary = "할일 카테고리 목록 조회", description = "사용자의 할일 카테고리 목록을 조회합니다.")
     @GetMapping
     public ApiResponse<List<TodoCategoryResponse>> getTodoCategories(
             @AuthenticationPrincipal Long userId
@@ -34,6 +36,7 @@ public class TodoCategoryController {
     /**
      * 할일 카테고리 생성
      */
+    @Operation(summary = "할일 카테고리 생성", description = "할일 카테고리를 생성합니다.")
     @PostMapping
     public ApiResponse<TodoCategoryResponse> createTodoCategory(
             @AuthenticationPrincipal Long userId,
@@ -47,6 +50,7 @@ public class TodoCategoryController {
     /**
      * 할일 카테고리 수정
      */
+    @Operation(summary = "할일 카테고리 수정", description = "categoryId에 해당하는 할일 카테고리를 수정합니다.")
     @PatchMapping("/{categoryId}")
     public ApiResponse<TodoCategoryResponse> updateTodoCategory(
             @AuthenticationPrincipal Long userId,
@@ -61,6 +65,7 @@ public class TodoCategoryController {
     /**
      * 할일 카테고리 삭제
      */
+    @Operation(summary = "할일 카테고리 삭제", description = "categoryId에 해당하는 할일 카테고리를 삭제합니다.")
     @DeleteMapping("/{categoryId}")
     public ApiResponse<Void> deleteTodoCategory(
             @AuthenticationPrincipal Long userId,
