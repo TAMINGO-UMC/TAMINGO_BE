@@ -37,4 +37,15 @@ public interface FavoritePlaceRepository extends JpaRepository<FavoritePlace, Lo
 
     // 자주 가는 장소 개수 확인
     long countByUser(User user);
+
+    // 유저가 자주 가는 장소 상위 6개만 조회(최신순)
+    @Query(""" 
+    select f 
+    from FavoritePlace f 
+    where f.user = :user 
+    order by f.createdAt desc
+    limit 6
+    """)
+    List<FavoritePlace> findTop6ByUser(User user);
+
 }

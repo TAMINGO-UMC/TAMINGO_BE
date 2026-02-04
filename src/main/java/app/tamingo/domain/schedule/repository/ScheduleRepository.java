@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
@@ -30,6 +31,24 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             User user,
             LocalDateTime startOfDay,
             LocalDateTime endOfDay
+    );
+
+    List<Schedule> findAllByStartTimeBetween(
+            LocalDateTime startTime,
+            LocalDateTime endTime
+    );
+
+    @Query("""
+    select s
+    from Schedule s
+    where s.user = :user
+      and s.startTime < :startTime
+    order by s.startTime desc
+    limit 1
+    """)
+    Optional<Schedule> findBeforeStartTime(
+            User user,
+            LocalDateTime startTime
     );
 
     //스케줄 카테고리가 사용 중이면 삭제 불가
@@ -72,6 +91,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             LocalDateTime startInclusive,
             LocalDateTime endExclusive
     );
+           
     // [Nearby] 반경 2km 이내 + 현재 시간 이후의 일정 조회
     @Query(value = """
         SELECT * FROM schedule s 
@@ -109,4 +129,11 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     );
 
 
+    List<Schedule> findAllByUserIdAndStartTimeGreaterThanEqualAndStartTimeLessThan(
+            Long userId,
+            LocalDateTime startInclusive,
+            LocalDateTime endExclusive
+    );
+
+    Optional<Schedule> findByIdAndUser(Long scheduleId, User user);
 }

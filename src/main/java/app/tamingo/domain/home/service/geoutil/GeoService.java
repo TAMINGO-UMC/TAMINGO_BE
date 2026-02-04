@@ -1,4 +1,4 @@
-package app.tamingo.domain.home.service.gapsuggestion;
+package app.tamingo.domain.home.service.geoutil;
 
 import org.springframework.stereotype.Component;
 

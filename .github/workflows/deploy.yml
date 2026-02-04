@@ -77,14 +77,14 @@ jobs:
             cd /opt/tamingo
 
             echo "[0/4] pull"
-            sudo docker compose pull
-
+            sudo docker compose -f docker-compose.prod.yml pull
+            
             echo "[1/4] down"
-            sudo docker compose down --remove-orphans
-
+            sudo docker compose -f docker-compose.prod.yml down --remove-orphans
+            
             echo "[2/4] up -d"
-            sudo docker compose up -d
-
+            sudo docker compose -f docker-compose.prod.yml up -d
+            
             echo "[3/4] prune"
             sudo docker image prune -f
 

@@ -1,5 +1,6 @@
 package app.tamingo.domain.todo.repository;
 
+import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.todo.entity.Todo;
 import app.tamingo.domain.todo.entity.TodoCategory;
 import app.tamingo.domain.user.entity.User;
@@ -54,6 +55,12 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     // 할일 카테고리가 사용 중이면 삭제 불가
     boolean existsByUserAndTodoCategory(User user, TodoCategory todoCategory);
 
+    /**
+     * 주간 리포트(할일) 집계 대상 조회
+     * - 기준: targetDate가 주간 범위(start~end) 안에 있는 Todo만 포함
+     */
+    List<Todo> findAllByUserIdAndTargetDateBetween(Long userId, LocalDate start, LocalDate end);
+
     @Query("""
     select t
     from Todo t
@@ -78,4 +85,14 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     // 전체 최신순 20개
     List<Todo> findTop20ByUserOrderByIdDesc(User user);
 
+    @Query("""
+    select t
+    from Todo t
+    where t.schedule = :schedule
+        and t.longitude is not null
+        and t.longitude > 0
+    """)
+    List<Todo> findAllByScheduleAndLocation(@Param("schedule") Schedule schedule);
+
+    List<Todo> findAllBySchedule(@Param("schedule") Schedule schedule);
 }
