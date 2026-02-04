@@ -12,6 +12,8 @@ import app.tamingo.domain.onboarding.entity.*;
 import app.tamingo.domain.onboarding.repository.*;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.repository.UserRepository;
+import app.tamingo.domain.useractivetime.entity.UserActiveTime;
+import app.tamingo.domain.useractivetime.repository.UserActiveTimeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,8 +33,8 @@ public class OnboardingService {
 
     private final UserRepository userRepository;
 
-    private final UserActiveTimeSettingRepository activeTimeRepo;
-    private final TransportPreferenceRepository transportPreferenceRepo;
+    private final UserActiveTimeRepository userActiveTimeRepository;
+    private final TransportPreferenceRepository transportPreferenceRepository;
     private final FavoritePlaceService favoritePlaceService;
     private final NotificationSettingService notificationSettingService;
 
@@ -84,7 +86,7 @@ public class OnboardingService {
     private void upsertActiveTime(User user, ActiveTimeValue v, OnboardingRequest.ActiveTime at) {
         Long userId = user.getId();
 
-        activeTimeRepo.findById(userId).ifPresentOrElse(
+        userActiveTimeRepository.findById(userId).ifPresentOrElse(
                 existing -> existing.update(
                         v.start(), v.end(),
                         at.monEnabled(),
@@ -94,16 +96,18 @@ public class OnboardingService {
                         at.friEnabled(),
                         at.weekendEnabled()
                 ),
-                () -> activeTimeRepo.save(UserActiveTimeSetting.of(
-                        user,
-                        v.start(), v.end(),
-                        at.monEnabled(),
-                        at.tueEnabled(),
-                        at.wedEnabled(),
-                        at.thuEnabled(),
-                        at.friEnabled(),
-                        at.weekendEnabled()
-                ))
+                () -> userActiveTimeRepository.save(
+                        UserActiveTime.of(
+                                user,
+                                v.start(), v.end(),
+                                at.monEnabled(),
+                                at.tueEnabled(),
+                                at.wedEnabled(),
+                                at.thuEnabled(),
+                                at.friEnabled(),
+                                at.weekendEnabled()
+                        )
+                )
         );
     }
 
@@ -157,9 +161,9 @@ public class OnboardingService {
     private void replaceTransportPreferences(User user, List<OnboardingRequest.TransportPref> list) {
         Long userId = user.getId();
 
-        transportPreferenceRepo.deleteAllByUserId(userId);
+        transportPreferenceRepository.deleteAllByUserId(userId);
         for (OnboardingRequest.TransportPref tp : list) {
-            transportPreferenceRepo.save(TransportPreference.of(
+            transportPreferenceRepository.save(TransportPreference.of(
                     user,
                     tp.transport(),
                     tp.rank()
