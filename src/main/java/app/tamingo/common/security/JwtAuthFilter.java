@@ -33,7 +33,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         try {
-            String token = resolveBearer(request);
+            String token = BearerTokenResolver.resolve(request);
 
             if (token != null) {
                 jwtTokenProvider.validateOrThrow(token);
@@ -55,13 +55,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
             writeErrorResponse(response, e.getErrorCode());
         }
-    }
-
-    private String resolveBearer(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header == null || header.isBlank()) return null;
-        if (!header.startsWith("Bearer ")) return null;
-        return header.substring(7).trim();
     }
 
     private void writeErrorResponse(HttpServletResponse response, BaseCode code)
