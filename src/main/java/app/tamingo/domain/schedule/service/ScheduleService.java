@@ -13,6 +13,7 @@ import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.todo.dto.TodoSummaryResponse;
 import app.tamingo.domain.todo.entity.Todo;
 import app.tamingo.domain.todo.repository.TodoRepository;
+import app.tamingo.domain.home.service.realtime.ScheduleInitQueueService;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
@@ -38,6 +39,7 @@ public class ScheduleService {
     private final UserRepository userRepository;
     private final ScheduleCategoryRepository scheduleCategoryRepository;
     private final ScheduleAiLogRepository scheduleAiLogRepository;
+    private final ScheduleInitQueueService scheduleInitQueueService;
 
     @Transactional
     public CreateScheduleResponse createSchedule(Long userId, CreateScheduleRequest request){
@@ -52,6 +54,10 @@ public class ScheduleService {
         }
 
         Schedule schedule = scheduleRepository.save(request.toEntity(user,category));
+        scheduleInitQueueService.scheduleInit(
+                schedule.getId(),
+                schedule.getStartTime().minusMinutes(20)
+        );
 
         if(request.linkedTodoIds() !=null && !request.linkedTodoIds().isEmpty()){
             List<Todo> todos = todoRepository.findAllById(request.linkedTodoIds());
@@ -204,6 +210,10 @@ public class ScheduleService {
                 request.repeatType(),
                 request.repeatEndDate(),
                 request.memo()
+        );
+        scheduleInitQueueService.scheduleInit(
+                schedule.getId(),
+                schedule.getStartTime().minusMinutes(20)
         );
 
         // 할 일 연결 업데이트

@@ -29,9 +29,7 @@ public class UserMobilityLearningService {
 
     private static final RouteType DEFAULT_ROUTE_TYPE = RouteType.TRANSIT;
 
-    private final UserLearningSummaryRepository userLearningSummaryRepository;
     private final UserLearningPatternRepository userLearningPatternRepository;
-    private final FavoritePlaceRepository favoritePlaceRepository;
     private final ErrorLogRepository errorLogRepository;
     private final PersonalSettingRepository personalSettingRepository;
     private final RealtimeScheduleRepository realtimeScheduleRepository;
@@ -52,7 +50,6 @@ public class UserMobilityLearningService {
         }
         TimeSlot timeSlot = resolveTimeSlot(scheduleStartTime);
 
-        updateSummaryFromErrorLogs(user, predictedMinutes, actualMinutes);
         updatePatternFromErrorLogs(user, timeSlot, DEFAULT_ROUTE_TYPE, predictedMinutes, actualMinutes);
     }
 
@@ -75,7 +72,7 @@ public class UserMobilityLearningService {
                 expectedDuration,
                 0,
                 0,
-                ArrivedStatus.ON_TIME,
+                ArrivedStatus.NO_SHOW,
                 schedule.getUser()
         );
         errorLogRepository.save(log);
@@ -125,38 +122,6 @@ public class UserMobilityLearningService {
         return setting != null && setting.isErrorLogEnabled();
     }
 
-    // 사용자 학습 요약 업데이트
-    @Transactional
-    public void updateSummaryFromErrorLogs(User user, int currentExpectedMinutes, int currentActualMinutes) {
-        List<ErrorLog> recentLogs = errorLogRepository.findLatest10ByUser(user.getId());
-
-        int totalSamples = 0;
-        double accuracySum = 0.0;
-
-        for (ErrorLog log : recentLogs) {
-            int expected = log.getExpectedDuration();
-            int actual = log.getTotalDuration();
-            if (expected <= 0 || actual <= 0) {
-                continue;
-            }
-            accuracySum += accuracyRate(expected, actual);
-            totalSamples++;
-        }
-
-        if (currentExpectedMinutes > 0 && currentActualMinutes > 0) {
-            accuracySum += accuracyRate(currentExpectedMinutes, currentActualMinutes);
-            totalSamples++;
-        }
-
-        double avgAccuracy = totalSamples == 0 ? 0.0 : accuracySum / totalSamples;
-        int fvpCount = (int) favoritePlaceRepository.countByUser(user);
-
-        UserLearningSummary summary = userLearningSummaryRepository.findByUser(user)
-                .orElseGet(() -> UserLearningSummary.of(user, 0, 0.0, 0));
-        summary.update(totalSamples, avgAccuracy, fvpCount);
-        userLearningSummaryRepository.save(summary);
-    }
-
     // 최신 오차로그 10개 + 현재 샘플로 패턴 업데이트
     @Transactional
     public void updatePatternFromErrorLogs(
@@ -166,7 +131,8 @@ public class UserMobilityLearningService {
             int currentExpectedMinutes,
             int currentActualMinutes
     ) {
-        List<ErrorLog> recentLogs = errorLogRepository.findLatest10ByUser(user.getId());
+        // 최신 10개를 조회
+        List<ErrorLog> recentLogs = errorLogRepository.findLatestByUserByNum(10,user);
 
         int totalSamples = 0;
         long diffSum = 0;
@@ -191,9 +157,11 @@ public class UserMobilityLearningService {
             totalSamples++;
         }
 
+        // 보정 진행
         int avgEtaDiff = totalSamples == 0 ? 0 : (int) Math.round((double) diffSum / totalSamples);
         double avgAccuracy = totalSamples == 0 ? 0.0 : accuracySum / totalSamples;
 
+        // 패턴이 없으면 새로 저장
         UserLearningPattern pattern = userLearningPatternRepository
                 .findByUserAndTimeSlotAndRouteType(user, timeSlot, routeType)
                 .orElseGet(() -> UserLearningPattern.of(user, timeSlot, routeType, 0, 0, 0.0));

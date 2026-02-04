@@ -9,12 +9,15 @@ import app.tamingo.domain.home.entity.SuggestionLearning;
 import app.tamingo.domain.home.entity.enums.SuggestionType;
 import app.tamingo.domain.home.repository.SuggestionLearningRepository;
 import app.tamingo.domain.home.service.realtime.RealTimeScheduleService;
+import app.tamingo.domain.home.service.startplace.ScheduleStartSnapshotService;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.exception.ScheduleErrorCode;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.todo.repository.TodoRepository;
 import app.tamingo.domain.todo.entity.Todo;
+import app.tamingo.domain.tmap.service.DirectionService;
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,12 +39,15 @@ public class DailyPlanService {
     private final UserRepository userRepository;
     private final RealTimeScheduleService realTimeScheduleService;
     private final TodoRepository todoRepository;
+    private final ScheduleStartSnapshotService scheduleStartSnapshotService;
+    private final DirectionService directionService;
 
 
     // 홈 화면 일정 목록 조회
     @Transactional(readOnly = true)
     public DailyPlanResponse viewDailyPlan(Long userId) {
-        User user = userRepository.getReferenceById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
         // 오늘 일정 조회
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
@@ -99,9 +105,11 @@ public class DailyPlanService {
     }
 
     // 일정 상세 조회
-    @Transactional(readOnly = true)
+    // TODO : Redis 없을때도 가져오기
+    @Transactional
     public DailyScheduleResponse viewScheduleDetail(Long userId, Long scheduleId) {
-        User user = userRepository.getReferenceById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
         Schedule schedule = scheduleRepository.findByIdAndUser(scheduleId, user)
                 .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_NOT_FOUND));
@@ -111,9 +119,13 @@ public class DailyPlanService {
                 && (schedule.getLatitude() == null || schedule.getLongitude() == null)) {
             return new DailyScheduleResponse(null, List.of(), List.of());
         }
+
         // 일정 상태 계산
         DailyScheduleResponse.ScheduleStatusResponse scheduleStatus =
                 realTimeScheduleService.calculateScheduleStatus(schedule);
+        if (scheduleStatus == null) {
+            refreshMapEtaMinutesIfNeeded(schedule);
+        }
 
         // 연결된 할일 조회
         List<Todo> linkedTodos = todoRepository.findAllBySchedule(schedule);
@@ -142,6 +154,32 @@ public class DailyPlanService {
                 linkedTodoResponses,
                 recommendations
         );
+    }
+
+    private void refreshMapEtaMinutesIfNeeded(Schedule schedule) {
+        if (schedule == null || schedule.getLatitude() == null || schedule.getLongitude() == null) {
+            return;
+        }
+        app.tamingo.domain.home.entity.ScheduleStartSnapshot snapshot =
+                scheduleStartSnapshotService.findSnapshotEntity(schedule);
+        if (snapshot == null) {
+            scheduleStartSnapshotService.createSnapshotForSchedule(schedule, LocalDateTime.now());
+            snapshot = scheduleStartSnapshotService.findSnapshotEntity(schedule);
+        }
+        if (snapshot == null || snapshot.getMapEtaMinutes() != null) {
+            return;
+        }
+        app.tamingo.domain.home.dto.DirectionResult route = directionService.calculateRoute(
+                snapshot.getUsedStartLat(),
+                snapshot.getUsedStartLng(),
+                schedule.getLatitude(),
+                schedule.getLongitude()
+        );
+        if (route == null) {
+            return;
+        }
+        snapshot.updateMapEtaMinutes(route.getTotalMinutes());
+        scheduleStartSnapshotService.saveSnapshot(snapshot);
     }
 
 
