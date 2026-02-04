@@ -24,7 +24,6 @@ public class TransportPreferenceService {
     private final TransportPreferenceRepository repository;
     private final UserRepository userRepository;
 
-    @Transactional
     public TransportPreferenceResponse getPreferences(Long userId) {
         List<TransportPreference> preferences =
                 repository.findAllByUserIdOrderByRankAsc(userId);

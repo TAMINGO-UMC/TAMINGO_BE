@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users/me/transport-preferences")
+@RequestMapping("/api/transport-preferences")
 public class TransportPreferenceController {
 
     private final TransportPreferenceService transportPreferenceService;
