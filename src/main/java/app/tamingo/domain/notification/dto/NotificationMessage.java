@@ -79,4 +79,16 @@ public class NotificationMessage implements Serializable {
                 .expectedEta(expectedEta)
                 .build();
     }
+
+    // [10번] N분 전 알림 (Optional)
+    public static NotificationMessage createNMinutes(
+            Long userId, String userName, String destination, int expectedEta) {
+        return NotificationMessage.builder()
+                .userId(userId)
+                .type(NotificationType.BEFORE_N)
+                .userName(userName)
+                .destination(destination)
+                .expectedEta(expectedEta)
+                .build();
+    }
 }
