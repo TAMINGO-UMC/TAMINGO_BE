@@ -18,6 +18,7 @@ import app.tamingo.domain.todo.repository.TodoRepository;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
+import app.tamingo.domain.userlearning.service.UserLearningSummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,7 @@ public class ScheduleService {
     private final ScheduleCategoryRepository scheduleCategoryRepository;
     private final ScheduleAiLogRepository scheduleAiLogRepository;
     private final ScheduleInitQueueService scheduleInitQueueService;
+    private final UserLearningSummaryService userLearningSummaryService;
 
     @Transactional
     public CreateScheduleResponse createSchedule(Long userId, CreateScheduleRequest request){
@@ -153,6 +155,8 @@ public class ScheduleService {
         // 첫 번째 일정에 대해서만 AI 로그 저장
         if (request.aiInferenceSource() != null) {
             saveAiLog(user, firstSchedule, category, request);
+
+            userLearningSummaryService.updateAiStats(userId);
         }
 
         return new CreateScheduleResponse(firstSchedule.getId());
@@ -183,10 +187,10 @@ public class ScheduleService {
         ScheduleAiLog log = ScheduleAiLog.of(
                 user,
                 schedule,
-                aiPlace,
                 aiCategory,
-                userPlace,
+                aiPlace,
                 userCategory,
+                userPlace,
                 score
         );
 

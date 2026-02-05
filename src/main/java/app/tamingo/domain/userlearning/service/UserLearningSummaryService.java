@@ -79,5 +79,39 @@ public class UserLearningSummaryService {
         errorLogRepository.deleteByUser(user);
     }
 
+    // avgAccuracyRate 갱신
+    @Transactional
+    public void updateAiStats(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+        // 기존 Summary 조회
+        UserLearningSummary summary = userLearningSummaryRepository.findByUser(user)
+                .orElseGet(() -> {
+                    UserLearningSummary newSummary = UserLearningSummary.of(user, 0, 0.0, 0);
+                    return userLearningSummaryRepository.save(newSummary);
+                });
+
+        // 데이터 집계
+        long scheduleCount = scheduleAiLogRepository.countByUser(user);
+        int scheduleSum = scheduleAiLogRepository.sumScoreByUser(user);
+
+        long todoCount = todoAiLogRepository.countByUser(user);
+        int todoSum = todoAiLogRepository.sumScoreByUser(user);
+
+        long totalCount = scheduleCount + todoCount;
+        double totalSum = (double) (scheduleSum + todoSum);
+
+        // 평균 정확도 계산
+        double newAvgAccuracy = (totalCount == 0) ? 0.0 : (totalSum / totalCount);
+        // 소수점 1자리 반올림
+        newAvgAccuracy = Math.round(newAvgAccuracy * 10.0) / 10.0;
+
+        summary.update(
+                summary.getSampleCount(),
+                newAvgAccuracy,
+                summary.getFvpCount()
+        );
+    }
 
 }
