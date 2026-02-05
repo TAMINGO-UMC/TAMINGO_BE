@@ -4,6 +4,7 @@ import app.tamingo.domain.home.entity.ScheduleStartSnapshot;
 import app.tamingo.domain.home.repository.ScheduleStartSnapshotRepository;
 import app.tamingo.domain.notification.dto.NotificationMessage;
 import app.tamingo.domain.notification.service.NotificationProducer;
+import app.tamingo.domain.notificationsetting.repository.NotificationSettingRepository;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.userlearning.entity.DepartureAlarm;
 import app.tamingo.domain.userlearning.repository.DepartureAlarmRepository;
@@ -24,6 +25,7 @@ public class NotificationReservationScheduler {
     private final NotificationProducer notificationProducer;
     private final ScheduleStartSnapshotRepository snapshotRepository;
     private final DepartureAlarmRepository departureAlarmRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
 
     @Scheduled(fixedDelay = 60000)
     @Transactional
@@ -72,11 +74,25 @@ public class NotificationReservationScheduler {
                 // 결정된 정각 알림(2번 또는 3번) 예약
                 notificationProducer.reserve(onTimeMessage, departureTime);
 
+                // [10번 알림 : N분 전]
+                notificationSettingRepository.findById(user.getId()).ifPresent(setting -> {
+                    if (setting.isDepartureAlertEnabled()) {
+                        int leadMinutes = setting.getDepartureLeadMinutes();
+                        LocalDateTime reminderTime = departureTime.minusMinutes(leadMinutes);
+
+                        notificationProducer.reserve(
+                                NotificationMessage.createNMinutes(user.getId(), user.getNickname(), destination, leadMinutes),
+                                reminderTime
+                        );
+                        log.info("[10번(n분전) 예약] {}님 {}분 전 알림", user.getNickname(), leadMinutes);
+                    }
+                });
+
                 snapshot.reserved();
-                log.info("✅ {}님 알림세트 예약 성공", user.getNickname());
+                log.info("{}님 알림세트 예약 성공", user.getNickname());
 
             } catch (Exception e) {
-                log.error("❌ 알림 예약 실패 -> snapshotId={}", snapshot.getId(), e);
+                log.error("알림 예약 실패 -> snapshotId={}", snapshot.getId(), e);
             }
         }
     }

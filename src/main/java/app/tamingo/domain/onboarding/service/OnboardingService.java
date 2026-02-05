@@ -6,7 +6,7 @@ import app.tamingo.domain.favoriteplace.service.FavoritePlaceService;
 import app.tamingo.domain.notificationsetting.entity.AlertMinute;
 import app.tamingo.domain.notificationsetting.service.NotificationSettingService;
 import app.tamingo.domain.transportpreference.exception.TransportPreferenceErrorCode;
-import app.tamingo.domain.useractivetime.exception.UserActiveTimeError;
+import app.tamingo.domain.useractivetime.exception.UserActiveTimeErrorCode;
 import app.tamingo.domain.transportpreference.entity.TransportPreference;
 import app.tamingo.domain.transportpreference.entity.TransportType;
 import app.tamingo.domain.transportpreference.repository.TransportPreferenceRepository;
@@ -77,7 +77,7 @@ public class OnboardingService {
         LocalTime end = parseTimeOrThrow(at.endTime());
 
         if (!end.isAfter(start)) {
-            throw new CustomException(UserActiveTimeError.TIME_ORDER_INVALID);
+            throw new CustomException(UserActiveTimeErrorCode.TIME_ORDER_INVALID);
         }
         return new ActiveTimeValue(start, end);
     }
@@ -86,7 +86,7 @@ public class OnboardingService {
         try {
             return LocalTime.parse(s); // expects "HH:mm"
         } catch (DateTimeParseException e) {
-            throw new CustomException(UserActiveTimeError.TIME_FORMAT_INVALID);
+            throw new CustomException(UserActiveTimeErrorCode.TIME_FORMAT_INVALID);
         }
     }
 

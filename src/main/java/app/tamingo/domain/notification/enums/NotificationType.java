@@ -6,5 +6,6 @@ public enum NotificationType {
     ARRIVAL_CHECK,
     PERSONAL,
     TRAFFIC,
-    GAP
+    GAP,
+    BEFORE_N
 }

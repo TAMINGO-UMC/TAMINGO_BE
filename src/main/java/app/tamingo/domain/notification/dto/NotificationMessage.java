@@ -55,4 +55,40 @@ public class NotificationMessage implements Serializable {
                 .expectedEta(expectedEta)
                 .build();
     }
+
+    // [4번] 교통 혼잡 알림
+    public static NotificationMessage createTrafficCongestion(
+            Long userId, String userName, String destination, int expectedEta) {
+        return NotificationMessage.builder()
+                .userId(userId)
+                .type(NotificationType.TRAFFIC)
+                .userName(userName)
+                .destination(destination)
+                .expectedEta(expectedEta)
+                .build();
+    }
+
+    // [6번] 도착 확인 알림
+    public static NotificationMessage createArrival(
+            Long userId, String userName, String destination, int expectedEta) {
+        return NotificationMessage.builder()
+                .userId(userId)
+                .type(NotificationType.ARRIVAL_CHECK)
+                .userName(userName)
+                .destination(destination)
+                .expectedEta(expectedEta)
+                .build();
+    }
+
+    // [10번] N분 전 알림 (Optional)
+    public static NotificationMessage createNMinutes(
+            Long userId, String userName, String destination, int expectedEta) {
+        return NotificationMessage.builder()
+                .userId(userId)
+                .type(NotificationType.BEFORE_N)
+                .userName(userName)
+                .destination(destination)
+                .expectedEta(expectedEta)
+                .build();
+    }
 }

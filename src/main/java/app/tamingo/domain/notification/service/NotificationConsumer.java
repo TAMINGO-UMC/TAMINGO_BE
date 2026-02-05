@@ -74,6 +74,11 @@ public class NotificationConsumer {
             case PERSONAL -> String.format("%s님의 평소 보폭을 반영해 조금 일찍 알려드려요. 지금 출발하면 [%s]에 여유있게 도착합니다!",
                     msg.getUserName(), msg.getDestination());
 
+            case TRAFFIC -> String.format("가는 길 교통이 혼잡해요! 평소보다 10분만 서둘러 출발해 볼까요?");
+
+            case ARRIVAL_CHECK -> String.format("%s님, [%s]에 잘 도착하셨나요? 도착하셨다면 버튼을 눌러 상태를 변경해 주세요!",
+                    msg.getUserName(), msg.getDestination());
+
             default -> "Tamingo 알림이 도착했습니다.";
         };
     }
