@@ -68,6 +68,16 @@ public class ScheduleStartSnapshot {
     @Column(name = "is_overridden", nullable = false)
     private boolean overridden;
 
+    @Column(name = "is_reserved", nullable = false)
+    private boolean isReserved = false;
+
+    @Column(name = "expected_eta", nullable = false)
+    private int expectedEta;
+
+    public void reserved() {
+        this.isReserved = true;
+    }
+
     @Builder(builderMethodName = "internalBuilder")
     private ScheduleStartSnapshot(
             Schedule schedule,
