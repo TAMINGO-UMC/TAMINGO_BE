@@ -10,4 +10,6 @@ import java.util.Optional;
 
 public interface UserLearningPatternRepository extends JpaRepository<UserLearningPattern, Long> {
     Optional<UserLearningPattern> findByUserAndTimeSlotAndRouteType(User user, TimeSlot timeSlot, RouteType routeType);
+
+    void deleteByUser(User user);
 }

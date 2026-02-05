@@ -38,7 +38,7 @@ public class ScheduleStartSnapshotService {
     private final KakaoGeoService kakaoGeoService;
 
     /**
-     * 모든 일정의 시작 1시간 + 출발 알림 시간  전에 출발지 스냅샷 생성
+     * 모든 일정의 시작 1시간 + 출발 알림 시간  전에 출발지 스냅샷 생성하는 배치작업 - 추ㅜ 삭제
      *
      * @return 스냅샷 개수
      */
@@ -55,56 +55,9 @@ public class ScheduleStartSnapshotService {
 
         // 일정별로 출발지 스냅샷 생성
         for (Schedule schedule : schedules) {
-            if (scheduleStartSnapshotRepository.existsBySchedule(schedule)) {
-                continue;
+            if (createSnapshotForSchedule(schedule, now)) {
+                savedCount++;
             }
-
-            // 일정에 장소가 없을 경우
-            if (schedule.getLatitude() == null || schedule.getLongitude() == null) {
-                log.debug("[HOME][START] 알정 장소 누락 scheduleId={}", schedule.getId());
-                continue;
-            }
-
-            User user = schedule.getUser();
-
-            // 이전 스케줄 불러오기, 없으면 null
-            Schedule previousSchedule = scheduleRepository
-                    .findBeforeStartTime(
-                            user,
-                            schedule.getStartTime()
-                    )
-                    .orElse(null);
-
-            // 자주 가는 장소 불러오기
-            List<FavoritePlace> favoritePlaces =
-                    favoritePlaceRepository.findAllByUser(user);
-
-            StartLocationDeciderService.LocationDecision decision =
-                    startLocationDeciderService.decideStartLocationWithSource(
-                            schedule,
-                            previousSchedule,
-                            null,
-                            favoritePlaces
-                    );
-
-            if (decision == null || decision.location() == null) {
-                log.debug("[HOME][START] 출발지 결정 안됨. scheduleId={}", schedule.getId());
-                continue;
-            }
-
-            ScheduleStartSnapshot snapshot = ScheduleStartSnapshot.of(
-                    schedule,
-                    decision.sourceType(),
-                    decision.sourceId(),
-                    decision.location().latitude(),
-                    decision.location().longitude(),
-                    decision.placeName(),
-                    now,
-                    false
-            );
-
-            scheduleStartSnapshotRepository.save(snapshot);
-            savedCount++;
         }
 
         if (savedCount > 0) {
@@ -113,6 +66,70 @@ public class ScheduleStartSnapshotService {
         }
 
         return savedCount;
+    }
+
+    /**
+     * 해당 일정의 출발지 스냅샷 생성
+     * 이전 스케줄이 있다면, 직전 스케줄의 장소를 가져옴
+     * @param schedule
+     * @param decidedAt
+     * @return
+     */
+    public boolean createSnapshotForSchedule(Schedule schedule, LocalDateTime decidedAt) {
+        if (schedule == null) {
+            return false;
+        }
+        if (scheduleStartSnapshotRepository.existsBySchedule(schedule)) {
+            return false;
+        }
+
+        // 일정에 장소가 없을 경우
+        if (schedule.getLatitude() == null || schedule.getLongitude() == null) {
+            log.debug("[HOME][START] 일정 장소 누락 scheduleId={}", schedule.getId());
+            return false;
+        }
+
+        User user = schedule.getUser();
+
+        // 이전 스케줄 불러오기
+        Schedule previousSchedule = scheduleRepository
+                .findBeforeStartTime(
+                        user,
+                        schedule.getStartTime()
+                )
+                .orElse(null);
+
+
+        // 자주 가는 장소 불러오기
+        List<FavoritePlace> favoritePlaces =
+                favoritePlaceRepository.findAllByUser(user);
+
+        StartLocationDeciderService.LocationDecision decision =
+                startLocationDeciderService.decideStartLocationWithSource(
+                        schedule,
+                        previousSchedule,
+                        null,
+                        favoritePlaces
+                );
+
+        if (decision == null || decision.location() == null) {
+            log.debug("[HOME][START] 출발지 결정 안됨. scheduleId={}", schedule.getId());
+            return false;
+        }
+
+        ScheduleStartSnapshot snapshot = ScheduleStartSnapshot.of(
+                schedule,
+                decision.sourceType(),
+                decision.sourceId(),
+                decision.location().latitude(),
+                decision.location().longitude(),
+                decision.placeName(),
+                decidedAt,
+                false
+        );
+
+        scheduleStartSnapshotRepository.save(snapshot);
+        return true;
     }
 
     // SILENT GPS CHECK 적용 - 출발지 스냅샷이 존재하고, GPS 위치가 스냅샷보다 더 오래 걸리는 경우에만 오버라이드
@@ -246,5 +263,47 @@ public class ScheduleStartSnapshotService {
 
     public String findPlaceNameWithLocation(double latitude, double longitude) {
         return kakaoGeoService.getAddress(latitude, longitude).addressName();
+    }
+
+    @Transactional(readOnly = true)
+    public StartLocationSnapshotInfo findSnapshotLocation(Schedule schedule) {
+        if (schedule == null) {
+            return null;
+        }
+        ScheduleStartSnapshot snapshot = scheduleStartSnapshotRepository
+                .findBySchedule(schedule)
+                .orElse(null);
+        if (snapshot == null) {
+            return null;
+        }
+        return new StartLocationSnapshotInfo(
+                snapshot.getUsedStartLat(),
+                snapshot.getUsedStartLng(),
+                snapshot.getUsedStartPlaceName()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ScheduleStartSnapshot findSnapshotEntity(Schedule schedule) {
+        if (schedule == null) {
+            return null;
+        }
+        return scheduleStartSnapshotRepository
+                .findBySchedule(schedule)
+                .orElse(null);
+    }
+
+    public void saveSnapshot(ScheduleStartSnapshot snapshot) {
+        if (snapshot == null) {
+            return;
+        }
+        scheduleStartSnapshotRepository.save(snapshot);
+    }
+
+    public record StartLocationSnapshotInfo(
+            double usedStartLat,
+            double usedStartLng,
+            String usedStartPlaceName
+    ) {
     }
 }

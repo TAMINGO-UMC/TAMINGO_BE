@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 
 public interface FvpHistoryRepository extends JpaRepository<FvpHistory, Long> {
 
+    void deleteByUser(User user);
+
     @Query("SELECT COUNT(f) FROM FvpHistory f " +
             "WHERE f.user = :user " +
             "AND f.name = :name " +

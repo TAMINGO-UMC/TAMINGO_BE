@@ -39,7 +39,7 @@ public class StartLocationController {
                         request.scheduleId(),
                         new Location(request.latitude(), request.longitude())
                 );
-        return ApiResponse.onSuccess(toResponse(result), SuccessCode.OK);
+        return ApiResponse.onSuccess(null, SuccessCode.OK);
     }
 
     @Operation(summary = "실시간 위치 전송", description = "일정 시작 후 실시간 위치를 전송합니다.")
@@ -66,20 +66,5 @@ public class StartLocationController {
     ) {
         realTimeScheduleService.confirmArrivalByPostCheck(userId,scheduleId);
         return ApiResponse.onSuccess(null, SuccessCode.OK);
-    }
-
-
-    // TODO: 추후 분리해야함
-    private StartLocationGpsResponse toResponse(
-            ScheduleStartSnapshotService.StartGpsUpdateResult result
-    ) {
-        return new StartLocationGpsResponse(
-                result.overridden(),
-                result.reason(),
-                result.snapshotMinutes(),
-                result.gpsMinutes(),
-                result.usedStartLat(),
-                result.usedStartLng()
-        );
     }
 }

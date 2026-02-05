@@ -60,6 +60,10 @@ public class ScheduleStartSnapshot {
     @Column(name = "decided_at", nullable = false)
     private LocalDateTime decidedAt;
 
+    // 스냅샷 기준 지도 ETA (분)
+    @Column(name = "map_eta_minutes")
+    private Integer mapEtaMinutes;
+
     // silent gps에 의해 변경되었는지의 여부
     @Column(name = "is_overridden", nullable = false)
     private boolean overridden;
@@ -132,7 +136,11 @@ public class ScheduleStartSnapshot {
         this.decidedAt = decidedAt;
         this.usedStartPlaceName = usedStartPlaceName;
         this.overridden = overridden;
+        this.mapEtaMinutes = null;
     }
 
+    public void updateMapEtaMinutes(Integer mapEtaMinutes) {
+        this.mapEtaMinutes = mapEtaMinutes;
+    }
 
 }
