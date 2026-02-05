@@ -6,7 +6,7 @@ import app.tamingo.domain.notification.dto.NotificationMessage;
 import app.tamingo.domain.notification.service.NotificationProducer;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.userlearning.entity.DepartureAlarm;
-import app.tamingo.domain.userlearning.respository.DepartureAlarmRepository;
+import app.tamingo.domain.userlearning.repository.DepartureAlarmRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

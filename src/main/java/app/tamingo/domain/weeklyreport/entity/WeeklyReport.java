@@ -1,9 +1,7 @@
 package app.tamingo.domain.weeklyreport.entity;
 
 import app.tamingo.BaseEntity;
-import app.tamingo.domain.dailyactivity.entity.DailyActivitySummary;
 import app.tamingo.domain.user.entity.User;
-import app.tamingo.domain.weeklyinsight.entity.WeeklyInsight;
 import app.tamingo.domain.weeklyreport.enums.ProductivityGrade;
 import jakarta.persistence.*;
 import lombok.*;

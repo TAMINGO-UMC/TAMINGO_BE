@@ -32,4 +32,37 @@ public class WebClientConfig {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
+
+    @Bean(name = "tmapWebClient")
+    WebClient tmapWebClient(
+            @Value("${tmap.url}") String baseUrl,
+            @Value("${tmap.app-key}") String appKey
+    ) {
+        return WebClient.builder()
+                .baseUrl(baseUrl)
+                .defaultHeader("appKey", appKey)
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+    }
+
+    @Bean(name = "kakaoMapGeoWebClient")
+    WebClient kakaoMapGeoWebClient(
+            @Value("${kakao.api.key}") String apiKey,
+            @Value("${kakao.api.url}") String baseUrl
+    ) {
+        return WebClient.builder()
+                .baseUrl(baseUrl)
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "KakaoAK " + apiKey)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+    }
+
+    @Bean(name = "kakaoUserWebClient")
+    WebClient kakaoUserWebClient() {
+        return WebClient.builder()
+                .baseUrl("https://kapi.kakao.com")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+    }
 }

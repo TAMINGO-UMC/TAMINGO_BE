@@ -53,16 +53,16 @@ public class Schedule extends BaseEntity {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
-    @Column(name = "place_name", nullable = false)
+    @Column(name = "place_name")
     private String placeName;
 
     @Column(name = "address")
     private String address;
 
-    @Column(name = "latitude", nullable = false)
+    @Column(name = "latitude")
     private Double latitude;
 
-    @Column(name = "longitude", nullable = false)
+    @Column(name = "longitude")
     private Double longitude;
 
     // 길찾기 기능 해제 여부, 기본 true로 설정
@@ -103,9 +103,13 @@ public class Schedule extends BaseEntity {
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.repeatType = (repeatType != null) ? repeatType : RepeatType.NONE;
-        this.repeatEndDate = repeatEndDate;
         this.memo = memo;
+
+        // RepeatType 설정 및 EndDate 정제
+        this.repeatType = (repeatType != null) ? repeatType : RepeatType.NONE;
+
+        // NONE이면 날짜가 들어와도 무시하고 null 저장
+        this.repeatEndDate = (this.repeatType == RepeatType.NONE) ? null : repeatEndDate;
     }
 
     public static Schedule of(
@@ -164,8 +168,9 @@ public class Schedule extends BaseEntity {
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.repeatType = repeatType;
-        this.repeatEndDate = repeatEndDate;
         this.memo = memo;
+
+        this.repeatType = (repeatType != null) ? repeatType : RepeatType.NONE;
+        this.repeatEndDate = (this.repeatType == RepeatType.NONE) ? null : repeatEndDate;
     }
 }

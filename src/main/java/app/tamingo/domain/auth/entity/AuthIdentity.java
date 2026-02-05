@@ -12,8 +12,14 @@ import lombok.NoArgsConstructor;
 @Table(
         name = "auth_identities",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"provider", "email"}),
-                @UniqueConstraint(columnNames = {"provider", "provider_user_id"})
+                @UniqueConstraint(
+                        name = "uq_auth_identities_provider_provider_user_id",
+                        columnNames = {"provider", "provider_user_id"}
+                ),
+                @UniqueConstraint(
+                        name = "uq_auth_identities_provider_email",
+                        columnNames = {"provider", "email"}
+                )
         }
 )
 @Getter
@@ -63,5 +69,19 @@ public class AuthIdentity extends BaseEntity {
                 .passwordHash(passwordHash)
                 .providerUserId(null)
                 .build();
+    }
+
+    public static AuthIdentity createKakao(User user, String providerUserId, String email) {
+        return AuthIdentity.internalBuilder()
+                .user(user)
+                .provider(AuthProvider.KAKAO)
+                .providerUserId(providerUserId)
+                .email(email)
+                .passwordHash(null)
+                .build();
+    }
+
+    public void updatePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }
