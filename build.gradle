@@ -55,8 +55,8 @@ dependencies {
 	// webclient
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-	implementation 'org.redisson:redisson-spring-boot-starter:3.27.2'
-}
+	implementation 'org.redisson:redisson:3.27.2'
+	implementation 'com.google.firebase:firebase-admin:9.2.0'}
 
 tasks.named('test') {
 	useJUnitPlatform()
