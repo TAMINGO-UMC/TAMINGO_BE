@@ -718,7 +718,7 @@ public class RealTimeScheduleService {
                 LocalDateTime.now()
         );
 
-        log.info("✅ [6번 도착 확인 알림] {}님 발송 성공", user.getNickname());
+        log.info("[6번 도착 확인] {}님 예약", user.getNickname());
     }
 
     private int computePScore(LocalDateTime scheduleStartTime, LocalDateTime arrivedAt, boolean isPostConfirm) {
