@@ -51,7 +51,7 @@ public class DailyPlanController {
 
     // 사용자 출발 처리
     @PostMapping("/route-find/start")
-    @Operation(summary = "사용자 출발 처리 및 길찾기 시작", description = "일정 출발 시 출발 처리")
+    @Operation(summary = "사용자 출발 처리 및 길찾기 시작", description = "길찾기 버튼 클릭 시 출발 처리가 되어있지 않으면 처리를 진행합니다.")
     public ApiResponse<FindRouteResponse> startSchedule(
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody StartLocationGpsRequest request
@@ -70,7 +70,6 @@ public class DailyPlanController {
         FindRouteEndResponse response = realTimeScheduleService.confirmArrivalByEndRouteFind(request,now);
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
-
 
 
 

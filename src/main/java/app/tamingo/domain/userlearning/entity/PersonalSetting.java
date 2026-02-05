@@ -41,7 +41,10 @@ public class PersonalSetting extends BaseEntity {
     }
 
     // 오차 로그 수집 설정 수정
-    public void update(boolean errorLogEnabled) {
-        this.errorLogEnabled = errorLogEnabled;
+    public void update() {
+        if (this.errorLogEnabled) {
+            this.errorLogEnabled = false;
+        }
     }
+
 }
