@@ -1,34 +1,37 @@
 package app.tamingo.domain.notification.service;
 
 import app.tamingo.domain.notification.dto.NotificationMessage;
+import app.tamingo.domain.notification.repository.NotificationRedisRepository;
 import lombok.RequiredArgsConstructor;
-import org.redisson.api.RBlockingQueue;
-import org.redisson.api.RDelayedQueue;
-import org.redisson.api.RedissonClient;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
-import java.util.concurrent.TimeUnit;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationProducer {
 
-    private final RedissonClient redisson;
+    private final RedisTemplate<String, String> redisTemplate;
+    private static final String NOTIFICATION_QUEUE_KEY = "notification:reservation:queue";
+    private final NotificationRedisRepository notificationRedisRepository;
 
-    // 알림 메시지 큐 이름
-    private static String NOTIFICATION_QUEUE_NAME = "notification_queue";
+    public void reserve(NotificationMessage message, LocalDateTime targetTime) {
+        try {
+            // 발송 시간을 초 단위 타임스탬프로 변환
+            double score = (double) targetTime.atZone(ZoneId.systemDefault()).toInstant().getEpochSecond();
 
-    // 알림 예약 메서드
-    public void sendNotification(NotificationMessage message, long delayMinutes) {
+            // Redis ZSet에 추가
+            notificationRedisRepository.saveToZSet(message, score);
+            log.info("[알림 예약 성공] 유저: {}, 타입: {}, 발송예정: {}",
+                    message.getUserName(), message.getType(), targetTime);
 
-        // 실제 메시지가 적재되는 Blocking Queue
-        RBlockingQueue<NotificationMessage> blockingQueue = redisson.getBlockingQueue(NOTIFICATION_QUEUE_NAME);
-
-        // 지연 기능을 담당하는 Delayed Queue
-        RDelayedQueue<NotificationMessage> delayedQueue = redisson.getDelayedQueue(blockingQueue);
-
-        // 지연시간이 지나면 메시지가 blockingQueue로 넘어가게끔 예약
-        delayedQueue.offer(message, delayMinutes, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            log.error("[알림 예약 실패] 유저ID: {}, 에러: {}", message.getUserId(), e.getMessage());
+            throw new RuntimeException("Redis 알림 예약 중 오류 발생", e);
+        }
     }
 
 }
