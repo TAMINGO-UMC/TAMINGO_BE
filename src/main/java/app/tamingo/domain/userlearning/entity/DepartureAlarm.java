@@ -45,6 +45,9 @@ public class DepartureAlarm {
     @Column(name = "arrival_buffer_minutes", nullable = false)
     private int arrivalBufferMinutes;
 
+    @Column(name = "is_applied", nullable = false)
+    private boolean isApplied = false;
+
     @Builder(builderMethodName = "internalBuilder")
     private DepartureAlarm(
             User user,
@@ -52,7 +55,8 @@ public class DepartureAlarm {
             double usfApplied,
             Integer finalEta,
             Time notifyAt,
-            int arrivalBufferMinutes
+            int arrivalBufferMinutes,
+            boolean isApplied
     ) {
         this.user = user;
         this.baseEta = baseEta;
@@ -60,6 +64,7 @@ public class DepartureAlarm {
         this.finalEta = finalEta;
         this.notifyAt = notifyAt;
         this.arrivalBufferMinutes = arrivalBufferMinutes;
+        this.isApplied = isApplied;
     }
 
     public static DepartureAlarm of(
@@ -78,5 +83,9 @@ public class DepartureAlarm {
                 .notifyAt(notifyAt)
                 .arrivalBufferMinutes(arrivalBufferMinutes)
                 .build();
+    }
+
+    public void markAsApplied() {
+        this.isApplied = true;
     }
 }

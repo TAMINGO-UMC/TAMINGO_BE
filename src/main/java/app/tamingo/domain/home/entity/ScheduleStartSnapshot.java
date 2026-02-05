@@ -58,4 +58,14 @@ public class ScheduleStartSnapshot {
     // silent gps에 의해 변경되었는지의 여부
     @Column(name = "is_overridden", nullable = false)
     private boolean overridden;
+
+    @Column(name = "is_reserved", nullable = false)
+    private boolean isReserved = false;
+
+    @Column(name = "expected_eta", nullable = false)
+    private int expectedEta;
+
+    public void reserved() {
+        this.isReserved = true;
+    }
 }
