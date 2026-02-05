@@ -7,6 +7,7 @@ import app.tamingo.domain.schedule.dto.*;
 import app.tamingo.domain.schedule.service.PlaceContextService;
 import app.tamingo.domain.schedule.service.ScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -19,13 +20,13 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/schedules")
+@Tag(name = "Schedule API", description = "일정 관련 API")
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
     private final PlaceContextService placeContextService;
     private final AiScheduleService aiScheduleService;
 
-    // 일정 생성 API
     @Operation(summary = "일정 생성 API",description = "일정 생성")
     @PostMapping("/create")
     public ApiResponse<CreateScheduleResponse> createSchedule(
@@ -36,12 +37,11 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
-    // 사용자 장소 수정 시 할 일 추천 API
     @Operation(summary = "사용자 장소 수정 시 할 일 추천 API", description = "사용자가 직접 장소 수정 시 할 일 리스트 추천")
     @PostMapping("/recommend-todos")
     public ApiResponse<RecommendTodoResponse> getRecommendTodos(
             @AuthenticationPrincipal Long userId,
-            @RequestBody RecommendTodoRequest request
+            @Valid @RequestBody RecommendTodoRequest request
     ){
         RecommendTodoResponse response = placeContextService.getPlaceContext(
                 userId,
@@ -52,18 +52,16 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
-    // ai 일정 추론 API (제목 -> 장소/할일 추론)
     @Operation(summary = "제목 기반 AI 일정 추론 API",description = "장소&카테고리&자주 가는 장소 추가 여부")
     @PostMapping("/ai-inference")
     public ApiResponse<AiInferenceResponse> inferSchedule(
             @AuthenticationPrincipal Long userId,
-            @RequestBody AiInferenceRequest request
+            @Valid @RequestBody AiInferenceRequest request
     ) {
         AiInferenceResponse response = aiScheduleService.inferSchedule(userId, request.title());
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
-    // 특정 일자 일정 목록 조회 API
     @Operation(summary = "특정 일자 일정 목록 API", description = "yyyy-mm-dd 형태로 조회")
     @GetMapping
     public ApiResponse<List<ScheduleListResponse>> getDailySchedules(
@@ -74,7 +72,6 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
-    // 특정 일정 상세 조회 API
     @Operation(summary = "특정 일정 상세 조회 API",description = "특정 일정에 대한 정보 조회")
     @GetMapping("/{scheduleId}")
     public ApiResponse<ScheduleDetailResponse> getScheduleDetail(
@@ -85,7 +82,6 @@ public class ScheduleController {
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 
-    // 일정 수정 API
     @Operation(summary = "일정 수정 API",description = "수정된 정보 저장")
     @PutMapping("/{scheduleId}")
     public ApiResponse<String> updateSchedule(
@@ -97,7 +93,6 @@ public class ScheduleController {
         return ApiResponse.onSuccess("일정이 성공적으로 수정되었습니다.", SuccessCode.OK);
     }
 
-    // 월간 일정 및 카테고리 조회 API
     @Operation(summary = "월간 일정 및 카테고리 조회 API", description = "yyyy-MM 형식으로 요청 시 해당 월의 일정 리스트와 카테고리 정보를 반환합니다.")
     @GetMapping("/calendar")
     public ApiResponse<MonthlyScheduleResponse> getMonthlySchedules(
