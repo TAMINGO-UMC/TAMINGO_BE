@@ -89,4 +89,29 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     List<Todo> findAllByScheduleAndLocation(@Param("schedule") Schedule schedule);
 
     List<Todo> findAllBySchedule(@Param("schedule") Schedule schedule);
+
+    // 날짜 지정 할 일 조회 (Daily)
+    @Query("""
+        SELECT t FROM Todo t 
+        LEFT JOIN FETCH t.todoCategory 
+        WHERE t.user.id = :userId 
+        AND t.targetDate = :date 
+        ORDER BY t.id ASC
+    """)
+    List<Todo> findDailyTodos(
+            @Param("userId") Long userId,
+            @Param("date") LocalDate date
+    );
+
+    // 날짜 미지정 할 일 조회 (Backlog)
+    @Query("""
+        SELECT t FROM Todo t 
+        LEFT JOIN FETCH t.todoCategory 
+        WHERE t.user.id = :userId 
+        AND t.targetDate IS NULL 
+        AND t.isChecked = false 
+        ORDER BY t.id ASC
+    """)
+    List<Todo> findBacklogTodos(@Param("userId") Long userId);
+
 }
