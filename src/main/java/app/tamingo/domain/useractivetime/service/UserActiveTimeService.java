@@ -1,14 +1,13 @@
 package app.tamingo.domain.useractivetime.service;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.ErrorCode;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
 import app.tamingo.domain.useractivetime.dto.UserActiveTimeRequest;
 import app.tamingo.domain.useractivetime.dto.UserActiveTimeResponse;
 import app.tamingo.domain.useractivetime.entity.UserActiveTime;
-import app.tamingo.domain.useractivetime.exception.UserActiveTimeError;
+import app.tamingo.domain.useractivetime.exception.UserActiveTimeErrorCode;
 import app.tamingo.domain.useractivetime.repository.UserActiveTimeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,7 +41,7 @@ public class UserActiveTimeService {
 
         // 시간 순서 검증
         if (request.startTime().isAfter(request.endTime()) || request.startTime().equals(request.endTime())) {
-            throw new CustomException(UserActiveTimeError.TIME_ORDER_INVALID);
+            throw new CustomException(UserActiveTimeErrorCode.TIME_ORDER_INVALID);
         }
 
         // 유저 확인

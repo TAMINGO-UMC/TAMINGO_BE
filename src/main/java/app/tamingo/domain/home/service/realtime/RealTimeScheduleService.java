@@ -12,6 +12,9 @@ import app.tamingo.domain.home.redis.RealtimeScheduleArrivalCheck;
 import app.tamingo.domain.home.entity.enums.ArrivedStatus;
 import app.tamingo.domain.home.service.geoutil.GeoService;
 import app.tamingo.domain.home.service.startplace.ScheduleStartSnapshotService;
+import app.tamingo.domain.notification.dto.NotificationMessage;
+import app.tamingo.domain.notification.enums.NotificationType;
+import app.tamingo.domain.notification.service.NotificationProducer;
 import app.tamingo.domain.notificationsetting.entity.AlertMinute;
 import app.tamingo.domain.notificationsetting.entity.NotificationSetting;
 import app.tamingo.domain.notificationsetting.repository.NotificationSettingRepository;
@@ -30,6 +33,7 @@ import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.exception.ScheduleErrorCode;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +43,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.lettuce.core.pubsub.PubSubOutput.Type.message;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RealTimeScheduleService {
@@ -67,6 +74,7 @@ public class RealTimeScheduleService {
     private final TodoRepository todoRepository;
     private final UserLearningPatternRepository userLearningPatternRepository;
     private final UserMobilityLearningService userMobilityLearningService;
+    private final NotificationProducer notificationProducer;
 
     // 사용자 출발 처리, 길찾기 시작
     @Transactional
@@ -257,7 +265,7 @@ public class RealTimeScheduleService {
 
         int etaMinutes = route.getTotalMinutes();
         etaMinutes = applyUserPattern(schedule.getUser(), schedule.getStartTime(), etaMinutes);
-
+        checkTrafficAndNotify(schedule, etaMinutes);
         ExpectedTimes expectedTimes = computeExpectedTimes(schedule, arrivalBufferMinutes, etaMinutes);
 
         saveEta(schedule, etaMinutes, arrivalBufferMinutes, expectedTimes, now);
@@ -709,7 +717,19 @@ public class RealTimeScheduleService {
     }
 
     private void sendArrivalConfirmationPush(Schedule schedule) {
-        // TODO: "도착하셨나요?" 푸시 전송 연결
+        User user = schedule.getUser();
+
+        notificationProducer.reserve(
+                NotificationMessage.createArrival(
+                        user.getId(),
+                        user.getNickname(),
+                        schedule.getPlaceName(),
+                        0
+                ),
+                LocalDateTime.now()
+        );
+
+        log.info("[6번 도착 확인] {}님 예약", user.getNickname());
     }
 
     private int computePScore(LocalDateTime scheduleStartTime, LocalDateTime arrivedAt, boolean isPostConfirm) {
@@ -994,6 +1014,55 @@ public class RealTimeScheduleService {
         saveLocation(schedule, snapshot.usedStartLat(), snapshot.usedStartLng(), now);
         saveEta(schedule, etaMinutes, arrivalBufferMinutes, expectedTimes, now);
         saveStatus(schedule, expectedTimes, now);
+    }
+
+    @Transactional
+    public void initializeRealtimeOnScheduleCreate(Schedule schedule) {
+        if (schedule == null || !hasDestination(schedule)) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        long ttlSec = ttlSecondsUntil(resolveEndTime(schedule), REALTIME_SCHEDULE_TTL_AFTER_END_MIN);
+        RealtimeSchedule realtime = realtimeScheduleRedisService
+                .getOrCreateScheduleStatus(schedule.getId(), now.format(ISO), ttlSec);
+        applyNavigationEnabled(realtime, schedule);
+        realtimeScheduleRedisService.saveScheduleStatus(realtime);
+    }
+
+
+    @Transactional
+    public void refreshRealtimeOnScheduleUpdate(Schedule schedule) {
+        if (schedule == null) {
+            return;
+        }
+        RealtimeSchedule realtime = realtimeScheduleRedisService.findScheduleStatus(schedule.getId());
+        if (realtime != null
+                && (realtime.getActualDepartureTime() != null || realtime.getActualArrivalTime() != null)) {
+            return;
+        }
+        realtimeScheduleRedisService.deleteScheduleStatus(schedule.getId());
+        realtimeScheduleRedisService.deleteArrivalCheck(schedule.getId());
+        initializeRealtimeOnScheduleCreate(schedule);
+    }
+
+    private void checkTrafficAndNotify(Schedule schedule, int etaMinutes) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startTime = schedule.getStartTime(); //
+
+        if (now.isAfter(startTime.minusMinutes(11)) && now.isBefore(startTime.minusMinutes(4))) {
+
+            if (now.plusMinutes(etaMinutes).isAfter(startTime)) {
+                User user = schedule.getUser(); //
+
+                notificationProducer.reserve(
+                        NotificationMessage.createTrafficCongestion(
+                                user.getId(), user.getNickname(), schedule.getPlaceName(), etaMinutes),
+                        now
+                );
+
+                log.info("[4번 교통혼잡] {}님 예약", user.getNickname());
+            }
+        }
     }
 
 }

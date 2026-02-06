@@ -12,3 +12,5 @@ out/
 
 ### env ###
 .env
+
+src/main/resources/serviceAccountKey.json

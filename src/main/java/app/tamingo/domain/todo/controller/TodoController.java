@@ -6,6 +6,7 @@ import app.tamingo.domain.gpt.service.todo.AiTodoService;
 import app.tamingo.domain.todo.dto.*;
 import app.tamingo.domain.todo.service.TodoService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/todos")
+@Tag(name = "Todo API", description = "할 일 관련 API")
 public class TodoController {
 
     private final TodoService todoService;
@@ -33,7 +35,7 @@ public class TodoController {
     @PostMapping("/ai-inference")
     public ApiResponse<AiTodoInferenceResponse> inferTodo(
             @AuthenticationPrincipal Long userId,
-            @RequestBody AiTodoInferenceRequest request
+            @Valid @RequestBody AiTodoInferenceRequest request
     ) {
         AiTodoInferenceResponse response = aiTodoService.inferTodo(userId, request.title());
         return ApiResponse.onSuccess(response, SuccessCode.OK);
@@ -71,4 +73,13 @@ public class TodoController {
         return ApiResponse.onSuccess("상태가 변경되었습니다.", SuccessCode.OK);
     }
 
+    @Operation(summary = "할 일 장소 수정 시 일정 추천 API", description = "입력된 장소 주변의 일정과 향후 7일간의 일정을 추천합니다.")
+    @PostMapping("/recommend-schedules")
+    public ApiResponse<RecommendScheduleResponse> recommendSchedules(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody RecommendScheduleRequest request
+    ) {
+        RecommendScheduleResponse response = todoService.recommendSchedules(userId, request);
+        return ApiResponse.onSuccess(response, SuccessCode.OK);
+    }
 }

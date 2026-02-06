@@ -6,7 +6,7 @@ import app.tamingo.domain.favoriteplace.service.FavoritePlaceService;
 import app.tamingo.domain.notificationsetting.entity.AlertMinute;
 import app.tamingo.domain.notificationsetting.service.NotificationSettingService;
 import app.tamingo.domain.transportpreference.exception.TransportPreferenceErrorCode;
-import app.tamingo.domain.useractivetime.exception.UserActiveTimeError;
+import app.tamingo.domain.useractivetime.exception.UserActiveTimeErrorCode;
 import app.tamingo.domain.transportpreference.entity.TransportPreference;
 import app.tamingo.domain.transportpreference.entity.TransportType;
 import app.tamingo.domain.transportpreference.repository.TransportPreferenceRepository;
@@ -16,6 +16,8 @@ import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.repository.UserRepository;
 import app.tamingo.domain.useractivetime.entity.UserActiveTime;
 import app.tamingo.domain.useractivetime.repository.UserActiveTimeRepository;
+import app.tamingo.domain.userlearning.entity.PersonalSetting;
+import app.tamingo.domain.userlearning.repository.PersonalSettingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,7 @@ public class OnboardingService {
 
     private final UserActiveTimeRepository userActiveTimeRepository;
     private final TransportPreferenceRepository transportPreferenceRepository;
+    private final PersonalSettingRepository personalSettingRepository;
     private final FavoritePlaceService favoritePlaceService;
     private final NotificationSettingService notificationSettingService;
 
@@ -56,6 +59,8 @@ public class OnboardingService {
         AlertMinute minute = req.notificationSetting().departAlertMinutes();
         notificationSettingService.applyOnboarding(userId, enabled, minute);
 
+        createPersonalSettingIfAbsent(user);
+
         user.completeOnboarding();
     }
 
@@ -72,7 +77,7 @@ public class OnboardingService {
         LocalTime end = parseTimeOrThrow(at.endTime());
 
         if (!end.isAfter(start)) {
-            throw new CustomException(UserActiveTimeError.TIME_ORDER_INVALID);
+            throw new CustomException(UserActiveTimeErrorCode.TIME_ORDER_INVALID);
         }
         return new ActiveTimeValue(start, end);
     }
@@ -81,7 +86,7 @@ public class OnboardingService {
         try {
             return LocalTime.parse(s); // expects "HH:mm"
         } catch (DateTimeParseException e) {
-            throw new CustomException(UserActiveTimeError.TIME_FORMAT_INVALID);
+            throw new CustomException(UserActiveTimeErrorCode.TIME_FORMAT_INVALID);
         }
     }
 
@@ -170,6 +175,17 @@ public class OnboardingService {
                     tp.transport(),
                     tp.rank()
             ));
+        }
+    }
+
+    // 개인화 설정(오차 로그 수집)
+    private void createPersonalSettingIfAbsent(User user) {
+        Long userId = user.getId();
+
+        if (!personalSettingRepository.existsById(userId)) {
+            personalSettingRepository.save(
+                    PersonalSetting.of(user, true) // 기본값 ON
+            );
         }
     }
 }
