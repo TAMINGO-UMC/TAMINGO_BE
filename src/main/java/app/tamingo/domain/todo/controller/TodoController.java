@@ -9,8 +9,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -80,6 +83,16 @@ public class TodoController {
             @Valid @RequestBody RecommendScheduleRequest request
     ) {
         RecommendScheduleResponse response = todoService.recommendSchedules(userId, request);
+        return ApiResponse.onSuccess(response, SuccessCode.OK);
+    }
+
+    @Operation(summary = "날짜별 할 일 목록 조회 API", description = "특정 날짜의 할 일(완료 포함)과 날짜 미지정 할 일(미완료만)을 함께 조회합니다. 카테고리별로 정렬되어 반환됩니다.")
+    @GetMapping
+    public ApiResponse<DailyTodoListResponse> getDailyTodos(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
+    ) {
+        DailyTodoListResponse response = todoService.getDailyTodos(userId, date);
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
 }

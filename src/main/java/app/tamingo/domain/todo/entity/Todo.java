@@ -187,6 +187,10 @@ public class Todo extends BaseEntity {
         this.isChecked = isChecked;
     }
 
+    public void updateTargetDate(LocalDate targetDate) {
+        this.targetDate = targetDate;
+    }
+
     // 반복 할 일 생성용
     public static Todo createRecurring(
             User user,

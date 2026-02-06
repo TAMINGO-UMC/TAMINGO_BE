@@ -291,6 +291,10 @@ public class TodoService {
             throw new CustomException(TodoErrorCode.TODO_NOT_OWNER);
         }
 
+        if (isChecked && todo.getTargetDate() == null) {
+            todo.updateTargetDate(LocalDate.now());
+        }
+
         // 상태 변경
         todo.updateCheckStatus(isChecked);
     }
@@ -364,6 +368,30 @@ public class TodoService {
                 today.atStartOfDay(),
                 today.plusDays(7).atTime(23, 59, 59)
         );
+    }
+
+    /**
+     * 날짜 지정 + 미지정 할 일 조회
+     */
+    public DailyTodoListResponse getDailyTodos(Long userId, LocalDate date) {
+
+        if (!userRepository.existsById(userId)) {
+            throw new CustomException(UserErrorCode.USER_NOT_FOUND);
+        }
+
+        // 해당 날짜 할 일 조회 (카테고리 정렬)
+        List<TodoListResponse> dailyTodos = todoRepository.findDailyTodos(userId, date)
+                .stream()
+                .map(TodoListResponse::from)
+                .toList();
+
+        // 날짜 미지정 할 일 조회 (미완료만)
+        List<TodoListResponse> backlogTodos = todoRepository.findBacklogTodos(userId)
+                .stream()
+                .map(TodoListResponse::from)
+                .toList();
+
+        return DailyTodoListResponse.of(dailyTodos, backlogTodos);
     }
 
 }
