@@ -41,11 +41,11 @@ public interface FavoritePlaceRepository extends JpaRepository<FavoritePlace, Lo
 
     // ai 추론 장소 개수 계산
     @Query("""
-    select f
+    select count(f)
     from FavoritePlace f
     where f.user = :user
     and f.isAiSuggested = true
     """)
-    int countAiFvpByUser(@Param("user") User user);
+    long countAiFvpByUser(@Param("user") User user);
 
 }

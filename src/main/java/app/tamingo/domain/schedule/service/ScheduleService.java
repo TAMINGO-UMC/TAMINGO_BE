@@ -295,6 +295,12 @@ public class ScheduleService {
                 request.memo()
         );
 
+        // 일정 시작 20분 전 초기화 큐 재등록
+        scheduleInitQueueService.scheduleInit(
+                schedule.getId(),
+                schedule.getStartTime().minusMinutes(20)
+        );
+
         // 할 일 연결 업데이트
         // 기존 연결 해제
         List<Todo> currentLinkedTodos = schedule.getTodoList();

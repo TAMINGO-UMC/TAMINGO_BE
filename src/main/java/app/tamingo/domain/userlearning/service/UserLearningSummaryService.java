@@ -40,7 +40,7 @@ public class UserLearningSummaryService {
         Long patternCount = userLearningSummary != null ? userLearningSummary.getSampleCount() : 0;
         double avgAccuracy = userLearningSummary != null ? userLearningSummary.getAvgAccuracyRate() : 0.0;
         // ai 추론 장소 개수 계산
-        int fvpCount = favoritePlaceRepository.countAiFvpByUser(user);
+        int fvpCount = Math.toIntExact(favoritePlaceRepository.countAiFvpByUser(user));
         return new UserSummaryResponse(patternCount, avgAccuracy, fvpCount);
     }
 

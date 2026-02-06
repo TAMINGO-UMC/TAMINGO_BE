@@ -10,7 +10,7 @@ import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.domain.schedule.exception.ScheduleErrorCode;
-import app.tamingo.domain.tmap.service.DirectionService;
+import app.tamingo.domain.odsay.service.DirectionService;
 import app.tamingo.domain.home.dto.DirectionResult;
 import app.tamingo.domain.home.dto.Location;
 import lombok.RequiredArgsConstructor;

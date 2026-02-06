@@ -29,8 +29,6 @@ public class DailyScheduleResponseConverter {
                 leftOrDelayMinutes,
                 expectedDepartureTime,
                 expectedArrivalTime,
-                actualDepartureTime,
-                actualArrivalTime,
                 lateArrivalMinutes
         );
     }
@@ -62,8 +60,6 @@ public class DailyScheduleResponseConverter {
                 realtime.getLeftOrDelayMinutes(),
                 expectedDeparture,
                 expectedArrival,
-                actualDeparture,
-                actualArrival,
                 realtime.getLateArrivalMinutes()
         );
     }

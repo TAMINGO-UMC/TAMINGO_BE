@@ -88,7 +88,7 @@ public class UserLearningPattern extends BaseEntity {
 
     public void update(int avgEtaDiff, int sampleCount, double accuracyRate) {
         this.avgEtaDiff = avgEtaDiff;
-        this.sampleCount+=sampleCount;
+        this.sampleCount += sampleCount;
         this.accuracyRate = accuracyRate;
     }
 }

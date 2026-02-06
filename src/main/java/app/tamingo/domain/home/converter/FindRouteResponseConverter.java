@@ -1,7 +1,7 @@
 package app.tamingo.domain.home.converter;
 
 import app.tamingo.domain.home.dto.FindRouteResponse;
-import app.tamingo.domain.tmap.dto.TmapTransitResponse;
+import app.tamingo.domain.odsay.dto.OdsayTransitResponse;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.Objects;
 @Component
 public class FindRouteResponseConverter {
 
-    public List<FindRouteResponse.RouteLeg> toRouteLegs(TmapTransitResponse.Itinerary itinerary) {
+    public List<FindRouteResponse.RouteLeg> toRouteLegs(OdsayTransitResponse.Itinerary itinerary) {
         if (itinerary == null || itinerary.legs() == null) {
             return List.of();
         }
@@ -27,7 +27,7 @@ public class FindRouteResponseConverter {
         return (seconds + 59) / 60;
     }
 
-    private FindRouteResponse.RouteLeg toRouteLeg(TmapTransitResponse.Leg leg) {
+    private FindRouteResponse.RouteLeg toRouteLeg(OdsayTransitResponse.Leg leg) {
         if (leg == null) {
             return null;
         }
@@ -62,12 +62,12 @@ public class FindRouteResponseConverter {
         };
     }
 
-    private List<String> toStationNames(TmapTransitResponse.PassStopList passStopList) {
+    private List<String> toStationNames(OdsayTransitResponse.PassStopList passStopList) {
         if (passStopList == null || passStopList.stations() == null) {
             return null;
         }
         return passStopList.stations().stream()
-                .map(TmapTransitResponse.Station::stationName)
+                .map(OdsayTransitResponse.Station::stationName)
                 .filter(Objects::nonNull)
                 .toList();
     }
