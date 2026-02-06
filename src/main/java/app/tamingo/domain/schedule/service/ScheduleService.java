@@ -2,7 +2,6 @@ package app.tamingo.domain.schedule.service;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
-import app.tamingo.domain.home.service.realtime.ScheduleInitQueueService;
 import app.tamingo.domain.schedule.dto.*;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleAiLog;
@@ -43,7 +42,6 @@ public class ScheduleService {
     private final UserRepository userRepository;
     private final ScheduleCategoryRepository scheduleCategoryRepository;
     private final ScheduleAiLogRepository scheduleAiLogRepository;
-    private final ScheduleInitQueueService scheduleInitQueueService;
     private final UserLearningSummaryService userLearningSummaryService;
 
     @Transactional
@@ -128,14 +126,6 @@ public class ScheduleService {
         // 일괄 저장
         List<Schedule> savedSchedules = scheduleRepository.saveAll(schedulesToSave);
         Schedule firstSchedule = savedSchedules.get(0); // 첫 번째 일정을 대표로 사용
-
-        // 일정 시작 20분 전 초기화 큐 등록
-        for (Schedule schedule : savedSchedules) {
-            scheduleInitQueueService.scheduleInit(
-                    schedule.getId(),
-                    schedule.getStartTime().minusMinutes(20)
-            );
-        }
 
         // 첫 번째 일정에만 할 일 연결
         if (request.linkedTodoIds() != null && !request.linkedTodoIds().isEmpty()) {
@@ -297,12 +287,6 @@ public class ScheduleService {
                 request.repeatType(),
                 request.repeatEndDate(),
                 request.memo()
-        );
-
-        // 일정 시작 20분 전 초기화 큐 재등록
-        scheduleInitQueueService.scheduleInit(
-                schedule.getId(),
-                schedule.getStartTime().minusMinutes(20)
         );
 
         // 할 일 연결 업데이트
