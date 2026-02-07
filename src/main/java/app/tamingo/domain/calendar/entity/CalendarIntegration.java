@@ -88,4 +88,14 @@ public class CalendarIntegration extends BaseEntity {
     public void markError() {
         this.status = CalendarIntegrationStatus.ERROR;
     }
+    // ACTIVE로 변경(연동 ON)
+    public void markActive() {
+        this.status = CalendarIntegrationStatus.ACTIVE;
+    }
+
+    // INACTIVE로 변경(연동 OFF)
+    public void markInactive() {
+        this.status = CalendarIntegrationStatus.INACTIVE;
+    }
+
 }
