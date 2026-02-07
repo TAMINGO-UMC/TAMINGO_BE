@@ -16,8 +16,6 @@ public record DailyScheduleResponse(
             Integer leftOrDelayMinutes,
             LocalTime expectedDepartureTime,
             LocalTime expectedArrivalTime,
-            LocalTime actualDepartureTime,
-            LocalTime actualArrivalTime,
             Integer lateArrivalMinutes
     ) {
     }

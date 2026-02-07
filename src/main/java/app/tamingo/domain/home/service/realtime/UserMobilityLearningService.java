@@ -1,10 +1,14 @@
 package app.tamingo.domain.home.service.realtime;
 
+import app.tamingo.common.exception.CustomException;
 import app.tamingo.domain.favoriteplace.repository.FavoritePlaceRepository;
 import app.tamingo.domain.home.entity.enums.ArrivedStatus;
 import app.tamingo.domain.home.entity.enums.TimeSlot;
+import app.tamingo.domain.home.exception.HomeErrorCode;
 import app.tamingo.domain.home.redis.RealtimeSchedule;
 import app.tamingo.domain.home.redis.RealtimeScheduleRepository;
+import app.tamingo.domain.schedule.entity.ScheduleResult;
+import app.tamingo.domain.schedule.repository.ScheduleResultRepository;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.userlearning.entity.ErrorLog;
 import app.tamingo.domain.userlearning.entity.PersonalSetting;
@@ -33,6 +37,7 @@ public class UserMobilityLearningService {
     private final ErrorLogRepository errorLogRepository;
     private final PersonalSettingRepository personalSettingRepository;
     private final RealtimeScheduleRepository realtimeScheduleRepository;
+    private final ScheduleResultRepository scheduleResultRepository;
 
     // 도착 학습 정보 저장 및 요약/패턴 업데이트
     @Transactional
@@ -114,7 +119,14 @@ public class UserMobilityLearningService {
             LocalDateTime evaluatedAt,
             boolean navigationUsed
     ) {
-        // TODO: schedule_result 저장 로직 연결 전까지 no-op
+        // TODO : 주간리포트 적용 후 구현
+//        // 결과 중복 저장 방지
+//        if(scheduleResultRepository.existsByScheduleId(schedule.getId()))
+//            throw new CustomException(HomeErrorCode.SCHEDULE_RESULT_EXISTS);
+//        ScheduleResult scheduleResult = ScheduleResult.of(
+//                schedule,
+//                punctualityScore
+//        )
     }
 
     private boolean isErrorLogEnabled(User user) {

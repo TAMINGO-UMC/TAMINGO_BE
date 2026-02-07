@@ -20,6 +20,7 @@ public class ScheduleInitQueueService {
 
     private final StringRedisTemplate stringRedisTemplate;
 
+    // 스케줄 초기화
     public void scheduleInit(Long scheduleId, LocalDateTime runAt) {
         if (scheduleId == null || runAt == null) {
             return;
@@ -28,6 +29,7 @@ public class ScheduleInitQueueService {
         stringRedisTemplate.opsForZSet().add(KEY, scheduleId.toString(), score);
     }
 
+    // 시간에 맞춰서 실행
     public List<Long> fetchDue(LocalDateTime now, int limit) {
         if (now == null) {
             return List.of();

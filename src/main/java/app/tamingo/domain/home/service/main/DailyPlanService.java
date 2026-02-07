@@ -5,6 +5,7 @@ import app.tamingo.domain.home.converter.DailyPlanItemConverter;
 import app.tamingo.domain.home.converter.DailyScheduleResponseConverter;
 import app.tamingo.domain.home.dto.DailyPlanResponse;
 import app.tamingo.domain.home.dto.DailyScheduleResponse;
+import app.tamingo.domain.home.dto.DirectionResult;
 import app.tamingo.domain.home.entity.SuggestionLearning;
 import app.tamingo.domain.home.entity.enums.SuggestionType;
 import app.tamingo.domain.home.repository.SuggestionLearningRepository;
@@ -15,7 +16,7 @@ import app.tamingo.domain.schedule.exception.ScheduleErrorCode;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.todo.repository.TodoRepository;
 import app.tamingo.domain.todo.entity.Todo;
-import app.tamingo.domain.tmap.service.DirectionService;
+import app.tamingo.domain.odsay.service.DirectionService;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
@@ -105,7 +106,6 @@ public class DailyPlanService {
     }
 
     // 일정 상세 조회
-    // TODO : Redis 없을때도 가져오기
     @Transactional
     public DailyScheduleResponse viewScheduleDetail(Long userId, Long scheduleId) {
         User user = userRepository.findById(userId)
@@ -158,10 +158,12 @@ public class DailyPlanService {
 
     private void refreshMapEtaMinutesIfNeeded(Schedule schedule) {
         if (schedule == null || schedule.getLatitude() == null || schedule.getLongitude() == null) {
-            return;
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_NOT_FOUND);
         }
         app.tamingo.domain.home.entity.ScheduleStartSnapshot snapshot =
                 scheduleStartSnapshotService.findSnapshotEntity(schedule);
+
+        // 출발지 스냅샷이 없으면 새로운 출발지를 생성
         if (snapshot == null) {
             scheduleStartSnapshotService.createSnapshotForSchedule(schedule, LocalDateTime.now());
             snapshot = scheduleStartSnapshotService.findSnapshotEntity(schedule);
@@ -169,7 +171,8 @@ public class DailyPlanService {
         if (snapshot == null || snapshot.getMapEtaMinutes() != null) {
             return;
         }
-        app.tamingo.domain.home.dto.DirectionResult route = directionService.calculateRoute(
+        // 조회 시점에 ETA 계산
+        DirectionResult route = directionService.calculateRoute(
                 snapshot.getUsedStartLat(),
                 snapshot.getUsedStartLng(),
                 schedule.getLatitude(),

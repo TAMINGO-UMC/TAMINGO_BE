@@ -18,8 +18,8 @@ import app.tamingo.domain.notification.service.NotificationProducer;
 import app.tamingo.domain.notificationsetting.entity.AlertMinute;
 import app.tamingo.domain.notificationsetting.entity.NotificationSetting;
 import app.tamingo.domain.notificationsetting.repository.NotificationSettingRepository;
-import app.tamingo.domain.tmap.dto.TmapTransitResponse;
-import app.tamingo.domain.tmap.service.DirectionService;
+import app.tamingo.domain.odsay.dto.OdsayTransitResponse;
+import app.tamingo.domain.odsay.service.DirectionService;
 import app.tamingo.domain.todo.entity.Todo;
 import app.tamingo.domain.todo.repository.TodoRepository;
 import app.tamingo.domain.user.entity.User;
@@ -118,13 +118,13 @@ public class RealTimeScheduleService {
 
         // 경유지 분기, 길찾기 응답 생성
         if (wayPointLocations.isEmpty()) {
-            TmapTransitResponse routeResponse = directionService.calculateRouteDetail(
+            OdsayTransitResponse routeResponse = directionService.calculateRouteDetail(
                     startLat,
                     startLng,
                     schedule.getLatitude(),
                     schedule.getLongitude()
             );
-            TmapTransitResponse.Itinerary itinerary = firstItinerary(routeResponse);
+            OdsayTransitResponse.Itinerary itinerary = firstItinerary(routeResponse);
             if (itinerary == null || itinerary.totalTime() == null) {
                 return null;
             }
@@ -140,13 +140,13 @@ public class RealTimeScheduleService {
             for (int i = 0; i < points.size() - 1; i++) {
                 Location from = points.get(i);
                 Location to = points.get(i + 1);
-                TmapTransitResponse segmentResponse = directionService.calculateRouteDetail(
+                OdsayTransitResponse segmentResponse = directionService.calculateRouteDetail(
                         from.latitude(),
                         from.longitude(),
                         to.latitude(),
                         to.longitude()
                 );
-                TmapTransitResponse.Itinerary segment = firstItinerary(segmentResponse);
+                OdsayTransitResponse.Itinerary segment = firstItinerary(segmentResponse);
                 if (segment == null || segment.totalTime() == null) {
                     return null;
                 }
@@ -339,11 +339,22 @@ public class RealTimeScheduleService {
         realtimeScheduleRedisService.saveScheduleStatus(realtime);
     }
 
-    // 실시간 일정 상태 조회
+    // 실시간 일정 상태 조회, Redis 생성 전이면 기본 설정
     @Transactional(readOnly = true)
     public DailyScheduleResponse.ScheduleStatusResponse calculateScheduleStatus(Schedule schedule) {
         RealtimeSchedule realtime = realtimeScheduleRedisService.findScheduleStatus(schedule.getId());
-        return realtimeScheduleRedisService.toStatusResponse(realtime);
+        if (realtime != null) {
+            return realtimeScheduleRedisService.toStatusResponse(realtime);
+        }
+
+        return new DailyScheduleResponse.ScheduleStatusResponse(
+                CurrentStatus.READY,
+                false,
+                0,
+                schedule.getStartTime().toLocalTime(),
+                schedule.getEndTime().toLocalTime(),
+                0
+        );
     }
 
 
@@ -802,7 +813,7 @@ public class RealTimeScheduleService {
         return realtimeScheduleRedisService.findScheduleStatus(scheduleId);
     }
 
-    private TmapTransitResponse.Itinerary firstItinerary(TmapTransitResponse response) {
+    private OdsayTransitResponse.Itinerary firstItinerary(OdsayTransitResponse response) {
         if (response == null
                 || response.metaData() == null
                 || response.metaData().plan() == null
@@ -983,6 +994,7 @@ public class RealTimeScheduleService {
         if (snapshot == null) {
             return;
         }
+        // 도착 시간 계산
         DirectionResult route = directionService.calculateRoute(
                 snapshot.usedStartLat(),
                 snapshot.usedStartLng(),
@@ -992,6 +1004,8 @@ public class RealTimeScheduleService {
         if (route == null) {
             return;
         }
+
+        // eta 보정 진행
         int etaMinutes = route.getTotalMinutes();
         etaMinutes = applyUserPattern(schedule.getUser(), schedule.getStartTime(), etaMinutes);
         int arrivalBufferMinutes = getArrivalBufferMinutes(schedule);
