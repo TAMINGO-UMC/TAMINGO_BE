@@ -1,8 +1,8 @@
 package app.tamingo.domain.schedule.service;
 
+import app.tamingo.domain.home.entity.enums.ArrivedStatus;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleResult;
-import app.tamingo.domain.schedule.enums.ScheduleResultStatus;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.schedule.repository.ScheduleResultRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class ScheduleNoShowService {
             ScheduleResult result = scheduleResultRepository.findByScheduleId(schedule.getId())
                     .orElseGet(() -> ScheduleResult.of(
                             schedule,
-                            ScheduleResultStatus.PENDING,
+                            ArrivedStatus.PENDING,
                             false,              // navigationUsed
                             null,               // arrivedAt
                             null,               // lateMinutes
@@ -41,7 +41,7 @@ public class ScheduleNoShowService {
                     ));
 
             // 이미 PENDING인 것만 잡혀오지만 방어적으로 체크
-            if (result.getStatus() == ScheduleResultStatus.PENDING) {
+            if (result.getStatus() == ArrivedStatus.PENDING) {
                 result.confirmNoShow(now);
                 scheduleResultRepository.save(result);
             }
