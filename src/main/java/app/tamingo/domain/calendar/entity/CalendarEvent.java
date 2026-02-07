@@ -12,6 +12,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         name = "calendar_event",
+        uniqueConstraints = {
+                // 중복 저장 방지
+                @UniqueConstraint(
+                        name = "uk_calendar_event_integration_external_uid",
+                        columnNames = {"integration_id", "external_event_uid"}
+                )
+        },
         indexes = {
                 @Index(name = "idx_calendar_event_user_id", columnList = "user_id"),
                 @Index(name = "idx_calendar_event_integration_id", columnList = "integration_id"),
@@ -24,25 +31,21 @@ public class CalendarEvent extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 애플캘린더 연동 외래키
+    // 어떤 애플 연동에서 들어온 이벤트인지
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "integration_id", nullable = false)
     private CalendarIntegration integration;
 
-    // 유저 외래키
+    // 유저 FK(조회 최적화용)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // 캘린더 제공자 (APPLE)
-    @Column(name = "provider", nullable = false, length = 30)
-    private String provider;
-
-    // 외부 이벤트 UID
+    // 외부 이벤트 UID(EventKit의 calendarItemExternalIdentifier 추천)
     @Column(name = "external_event_uid", nullable = false, length = 255)
     private String externalEventUid;
 
-    // 외부 캘린더 ID
+    // 외부 캘린더 식별자
     @Column(name = "calendar_external_id", length = 255)
     private String calendarExternalId;
 
@@ -50,7 +53,7 @@ public class CalendarEvent extends BaseEntity {
     @Column(name = "calendar_name", length = 255)
     private String calendarName;
 
-    // 일정 제목
+    // 제목
     @Column(name = "title", length = 255)
     private String title;
 
@@ -66,7 +69,7 @@ public class CalendarEvent extends BaseEntity {
     @Column(name = "is_all_day", nullable = false)
     private boolean isAllDay;
 
-    // 타임존
+    // 타임존 ex) Asia/Seoul
     @Column(name = "timezone", length = 50)
     private String timezone;
 
@@ -79,28 +82,18 @@ public class CalendarEvent extends BaseEntity {
     @Column(name = "notes")
     private String notes;
 
-    // 외부 마지막 수정 시각
+    // Apple 측 마지막 수정 시간(선택)
     @Column(name = "last_external_modified_at")
     private LocalDateTime lastExternalModifiedAt;
 
-    // 삭제 시각 (소프트 딜리트)
+    // Apple에서 삭제된 이벤트 처리(soft delete)
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
-
-    public boolean isDeleted() {
-        return deletedAt != null;
-    }
-
-    public void delete() {
-        if (this.deletedAt != null) return;
-        this.deletedAt = LocalDateTime.now();
-    }
 
     @Builder(builderMethodName = "internalBuilder")
     private CalendarEvent(
             CalendarIntegration integration,
             User user,
-            String provider,
             String externalEventUid,
             String calendarExternalId,
             String calendarName,
@@ -111,11 +104,11 @@ public class CalendarEvent extends BaseEntity {
             String timezone,
             String location,
             String notes,
-            LocalDateTime lastExternalModifiedAt
+            LocalDateTime lastExternalModifiedAt,
+            LocalDateTime deletedAt
     ) {
         this.integration = integration;
         this.user = user;
-        this.provider = provider;
         this.externalEventUid = externalEventUid;
         this.calendarExternalId = calendarExternalId;
         this.calendarName = calendarName;
@@ -127,12 +120,13 @@ public class CalendarEvent extends BaseEntity {
         this.location = location;
         this.notes = notes;
         this.lastExternalModifiedAt = lastExternalModifiedAt;
+        this.deletedAt = deletedAt;
     }
 
+    // 최초 생성
     public static CalendarEvent of(
             CalendarIntegration integration,
             User user,
-            String provider,
             String externalEventUid,
             String calendarExternalId,
             String calendarName,
@@ -148,7 +142,6 @@ public class CalendarEvent extends BaseEntity {
         return CalendarEvent.internalBuilder()
                 .integration(integration)
                 .user(user)
-                .provider(provider)
                 .externalEventUid(externalEventUid)
                 .calendarExternalId(calendarExternalId)
                 .calendarName(calendarName)
@@ -160,6 +153,46 @@ public class CalendarEvent extends BaseEntity {
                 .location(location)
                 .notes(notes)
                 .lastExternalModifiedAt(lastExternalModifiedAt)
+                .deletedAt(null)
                 .build();
+    }
+
+    // 삭제 여부
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    // Apple에서 삭제되었다고 판단되면 호출
+    public void markDeletedNow() {
+        if (this.deletedAt == null) {
+            this.deletedAt = LocalDateTime.now();
+        }
+    }
+
+    // Apple에서 받은 최신 값으로 갱신(upsert 시 사용)
+    public void updateFromApple(
+            String calendarExternalId,
+            String calendarName,
+            String title,
+            LocalDateTime startAt,
+            LocalDateTime endAt,
+            boolean isAllDay,
+            String timezone,
+            String location,
+            String notes,
+            LocalDateTime lastExternalModifiedAt
+    ) {
+        this.calendarExternalId = calendarExternalId;
+        this.calendarName = calendarName;
+        this.title = title;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.isAllDay = isAllDay;
+        this.timezone = timezone;
+        this.location = location;
+        this.notes = notes;
+        this.lastExternalModifiedAt = lastExternalModifiedAt;
+        // Apple에서 다시 살아난 케이스 대응
+        this.deletedAt = null;
     }
 }

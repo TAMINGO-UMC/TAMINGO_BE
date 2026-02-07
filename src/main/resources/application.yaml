@@ -55,7 +55,6 @@ odsay:
   search-type: 0
   search-path-type: 0
   opt: 0
-
 # service-region:
 #   min-lat: 0.0
 #   max-lat: 0.0

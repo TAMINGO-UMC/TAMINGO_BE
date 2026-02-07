@@ -2,6 +2,8 @@ package app.tamingo.domain.schedule.service;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
+import app.tamingo.domain.calendar.enums.LinkStatus;
+import app.tamingo.domain.calendar.repository.ExternalTaskMappingRepository;
 import app.tamingo.domain.schedule.dto.*;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleAiLog;
@@ -43,6 +45,8 @@ public class ScheduleService {
     private final ScheduleCategoryRepository scheduleCategoryRepository;
     private final ScheduleAiLogRepository scheduleAiLogRepository;
     private final UserLearningSummaryService userLearningSummaryService;
+    private final ExternalTaskMappingRepository externalTaskMappingRepository;
+
 
     @Transactional
     public CreateScheduleResponse createSchedule(Long userId, CreateScheduleRequest request){
@@ -274,6 +278,13 @@ public class ScheduleService {
             category = scheduleCategoryRepository.findById(request.scheduleCategoryId())
                     .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_CATEGORY_NOT_FOUND));
         }
+        //링크 바꾸기
+        externalTaskMappingRepository.findByScheduleId(scheduleId)
+                .ifPresent(mapping -> {
+                    if (mapping.getLinkStatus() == LinkStatus.LINKED) {
+                        mapping.unlink();
+                    }
+                });
 
         schedule.update(
                 category,
