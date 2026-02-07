@@ -49,7 +49,6 @@ public class TodoCategoryService {
 
         TodoCategory category = TodoCategory.of(
                 req.name(),
-                req.iconCode(),
                 req.colorCode(),
                 user
         );
@@ -76,7 +75,7 @@ public class TodoCategoryService {
             throw new CustomException(TodoErrorCode.TODO_CATEGORY_DUPLICATED);
         }
         //카테고리 업데이트
-        category.update(req.name(), req.iconCode(), req.colorCode());
+        category.update(req.name(), req.colorCode());
         return TodoCategoryResponse.from(category);
     }
 
