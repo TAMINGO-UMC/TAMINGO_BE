@@ -10,7 +10,7 @@ import app.tamingo.domain.favoriteplace.repository.FavoritePlaceRepository;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
-import app.tamingo.domain.userlearning.respository.FvpHistoryRepository;
+import app.tamingo.domain.userlearning.repository.FvpHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

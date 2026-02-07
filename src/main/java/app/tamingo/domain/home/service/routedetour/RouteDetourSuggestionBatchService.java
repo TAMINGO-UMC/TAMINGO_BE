@@ -32,4 +32,9 @@ public class RouteDetourSuggestionBatchService {
         log.info("[HOME][DETOUR] 전체 사용자 경로 연계 추천 완료 date={}, count={}", targetDate, total);
         return total;
     }
+
+    public void runForUser(User user, LocalDate targetDate) {
+        routeDetourSuggestionService.generateRouteDetourSuggestions(user,targetDate);
+        log.info("[HOME][DETOUR] 사용자 경로 연계 추천 완료 date={}", targetDate);
+    }
 }

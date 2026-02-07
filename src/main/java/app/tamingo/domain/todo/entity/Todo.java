@@ -186,4 +186,41 @@ public class Todo extends BaseEntity {
     public void updateCheckStatus(boolean isChecked) {
         this.isChecked = isChecked;
     }
+
+    public void updateTargetDate(LocalDate targetDate) {
+        this.targetDate = targetDate;
+    }
+
+    // 반복 할 일 생성용
+    public static Todo createRecurring(
+            User user,
+            TodoCategory todoCategory,
+            String title,
+            LocalDate targetDate,
+            String placeName,
+            String address,
+            Double latitude,
+            Double longitude,
+            Integer duration,
+            RepeatType repeatType,
+            LocalDate repeatEndDate,
+            boolean isLocationConfirmed // ★ 파라미터 추가됨
+    ) {
+        return Todo.internalBuilder()
+                .user(user)
+                .todoCategory(todoCategory)
+                .title(title)
+                .targetDate(targetDate)
+                .placeName(placeName)
+                .address(address)
+                .latitude(latitude)
+                .longitude(longitude)
+                .duration(duration)
+                .repeatType(repeatType)
+                .repeatEndDate(repeatEndDate)
+                .schedule(null)
+                .isChecked(false)
+                .isLocationConfirmed(isLocationConfirmed) // ★ 받은 값(true)으로 설정
+                .build();
+    }
 }

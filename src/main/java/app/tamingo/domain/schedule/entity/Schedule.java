@@ -53,17 +53,21 @@ public class Schedule extends BaseEntity {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
-    @Column(name = "place_name", nullable = false)
+    @Column(name = "place_name")
     private String placeName;
 
     @Column(name = "address")
     private String address;
 
-    @Column(name = "latitude", nullable = false)
+    @Column(name = "latitude")
     private Double latitude;
 
-    @Column(name = "longitude", nullable = false)
+    @Column(name = "longitude")
     private Double longitude;
+
+    // 지도 ETA (분 단위, null 가능)
+    @Column(name = "map_eta_minutes")
+    private Integer mapEtaMinutes;
 
     // 길찾기 기능 해제 여부, 기본 true로 설정
     @Column(name = "is_navigation_enabled", nullable = false)
@@ -172,5 +176,9 @@ public class Schedule extends BaseEntity {
 
         this.repeatType = (repeatType != null) ? repeatType : RepeatType.NONE;
         this.repeatEndDate = (this.repeatType == RepeatType.NONE) ? null : repeatEndDate;
+    }
+
+    public void updateMapEtaMinutes(Integer mapEtaMinutes) {
+        this.mapEtaMinutes = mapEtaMinutes;
     }
 }

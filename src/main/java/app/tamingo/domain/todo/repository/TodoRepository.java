@@ -73,12 +73,6 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
             @Param("date")LocalDate date
     );
 
-    /**
-     * 주간 리포트(할일) 집계 대상 조회
-     * - 기준: targetDate가 주간 범위(start~end) 안에 있는 Todo만 포함
-     */
-    List<Todo> findAllByUserIdAndTargetDateBetween(Long userId, LocalDate start, LocalDate end);
-
     // 검색어 포함 최신순 20개
     List<Todo> findTop20ByUserAndTitleContainingOrderByIdDesc(User user, String title);
 
@@ -95,4 +89,29 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     List<Todo> findAllByScheduleAndLocation(@Param("schedule") Schedule schedule);
 
     List<Todo> findAllBySchedule(@Param("schedule") Schedule schedule);
+
+    // 날짜 지정 할 일 조회 (Daily)
+    @Query("""
+        SELECT t FROM Todo t 
+        LEFT JOIN FETCH t.todoCategory 
+        WHERE t.user.id = :userId 
+        AND t.targetDate = :date 
+        ORDER BY t.id ASC
+    """)
+    List<Todo> findDailyTodos(
+            @Param("userId") Long userId,
+            @Param("date") LocalDate date
+    );
+
+    // 날짜 미지정 할 일 조회 (Backlog)
+    @Query("""
+        SELECT t FROM Todo t 
+        LEFT JOIN FETCH t.todoCategory 
+        WHERE t.user.id = :userId 
+        AND t.targetDate IS NULL 
+        AND t.isChecked = false 
+        ORDER BY t.id ASC
+    """)
+    List<Todo> findBacklogTodos(@Param("userId") Long userId);
+
 }

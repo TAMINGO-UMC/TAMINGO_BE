@@ -91,7 +91,18 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             LocalDateTime startInclusive,
             LocalDateTime endExclusive
     );
-           
+
+    @Query("""
+        select s
+        from Schedule s
+        where s.startTime >= :startInclusive
+          and s.startTime < :endExclusive
+    """)
+    List<Schedule> findAllStartTimeBetween(
+            @Param("startInclusive") LocalDateTime startInclusive,
+            @Param("endExclusive") LocalDateTime endExclusive
+    );
+
     // [Nearby] 반경 2km 이내 + 현재 시간 이후의 일정 조회
     @Query(value = """
         SELECT * FROM schedule s 
@@ -128,12 +139,6 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("endDate") LocalDateTime endDate
     );
 
-
-    List<Schedule> findAllByUserIdAndStartTimeGreaterThanEqualAndStartTimeLessThan(
-            Long userId,
-            LocalDateTime startInclusive,
-            LocalDateTime endExclusive
-    );
 
     Optional<Schedule> findByIdAndUser(Long scheduleId, User user);
 }

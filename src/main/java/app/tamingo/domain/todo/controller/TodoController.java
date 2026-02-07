@@ -6,14 +6,19 @@ import app.tamingo.domain.gpt.service.todo.AiTodoService;
 import app.tamingo.domain.todo.dto.*;
 import app.tamingo.domain.todo.service.TodoService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/todos")
+@Tag(name = "Todo API", description = "할 일 관련 API")
 public class TodoController {
 
     private final TodoService todoService;
@@ -33,7 +38,7 @@ public class TodoController {
     @PostMapping("/ai-inference")
     public ApiResponse<AiTodoInferenceResponse> inferTodo(
             @AuthenticationPrincipal Long userId,
-            @RequestBody AiTodoInferenceRequest request
+            @Valid @RequestBody AiTodoInferenceRequest request
     ) {
         AiTodoInferenceResponse response = aiTodoService.inferTodo(userId, request.title());
         return ApiResponse.onSuccess(response, SuccessCode.OK);
@@ -71,4 +76,23 @@ public class TodoController {
         return ApiResponse.onSuccess("상태가 변경되었습니다.", SuccessCode.OK);
     }
 
+    @Operation(summary = "할 일 장소 수정 시 일정 추천 API", description = "입력된 장소 주변의 일정과 향후 7일간의 일정을 추천합니다.")
+    @PostMapping("/recommend-schedules")
+    public ApiResponse<RecommendScheduleResponse> recommendSchedules(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody RecommendScheduleRequest request
+    ) {
+        RecommendScheduleResponse response = todoService.recommendSchedules(userId, request);
+        return ApiResponse.onSuccess(response, SuccessCode.OK);
+    }
+
+    @Operation(summary = "날짜별 할 일 목록 조회 API", description = "특정 날짜의 할 일(완료 포함)과 날짜 미지정 할 일(미완료만)을 함께 조회합니다. 카테고리별로 정렬되어 반환됩니다.")
+    @GetMapping
+    public ApiResponse<DailyTodoListResponse> getDailyTodos(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
+    ) {
+        DailyTodoListResponse response = todoService.getDailyTodos(userId, date);
+        return ApiResponse.onSuccess(response, SuccessCode.OK);
+    }
 }
