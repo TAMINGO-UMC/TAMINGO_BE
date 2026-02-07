@@ -1,6 +1,6 @@
 package app.tamingo.domain.userlearning.entity;
 
-import app.tamingo.BaseEntity;
+import app.tamingo.common.entity.BaseEntity;
 import app.tamingo.domain.home.entity.enums.ArrivedStatus;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;

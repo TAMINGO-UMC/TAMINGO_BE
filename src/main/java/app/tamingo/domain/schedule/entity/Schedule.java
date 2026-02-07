@@ -1,6 +1,6 @@
 package app.tamingo.domain.schedule.entity;
 
-import app.tamingo.BaseEntity;
+import app.tamingo.common.entity.BaseEntity;
 import app.tamingo.domain.todo.entity.Todo;
 import app.tamingo.domain.todo.enums.RepeatType;
 import app.tamingo.domain.user.entity.User;

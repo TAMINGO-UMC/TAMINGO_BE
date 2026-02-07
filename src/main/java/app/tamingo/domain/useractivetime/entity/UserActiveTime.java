@@ -1,6 +1,6 @@
 package app.tamingo.domain.useractivetime.entity;
 
-import app.tamingo.BaseEntity;
+import app.tamingo.common.entity.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Builder;
