@@ -4,7 +4,7 @@ import app.tamingo.domain.favoriteplace.entity.FavoritePlace;
 import app.tamingo.domain.home.dto.Location;
 import app.tamingo.domain.home.entity.enums.StartSourceType;
 import app.tamingo.domain.home.service.geoutil.GeoService;
-import app.tamingo.domain.tmap.service.DirectionService;
+import app.tamingo.domain.odsay.service.DirectionService;
 import app.tamingo.domain.home.service.startplace.region.ServiceRegionPolicy;
 import app.tamingo.domain.schedule.entity.Schedule;
 import lombok.RequiredArgsConstructor;
@@ -95,10 +95,10 @@ public class StartLocationDeciderService {
 
         List<LocationCandidate> candidates = new ArrayList<>();
 
-        // 자주 가는 장소(FVP) 후보군 수집 - 서비스 지역 내에 존재해야 함
-        // TODO : AI 추론 장소는 제외하는 로직 추가 필요
+        // 자주 가는 장소(FVP) 후보군 수집 - 서비스 지역 내에 존재해야 함,AI 추론장소 제외
         favoritePlaces.stream()
                 .filter(this::hasLocation)
+                .filter(fvp -> !(isAiSuggested(fvp)))
                 .filter(fvp -> serviceRegionPolicy.isAllowed(fvp.getLatitude(), fvp.getLongitude()))
                 .forEach(fvp -> candidates.add(new LocationCandidate(
                         fvp.getName(),
@@ -134,6 +134,9 @@ public class StartLocationDeciderService {
         );
     }
 
+    private boolean isAiSuggested(FavoritePlace favoritePlace){
+        return favoritePlace.isAiSuggested();
+    }
     private boolean hasLocation(Schedule schedule) {
         return schedule.getLatitude() != null && schedule.getLongitude() != null;
     }

@@ -1,5 +1,9 @@
 package app.tamingo.common.security;
 
+import app.tamingo.common.exception.CustomException;
+import app.tamingo.common.response.ApiResponse;
+import app.tamingo.common.response.BaseCode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +23,7 @@ import java.util.List;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(
@@ -27,27 +32,40 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String token = resolveBearer(request);
+        try {
+            String token = BearerTokenResolver.resolve(request);
 
-        if (token != null) {
-            jwtTokenProvider.validateOrThrow(token);
+            if (token != null) {
+                jwtTokenProvider.validateOrThrow(token);
 
-            Long userId = jwtTokenProvider.getUserId(token);
+                Long userId = jwtTokenProvider.getUserId(token);
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, List.of());
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userId, null, List.of());
 
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
+            filterChain.doFilter(request, response);
+
+        } catch (CustomException e) {
+            SecurityContextHolder.clearContext();
+            writeErrorResponse(response, e.getErrorCode());
         }
-
-        filterChain.doFilter(request, response);
     }
 
-    private String resolveBearer(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header == null || header.isBlank()) return null;
-        if (!header.startsWith("Bearer ")) return null;
-        return header.substring(7).trim();
+    private void writeErrorResponse(HttpServletResponse response, BaseCode code)
+            throws IOException {
+
+        response.setStatus(code.getHttpStatus().value());
+        response.setContentType("application/json;charset=UTF-8");
+
+        ApiResponse<Void> body = ApiResponse.onFailure(code, null);
+        response.getWriter().write(
+                objectMapper.writeValueAsString(body)
+        );
     }
 }

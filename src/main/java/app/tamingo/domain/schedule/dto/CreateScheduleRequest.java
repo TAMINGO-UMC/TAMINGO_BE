@@ -47,36 +47,4 @@ public record CreateScheduleRequest(
             String aiSuggestedPlaceName,
             String aiSuggestedCategoryName
     ) {}
-
-    public Schedule toEntity(User user, ScheduleCategory category){
-        // String 시간을 localtime 으로 변환
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-        LocalTime startLocalTime = LocalTime.parse(this.startTime, timeFormatter);
-        LocalTime endLocalTime = LocalTime.parse(this.endTime, timeFormatter);
-
-        // 종료 시간이 시작 시간보다 빠르면 에러
-        if(endLocalTime.isBefore(startLocalTime)){
-            throw new CustomException(ScheduleErrorCode.SCHEDULE_PERIOD_INVALID);
-        }
-
-        // 날짜+시간을 통해 LocalDateTime 생성
-        LocalDateTime startDateTime = LocalDateTime.of(this.scheduleDate, startLocalTime);
-        LocalDateTime endDateTime = LocalDateTime.of(this.scheduleDate, endLocalTime);
-
-        return Schedule.of(
-                user,
-                category,
-                this.title(),
-                startDateTime,
-                endDateTime,
-                this.placeName(),
-                this.address(),
-                this.latitude(),
-                this.longitude(),
-                this.repeatType(),
-                this.repeatEndDate(),
-                this.memo()
-        );
-
-    }
 }

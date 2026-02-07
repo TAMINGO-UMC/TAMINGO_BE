@@ -51,6 +51,7 @@ public class DailyPlanItemConverter {
                 suggestionLearning.getPlaceName(),
                 suggestionLearning.getStartTime().toLocalTime(),
                 suggestionLearning.getDuration(),
+                suggestionLearning.getTitle(),
                 suggestionLearning.getAiComment()
         );
     }

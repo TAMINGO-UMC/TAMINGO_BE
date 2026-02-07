@@ -12,17 +12,21 @@ import app.tamingo.domain.schedule.repository.ScheduleCategoryRepository;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.todo.dto.TodoSummaryResponse;
 import app.tamingo.domain.todo.entity.Todo;
+import app.tamingo.domain.todo.enums.RepeatType;
 import app.tamingo.domain.todo.repository.TodoRepository;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
+import app.tamingo.domain.userlearning.service.UserLearningSummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -38,6 +42,7 @@ public class ScheduleService {
     private final UserRepository userRepository;
     private final ScheduleCategoryRepository scheduleCategoryRepository;
     private final ScheduleAiLogRepository scheduleAiLogRepository;
+    private final UserLearningSummaryService userLearningSummaryService;
 
     @Transactional
     public CreateScheduleResponse createSchedule(Long userId, CreateScheduleRequest request){
@@ -51,22 +56,100 @@ public class ScheduleService {
                     .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_CATEGORY_NOT_FOUND));
         }
 
-        Schedule schedule = scheduleRepository.save(request.toEntity(user,category));
+        // 시간 파싱 및 유효성 검사
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+        LocalTime startLocalTime = LocalTime.parse(request.startTime(), timeFormatter);
+        LocalTime endLocalTime = LocalTime.parse(request.endTime(), timeFormatter);
 
-        if(request.linkedTodoIds() !=null && !request.linkedTodoIds().isEmpty()){
-            List<Todo> todos = todoRepository.findAllById(request.linkedTodoIds());
+        if(endLocalTime.isBefore(startLocalTime)){
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_PERIOD_INVALID);
+        }
 
-            for(Todo todo : todos){
-                // 일정과 할 일 연결 후 , 할 일의 날짜를 일정의 날짜로 강제 변환
-                todo.connectSchedule(schedule);
+        List<Schedule> schedulesToSave = new ArrayList<>();
+        LocalDate currentDate = request.scheduleDate();
+
+        // 반복이 없으면 종료일은 시작일과 같음.
+        LocalDate endDate = (request.repeatType() == null || request.repeatType() == RepeatType.NONE)
+                ? request.scheduleDate()
+                : request.repeatEndDate();
+
+        // 종료일이 없거나 시작일보다 빠르면 시작일 하루만 생성
+        if (endDate == null || endDate.isBefore(currentDate)) {
+            endDate = currentDate;
+        }
+
+        // 최대 3년까지만 생성 허용 (무한 루프 방지)
+        LocalDate limitDate = request.scheduleDate().plusYears(3);
+        if (endDate.isAfter(limitDate)) {
+            endDate = limitDate;
+        }
+
+        // 여러 개의 Schedule 객체 생성
+        while (!currentDate.isAfter(endDate)) {
+
+            LocalDateTime startDateTime = LocalDateTime.of(currentDate, startLocalTime);
+            LocalDateTime endDateTime = LocalDateTime.of(currentDate, endLocalTime);
+
+            Schedule schedule = Schedule.of(
+                    user,
+                    category,
+                    request.title(),
+                    startDateTime,
+                    endDateTime,
+                    request.placeName(),
+                    request.address(),
+                    request.latitude(),
+                    request.longitude(),
+                    request.repeatType(),     // 반복 타입 그대로 저장
+                    request.repeatEndDate(),  // 종료일 그대로 저장
+                    request.memo()
+            );
+
+            schedulesToSave.add(schedule);
+
+            // 다음 날짜 계산
+            if (request.repeatType() == null || request.repeatType() == RepeatType.NONE) {
+                break; // 반복 없으면 1회만 수행하고 종료
+            } else if (request.repeatType() == RepeatType.DAILY) {
+                currentDate = currentDate.plusDays(1);
+            } else if (request.repeatType() == RepeatType.WEEKLY) {
+                currentDate = currentDate.plusWeeks(1);
+            } else if (request.repeatType() == RepeatType.MONTHLY) {
+                currentDate = currentDate.plusMonths(1);
+            } else if (request.repeatType() == RepeatType.YEARLY) {
+                currentDate = currentDate.plusYears(1);
+            } else {
+                break;
             }
         }
 
-        if (request.aiInferenceSource() != null) {
-            saveAiLog(user, schedule, category, request);
-        }
-        return new CreateScheduleResponse(schedule.getId());
+        // 일괄 저장
+        List<Schedule> savedSchedules = scheduleRepository.saveAll(schedulesToSave);
+        Schedule firstSchedule = savedSchedules.get(0); // 첫 번째 일정을 대표로 사용
 
+        // 첫 번째 일정에만 할 일 연결
+        if (request.linkedTodoIds() != null && !request.linkedTodoIds().isEmpty()) {
+            List<Todo> todos = todoRepository.findAllById(request.linkedTodoIds());
+
+            for (Todo todo : todos) {
+                // 본인 확인 로직
+                if (!todo.getUser().getId().equals(userId)) {
+                    throw new CustomException(ErrorCode.INVALID_REQUEST);
+                }
+
+                // 할 일의 날짜를 해당 일정의 날짜로 강제 동기화
+                todo.connectSchedule(firstSchedule);
+            }
+        }
+
+        // 첫 번째 일정에 대해서만 AI 로그 저장
+        if (request.aiInferenceSource() != null) {
+            saveAiLog(user, firstSchedule, category, request);
+
+            userLearningSummaryService.updateAiStats(userId);
+        }
+
+        return new CreateScheduleResponse(firstSchedule.getId());
     }
 
     private void saveAiLog(User user, Schedule schedule, ScheduleCategory finalCategory, CreateScheduleRequest request) {
@@ -94,10 +177,10 @@ public class ScheduleService {
         ScheduleAiLog log = ScheduleAiLog.of(
                 user,
                 schedule,
-                aiPlace,
                 aiCategory,
-                userPlace,
+                aiPlace,
                 userCategory,
+                userPlace,
                 score
         );
 

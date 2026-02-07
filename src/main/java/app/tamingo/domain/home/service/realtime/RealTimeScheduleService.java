@@ -6,21 +6,24 @@ import app.tamingo.domain.home.dto.*;
 import app.tamingo.domain.home.entity.enums.CurrentStatus;
 import app.tamingo.domain.home.entity.enums.TimeSlot;
 import app.tamingo.domain.home.exception.HomeErrorCode;
+import app.tamingo.domain.home.redis.RealtimeActiveSchedule;
 import app.tamingo.domain.home.redis.RealtimeSchedule;
-import app.tamingo.domain.home.redis.RealtimeScheduleRepository;
 import app.tamingo.domain.home.redis.RealtimeScheduleArrivalCheck;
-import app.tamingo.domain.home.redis.RealtimeScheduleArrivalCheckRepository;
 import app.tamingo.domain.home.entity.enums.ArrivedStatus;
 import app.tamingo.domain.home.service.geoutil.GeoService;
 import app.tamingo.domain.home.service.startplace.ScheduleStartSnapshotService;
+import app.tamingo.domain.notification.dto.NotificationMessage;
+import app.tamingo.domain.notification.enums.NotificationType;
+import app.tamingo.domain.notification.service.NotificationProducer;
 import app.tamingo.domain.notificationsetting.entity.AlertMinute;
 import app.tamingo.domain.notificationsetting.entity.NotificationSetting;
 import app.tamingo.domain.notificationsetting.repository.NotificationSettingRepository;
-import app.tamingo.domain.tmap.dto.TmapTransitResponse;
-import app.tamingo.domain.tmap.service.DirectionService;
+import app.tamingo.domain.odsay.dto.OdsayTransitResponse;
+import app.tamingo.domain.odsay.service.DirectionService;
 import app.tamingo.domain.todo.entity.Todo;
 import app.tamingo.domain.todo.repository.TodoRepository;
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
 import app.tamingo.domain.userlearning.entity.DepartureAlarm;
 import app.tamingo.domain.userlearning.entity.UserLearningPattern;
@@ -30,17 +33,19 @@ import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.exception.ScheduleErrorCode;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+import static io.lettuce.core.pubsub.PubSubOutput.Type.message;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RealTimeScheduleService {
@@ -61,8 +66,7 @@ public class RealTimeScheduleService {
     private final NotificationSettingRepository notificationSettingRepository;
     private final DirectionService directionService;
     private final GeoService geoService;
-    private final RealtimeScheduleRepository realtimeScheduleRepository;
-    private final RealtimeScheduleArrivalCheckRepository arrivalCheckRepository;
+    private final RealtimeScheduleRedisService realtimeScheduleRedisService;
     private final FindRouteResponseConverter findRouteResponseConverter;
     private final DepartureAlarmRepository departureAlarmRepository;
     private final UserRepository userRepository;
@@ -70,6 +74,7 @@ public class RealTimeScheduleService {
     private final TodoRepository todoRepository;
     private final UserLearningPatternRepository userLearningPatternRepository;
     private final UserMobilityLearningService userMobilityLearningService;
+    private final NotificationProducer notificationProducer;
 
     // 사용자 출발 처리, 길찾기 시작
     @Transactional
@@ -81,6 +86,7 @@ public class RealTimeScheduleService {
         Schedule schedule = findScheduleById(scheduleId);
         // 소유자 확인
         ensureOwner(schedule, userId);
+
         // 목적지 정보 없으면 길찾기 불가, 네비게이션 비활성화 시 길찾기 불가
         if (!hasDestination(schedule) || !Boolean.TRUE.equals(schedule.getIsNavigationEnabled())) {
             return null;
@@ -88,9 +94,14 @@ public class RealTimeScheduleService {
 
         LocalDateTime now = LocalDateTime.now();
 
-       // status 조회 및 에러처리 (이미 도착 or 출발 처리된 경우)
-        RealtimeSchedule status = findRealtimeSchedule(schedule.getId());
-        ensureNotDepartedOrArrived(status);
+        // status 조회 및 처리
+        // 도착 처리된 일정 -> 조회 불가 및 예외처리
+        // 출발 처리된 일정 -> 길찾기 정보만 조회
+        RealtimeSchedule status = realtimeScheduleRedisService.findScheduleStatus(schedule.getId());
+        if (status != null && status.getActualArrivalTime() != null) {
+            throw new CustomException(HomeErrorCode.ALREADY_ARRIVED);
+        }
+        boolean alreadyDeparted = status != null && status.getActualDepartureTime() != null;
 
         // 연결된 할일을 조회, 위치정보 있는 할일만 조회
         List<Todo> todos = todoRepository.findAllByScheduleAndLocation(schedule);
@@ -107,13 +118,13 @@ public class RealTimeScheduleService {
 
         // 경유지 분기, 길찾기 응답 생성
         if (wayPointLocations.isEmpty()) {
-            TmapTransitResponse routeResponse = directionService.calculateRouteDetail(
+            OdsayTransitResponse routeResponse = directionService.calculateRouteDetail(
                     startLat,
                     startLng,
                     schedule.getLatitude(),
                     schedule.getLongitude()
             );
-            TmapTransitResponse.Itinerary itinerary = firstItinerary(routeResponse);
+            OdsayTransitResponse.Itinerary itinerary = firstItinerary(routeResponse);
             if (itinerary == null || itinerary.totalTime() == null) {
                 return null;
             }
@@ -129,13 +140,13 @@ public class RealTimeScheduleService {
             for (int i = 0; i < points.size() - 1; i++) {
                 Location from = points.get(i);
                 Location to = points.get(i + 1);
-                TmapTransitResponse segmentResponse = directionService.calculateRouteDetail(
+                OdsayTransitResponse segmentResponse = directionService.calculateRouteDetail(
                         from.latitude(),
                         from.longitude(),
                         to.latitude(),
                         to.longitude()
                 );
-                TmapTransitResponse.Itinerary segment = firstItinerary(segmentResponse);
+                OdsayTransitResponse.Itinerary segment = firstItinerary(segmentResponse);
                 if (segment == null || segment.totalTime() == null) {
                     return null;
                 }
@@ -150,11 +161,25 @@ public class RealTimeScheduleService {
         etaMinutes = applyUserPattern(schedule.getUser(), schedule.getStartTime(), etaMinutes);
         int arrivalBufferMinutes = getArrivalBufferMinutes(schedule);
 
-        // 예상 출발/도착 시간 계산
-        ExpectedTimes expectedTimes = computeExpectedTimes(schedule, arrivalBufferMinutes, etaMinutes);
-
         // 출발지 정보 가져오기
         String placeName = scheduleStartSnapshotService.findPlaceNameWithLocation(request.latitude(), request.longitude());
+
+        if (alreadyDeparted) {
+            String arrivePlaceName = schedule.getPlaceName() != null ? schedule.getPlaceName() : "DESTINATION";
+            LocalDateTime arriveTime = now.plusMinutes(etaMinutes);
+            return new FindRouteResponse(
+                    etaMinutes,
+                    now,
+                    arriveTime,
+                    placeName,
+                    arrivePlaceName,
+                    wayPoints,
+                    legs
+            );
+        }
+
+        // 예상 출발/도착 시간 계산
+        ExpectedTimes expectedTimes = computeExpectedTimes(schedule, arrivalBufferMinutes, etaMinutes);
 
         // 사용자 이동 오차 로그 초기 저장
         userMobilityLearningService.saveInitialErrorLogIfFirst(schedule, placeName, etaMinutes);
@@ -168,7 +193,8 @@ public class RealTimeScheduleService {
         int leftOrDelayMinutes = (int) Math.abs(diffMinutes);
         Integer lateArrivalMinutes = diffMinutes < 0 ? (int) Math.abs(diffMinutes) : null;
 
-        RealtimeSchedule realtimeSchedule = ensureRealtimeSchedule(schedule.getId(), now, ttlSec);
+        RealtimeSchedule realtimeSchedule = realtimeScheduleRedisService
+                .getOrCreateScheduleStatus(schedule.getId(), now.format(ISO), ttlSec);
         applyNavigationEnabled(realtimeSchedule, schedule);
         realtimeSchedule.applyStatus(
                 currentStatus,
@@ -181,7 +207,8 @@ public class RealTimeScheduleService {
                 ttlSec
         );
         realtimeSchedule.updateNavigationEnabled(true);
-        realtimeScheduleRepository.save(realtimeSchedule);
+        realtimeScheduleRedisService.saveScheduleStatus(realtimeSchedule);
+        saveActiveSchedule(schedule, now, ttlSec);
         markActualDeparture(
                 schedule,
                 expectedTimes,
@@ -209,6 +236,7 @@ public class RealTimeScheduleService {
     }
 
     // 실시간 사용자 위치 기반 ETA 업데이트
+    // 위치만 받아오면 현재 사용자의 active한 스케줄을 조회함
     @Transactional
     public void updateRealtime(Long userId, double userLat, double userLng) {
         LocalDateTime now = LocalDateTime.now();
@@ -237,7 +265,7 @@ public class RealTimeScheduleService {
 
         int etaMinutes = route.getTotalMinutes();
         etaMinutes = applyUserPattern(schedule.getUser(), schedule.getStartTime(), etaMinutes);
-
+        checkTrafficAndNotify(schedule, etaMinutes);
         ExpectedTimes expectedTimes = computeExpectedTimes(schedule, arrivalBufferMinutes, etaMinutes);
 
         saveEta(schedule, etaMinutes, arrivalBufferMinutes, expectedTimes, now);
@@ -246,8 +274,14 @@ public class RealTimeScheduleService {
         handleArrivalIfNeeded(schedule, userLat, userLng, now, "CURRENT_LOCATION");
     }
 
+    // 현재 스케줄 가져옴
     private Schedule resolveActiveSchedule(Long userId, LocalDateTime now) {
-        User user = userRepository.getReferenceById(userId);
+        Schedule cached = findActiveScheduleFromCache(userId, now);
+        if (cached != null) {
+            return cached;
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
         LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1);
         List<Schedule> schedules = scheduleRepository.findAllToDaySchedules(user, startOfDay, endOfDay);
@@ -264,6 +298,7 @@ public class RealTimeScheduleService {
                 candidate = schedule;
             }
         }
+        cacheActiveScheduleIfPresent(candidate, now);
         return candidate;
     }
 
@@ -284,10 +319,9 @@ public class RealTimeScheduleService {
             long ttlSec
     ) {
         String key = RealtimeSchedule.key(schedule.getId());
-        RealtimeSchedule realtime = realtimeScheduleRepository.findById(key).orElse(null);
-        if (realtime == null) {
-            realtime = RealtimeSchedule.create(schedule.getId(), now.format(ISO), ttlSec);
-        } else if (realtime.getActualDepartureTime() != null) {
+        RealtimeSchedule realtime = realtimeScheduleRedisService
+                .getOrCreateScheduleStatus(schedule.getId(), now.format(ISO), ttlSec);
+        if (realtime.getActualDepartureTime() != null) {
             throw new CustomException(HomeErrorCode.ALREADY_DEPARTED);
         }
         realtime.applyStatus(
@@ -302,43 +336,43 @@ public class RealTimeScheduleService {
         );
         applyNavigationEnabled(realtime, schedule);
         realtime.updateActualDepartureTime(now.format(ISO));
-        realtimeScheduleRepository.save(realtime);
+        realtimeScheduleRedisService.saveScheduleStatus(realtime);
     }
 
-    // 실시간 일정 상태 조회
+    // 실시간 일정 상태 조회, Redis 생성 전이면 기본 설정
     @Transactional(readOnly = true)
     public DailyScheduleResponse.ScheduleStatusResponse calculateScheduleStatus(Schedule schedule) {
-        String key = RealtimeSchedule.key(schedule.getId());
-        Optional<RealtimeSchedule> realtimeOpt = realtimeScheduleRepository.findById(key);
-        if (realtimeOpt.isEmpty()) {
-            return null;
+        RealtimeSchedule realtime = realtimeScheduleRedisService.findScheduleStatus(schedule.getId());
+        if (realtime != null) {
+            return realtimeScheduleRedisService.toStatusResponse(realtime);
         }
-        return toResponse(realtimeOpt.get());
+
+        return new DailyScheduleResponse.ScheduleStatusResponse(
+                CurrentStatus.READY,
+                false,
+                0,
+                schedule.getStartTime().toLocalTime(),
+                schedule.getEndTime().toLocalTime(),
+                0
+        );
     }
 
 
     // 현재 시간, 사용자 위치 기반으로 예상 도착 시간(ETA) 및 상태 저장 ->  Redis
     private void saveLocation(Schedule schedule, double userLat, double userLng, LocalDateTime now) {
         long ttlSec = ttlSecondsUntil(resolveEndTime(schedule), REALTIME_SCHEDULE_TTL_AFTER_END_MIN);
-        RealtimeSchedule realtime = ensureRealtimeSchedule(schedule.getId(), now, ttlSec);
+        RealtimeSchedule realtime = realtimeScheduleRedisService
+                .getOrCreateScheduleStatus(schedule.getId(), now.format(ISO), ttlSec);
         applyNavigationEnabled(realtime, schedule);
         realtime.applyLocation(userLat, userLng, now.format(ISO), ttlSec);
-        realtimeScheduleRepository.save(realtime);
-    }
-
-    private RealtimeSchedule ensureRealtimeSchedule(Long scheduleId, LocalDateTime now, long ttlSec) {
-        String key = RealtimeSchedule.key(scheduleId);
-        RealtimeSchedule realtime = realtimeScheduleRepository.findById(key).orElse(null);
-        if (realtime == null) {
-            realtime = RealtimeSchedule.create(scheduleId, now.format(ISO), ttlSec);
-        }
-        return realtime;
+        realtimeScheduleRedisService.saveScheduleStatus(realtime);
     }
 
     // ETA 저장
     private void saveEta(Schedule schedule, int etaMinutes, int arrivalBufferMinutes, ExpectedTimes expectedTimes, LocalDateTime now) {
         long ttlSec = ttlSecondsUntil(resolveEndTime(schedule), REALTIME_SCHEDULE_TTL_AFTER_END_MIN);
-        RealtimeSchedule realtime = ensureRealtimeSchedule(schedule.getId(), now, ttlSec);
+        RealtimeSchedule realtime = realtimeScheduleRedisService
+                .getOrCreateScheduleStatus(schedule.getId(), now.format(ISO), ttlSec);
         applyNavigationEnabled(realtime, schedule);
         realtime.applyEta(
                 etaMinutes,
@@ -348,7 +382,7 @@ public class RealTimeScheduleService {
                 now.format(ISO),
                 ttlSec
         );
-        realtimeScheduleRepository.save(realtime);
+        realtimeScheduleRedisService.saveScheduleStatus(realtime);
     }
 
     // 상태 저장 - 예상 시작,도착 시간
@@ -363,7 +397,8 @@ public class RealTimeScheduleService {
 
         boolean isStarted = !expectedTimes.departure.isAfter(now);
 
-        RealtimeSchedule realtime = ensureRealtimeSchedule(schedule.getId(), now, ttlSec);
+        RealtimeSchedule realtime = realtimeScheduleRedisService
+                .getOrCreateScheduleStatus(schedule.getId(), now.format(ISO), ttlSec);
         applyNavigationEnabled(realtime, schedule);
         realtime.applyStatus(
                 status,
@@ -375,32 +410,7 @@ public class RealTimeScheduleService {
                 now.format(ISO),
                 ttlSec
         );
-        realtimeScheduleRepository.save(realtime);
-    }
-
-    // Redis converter로 분리
-    private DailyScheduleResponse.ScheduleStatusResponse toResponse(RealtimeSchedule realtime) {
-        LocalTime expectedDeparture = parseLocalTime(realtime.getExpectedDepartureTime());
-        LocalTime expectedArrival = parseLocalTime(realtime.getExpectedArrivalTime());
-        LocalTime actualDeparture = parseLocalTime(realtime.getActualDepartureTime());
-        LocalTime actualArrival = parseLocalTime(realtime.getActualArrivalTime());
-        return new DailyScheduleResponse.ScheduleStatusResponse(
-                realtime.getCurrentStatus(),
-                realtime.isStarted(),
-                realtime.getLeftOrDelayMinutes(),
-                expectedDeparture,
-                expectedArrival,
-                actualDeparture,
-                actualArrival,
-                realtime.getLateArrivalMinutes()
-        );
-    }
-
-    private LocalTime parseLocalTime(String dateTime) {
-        if (dateTime == null) {
-            return null;
-        }
-        return LocalDateTime.parse(dateTime, ISO).toLocalTime();
+        realtimeScheduleRedisService.saveScheduleStatus(realtime);
     }
 
     // 지각/출발 상태 판별
@@ -465,23 +475,17 @@ public class RealTimeScheduleService {
     // 주간 리포트에 pscore 기록
     @Transactional
     public void recordPScoreIfFirst(Schedule schedule, int score, String source, LocalDateTime now) {
-        String key = RealtimeScheduleArrivalCheck.key(schedule.getId());
-        RealtimeScheduleArrivalCheck check = arrivalCheckRepository.findById(key).orElse(null);
         long ttlSec = ttlSecondsUntil(resolveEndTime(schedule), ARRIVAL_CHECK_TTL_AFTER_END_MIN);
-
-        if (check == null) {
-            check = RealtimeScheduleArrivalCheck.create(schedule.getId(), ttlSec);
-        }
+        RealtimeScheduleArrivalCheck check = realtimeScheduleRedisService
+                .getOrCreateArrivalCheck(schedule.getId(), ttlSec);
 
         if (check.getPScore() != null) {
             return;
         }
 
         check.applyPScore(score, source, now.format(ISO), ttlSec);
-        arrivalCheckRepository.save(check);
-        RealtimeSchedule realtime = realtimeScheduleRepository
-                .findById(RealtimeSchedule.key(schedule.getId()))
-                .orElse(null);
+        realtimeScheduleRedisService.saveArrivalCheck(check);
+        RealtimeSchedule realtime = realtimeScheduleRedisService.findScheduleStatus(schedule.getId());
         boolean navigationUsed = realtime != null && Boolean.TRUE.equals(realtime.getNavigationEnabled());
         userMobilityLearningService.saveScheduleResultIfFirst(
                 schedule,
@@ -513,8 +517,7 @@ public class RealTimeScheduleService {
             return;
         }
 
-        String key = RealtimeScheduleArrivalCheck.key(schedule.getId());
-        RealtimeScheduleArrivalCheck check = arrivalCheckRepository.findById(key).orElse(null);
+        RealtimeScheduleArrivalCheck check = realtimeScheduleRedisService.findArrivalCheck(schedule.getId());
         if (check != null && check.getFallbackPushSentAt() != null) {
             return;
         }
@@ -528,7 +531,7 @@ public class RealTimeScheduleService {
             check = RealtimeScheduleArrivalCheck.create(schedule.getId(), ttlSec);
         }
         check.markFallbackPushSent(now.format(ISO), ttlSec);
-        arrivalCheckRepository.save(check);
+        realtimeScheduleRedisService.saveArrivalCheck(check);
     }
 
 
@@ -543,8 +546,7 @@ public class RealTimeScheduleService {
         }
         LocalDateTime now = LocalDateTime.now();
 
-        String key = RealtimeScheduleArrivalCheck.key(scheduleId);
-        RealtimeScheduleArrivalCheck check = arrivalCheckRepository.findById(key).orElse(null);
+        RealtimeScheduleArrivalCheck check = realtimeScheduleRedisService.findArrivalCheck(scheduleId);
         long ttlSec = ttlSecondsUntil(resolveEndTime(schedule), ARRIVAL_CHECK_TTL_AFTER_END_MIN);
         if (check == null) {
             check = RealtimeScheduleArrivalCheck.create(scheduleId, ttlSec);
@@ -552,7 +554,7 @@ public class RealTimeScheduleService {
 
         if (!Boolean.TRUE.equals(check.getArrivedConfirmed())) {
             check.confirmArrival(now.format(ISO), ttlSec);
-            arrivalCheckRepository.save(check);
+            realtimeScheduleRedisService.saveArrivalCheck(check);
         }
 
         recordPScoreForArrival(schedule, now, "POST_CONFIRM", true);
@@ -570,8 +572,7 @@ public class RealTimeScheduleService {
             return;
         }
 
-        String key = RealtimeScheduleArrivalCheck.key(schedule.getId());
-        RealtimeScheduleArrivalCheck check = arrivalCheckRepository.findById(key).orElse(null);
+        RealtimeScheduleArrivalCheck check = realtimeScheduleRedisService.findArrivalCheck(schedule.getId());
         if (check == null || check.getFallbackPushSentAt() == null) {
             return;
         }
@@ -587,15 +588,13 @@ public class RealTimeScheduleService {
 
     // 실제 도착했는지 조회
     private boolean hasActualArrival(Long scheduleId) {
-        String key = RealtimeSchedule.key(scheduleId);
-        RealtimeSchedule realtime = realtimeScheduleRepository.findById(key).orElse(null);
+        RealtimeSchedule realtime = realtimeScheduleRedisService.findScheduleStatus(scheduleId);
         return realtime != null && realtime.getActualArrivalTime() != null;
     }
 
     // 실제 도착 시간 기록 및 오차 로그 저장
     private void recordActualArrivalAndFinalize(String departurePlace, Schedule schedule, LocalDateTime now) {
-        String statusKey = RealtimeSchedule.key(schedule.getId());
-        RealtimeSchedule realtime = realtimeScheduleRepository.findById(statusKey).orElse(null);
+        RealtimeSchedule realtime = realtimeScheduleRedisService.findScheduleStatus(schedule.getId());
         if (realtime == null) {
             return;
         }
@@ -604,7 +603,8 @@ public class RealTimeScheduleService {
         }
 
         realtime.updateActualArrivalTime(now.format(ISO));
-        realtimeScheduleRepository.save(realtime);
+        realtimeScheduleRedisService.saveScheduleStatus(realtime);
+        clearActiveSchedule(schedule);
 
         recordPScoreForArrival(schedule, now, "ARRIVAL", false);
 
@@ -636,10 +636,57 @@ public class RealTimeScheduleService {
         updateDepartureAlarmOnArrival(schedule, realtime, realtime.getEtaMinutes(), realDuration, arrivedStatus);
     }
 
+    private Schedule findActiveScheduleFromCache(Long userId, LocalDateTime now) {
+        RealtimeActiveSchedule active = realtimeScheduleRedisService.findActiveSchedule(userId);
+        if (active == null) {
+            return null;
+        }
+        Schedule schedule = scheduleRepository.findById(active.getScheduleId()).orElse(null);
+        if (schedule == null || !isWithinTrackingWindow(schedule, now)) {
+            realtimeScheduleRedisService.deleteActiveSchedule(userId);
+            return null;
+        }
+        return schedule;
+    }
+
+    private void cacheActiveScheduleIfPresent(Schedule schedule, LocalDateTime now) {
+        if (schedule == null) {
+            return;
+        }
+        long ttlSec = ttlSecondsUntil(resolveEndTime(schedule), REALTIME_SCHEDULE_TTL_AFTER_END_MIN);
+        RealtimeActiveSchedule active = realtimeScheduleRedisService.getOrCreateActiveSchedule(
+                schedule.getUser().getId(),
+                schedule.getId(),
+                now.format(ISO),
+                ttlSec
+        );
+        realtimeScheduleRedisService.saveActiveSchedule(active);
+    }
+
+    private void saveActiveSchedule(Schedule schedule, LocalDateTime now, long ttlSec) {
+        if (schedule == null) {
+            return;
+        }
+        RealtimeActiveSchedule active = realtimeScheduleRedisService.getOrCreateActiveSchedule(
+                schedule.getUser().getId(),
+                schedule.getId(),
+                now.format(ISO),
+                ttlSec
+        );
+        realtimeScheduleRedisService.saveActiveSchedule(active);
+    }
+
+    private void clearActiveSchedule(Schedule schedule) {
+        if (schedule == null) {
+            return;
+        }
+        realtimeScheduleRedisService.deleteActiveSchedule(schedule.getUser().getId());
+    }
+
     // Redis에서 Status 파싱
     private ArrivedStatus resolveArrivedStatusFromRedis(Long scheduleId) {
         String key = RealtimeSchedule.key(scheduleId);
-        RealtimeSchedule realtime = realtimeScheduleRepository.findById(key).orElse(null);
+        RealtimeSchedule realtime = realtimeScheduleRedisService.findScheduleStatus(scheduleId);
         if (realtime == null) {
             return ArrivedStatus.ON_TIME;
         }
@@ -670,7 +717,19 @@ public class RealTimeScheduleService {
     }
 
     private void sendArrivalConfirmationPush(Schedule schedule) {
-        // TODO: "도착하셨나요?" 푸시 전송 연결
+        User user = schedule.getUser();
+
+        notificationProducer.reserve(
+                NotificationMessage.createArrival(
+                        user.getId(),
+                        user.getNickname(),
+                        schedule.getPlaceName(),
+                        0
+                ),
+                LocalDateTime.now()
+        );
+
+        log.info("[6번 도착 확인] {}님 예약", user.getNickname());
     }
 
     private int computePScore(LocalDateTime scheduleStartTime, LocalDateTime arrivedAt, boolean isPostConfirm) {
@@ -751,11 +810,10 @@ public class RealTimeScheduleService {
     }
 
     private RealtimeSchedule findRealtimeSchedule(Long scheduleId) {
-        String realtimeKey = RealtimeSchedule.key(scheduleId);
-        return realtimeScheduleRepository.findById(realtimeKey).orElse(null);
+        return realtimeScheduleRedisService.findScheduleStatus(scheduleId);
     }
 
-    private TmapTransitResponse.Itinerary firstItinerary(TmapTransitResponse response) {
+    private OdsayTransitResponse.Itinerary firstItinerary(OdsayTransitResponse response) {
         if (response == null
                 || response.metaData() == null
                 || response.metaData().plan() == null
@@ -914,6 +972,96 @@ public class RealTimeScheduleService {
         private ExpectedTimes(LocalDateTime departure, LocalDateTime arrival) {
             this.departure = departure;
             this.arrival = arrival;
+        }
+    }
+
+    @Transactional
+    public void initializeRealtimeFromSnapshot(Long scheduleId, LocalDateTime now) {
+        if (scheduleId == null) {
+            return;
+        }
+        Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+        // 삭제된 스케줄이거나 존재하지 않으면 실행하지 않음, 위치 정보 없어도 추적하지 않음
+        if (schedule == null || !hasDestination(schedule)) {
+            return;
+        }
+        // 길찾기 기능 사용 하지 않을 경우
+        if (!Boolean.TRUE.equals(schedule.getIsNavigationEnabled())) {
+            return;
+        }
+        ScheduleStartSnapshotService.StartLocationSnapshotInfo snapshot =
+                scheduleStartSnapshotService.findSnapshotLocation(schedule);
+        if (snapshot == null) {
+            return;
+        }
+        // 도착 시간 계산
+        DirectionResult route = directionService.calculateRoute(
+                snapshot.usedStartLat(),
+                snapshot.usedStartLng(),
+                schedule.getLatitude(),
+                schedule.getLongitude()
+        );
+        if (route == null) {
+            return;
+        }
+
+        // eta 보정 진행
+        int etaMinutes = route.getTotalMinutes();
+        etaMinutes = applyUserPattern(schedule.getUser(), schedule.getStartTime(), etaMinutes);
+        int arrivalBufferMinutes = getArrivalBufferMinutes(schedule);
+        ExpectedTimes expectedTimes = computeExpectedTimes(schedule, arrivalBufferMinutes, etaMinutes);
+
+        saveLocation(schedule, snapshot.usedStartLat(), snapshot.usedStartLng(), now);
+        saveEta(schedule, etaMinutes, arrivalBufferMinutes, expectedTimes, now);
+        saveStatus(schedule, expectedTimes, now);
+    }
+
+    @Transactional
+    public void initializeRealtimeOnScheduleCreate(Schedule schedule) {
+        if (schedule == null || !hasDestination(schedule)) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        long ttlSec = ttlSecondsUntil(resolveEndTime(schedule), REALTIME_SCHEDULE_TTL_AFTER_END_MIN);
+        RealtimeSchedule realtime = realtimeScheduleRedisService
+                .getOrCreateScheduleStatus(schedule.getId(), now.format(ISO), ttlSec);
+        applyNavigationEnabled(realtime, schedule);
+        realtimeScheduleRedisService.saveScheduleStatus(realtime);
+    }
+
+
+    @Transactional
+    public void refreshRealtimeOnScheduleUpdate(Schedule schedule) {
+        if (schedule == null) {
+            return;
+        }
+        RealtimeSchedule realtime = realtimeScheduleRedisService.findScheduleStatus(schedule.getId());
+        if (realtime != null
+                && (realtime.getActualDepartureTime() != null || realtime.getActualArrivalTime() != null)) {
+            return;
+        }
+        realtimeScheduleRedisService.deleteScheduleStatus(schedule.getId());
+        realtimeScheduleRedisService.deleteArrivalCheck(schedule.getId());
+        initializeRealtimeOnScheduleCreate(schedule);
+    }
+
+    private void checkTrafficAndNotify(Schedule schedule, int etaMinutes) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startTime = schedule.getStartTime(); //
+
+        if (now.isAfter(startTime.minusMinutes(11)) && now.isBefore(startTime.minusMinutes(4))) {
+
+            if (now.plusMinutes(etaMinutes).isAfter(startTime)) {
+                User user = schedule.getUser(); //
+
+                notificationProducer.reserve(
+                        NotificationMessage.createTrafficCongestion(
+                                user.getId(), user.getNickname(), schedule.getPlaceName(), etaMinutes),
+                        now
+                );
+
+                log.info("[4번 교통혼잡] {}님 예약", user.getNickname());
+            }
         }
     }
 

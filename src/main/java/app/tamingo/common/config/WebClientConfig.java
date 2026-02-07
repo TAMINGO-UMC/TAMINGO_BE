@@ -33,14 +33,12 @@ public class WebClientConfig {
                 .build();
     }
 
-    @Bean(name = "tmapWebClient")
-    WebClient tmapWebClient(
-            @Value("${tmap.url}") String baseUrl,
-            @Value("${tmap.app-key}") String appKey
+    @Bean(name = "odsayWebClient")
+    WebClient odsayWebClient(
+            @Value("${odsay.url}") String baseUrl
     ) {
         return WebClient.builder()
                 .baseUrl(baseUrl)
-                .defaultHeader("appKey", appKey)
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
