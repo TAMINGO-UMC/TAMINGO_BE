@@ -1,6 +1,6 @@
 package app.tamingo.domain.schedule.entity;
 import app.tamingo.common.entity.BaseEntity;
-import app.tamingo.domain.schedule.enums.ScheduleResultStatus;
+import app.tamingo.domain.home.entity.enums.ArrivedStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -52,11 +52,11 @@ public class ScheduleResult extends BaseEntity {
 
     /**
      * 일정 수행 결과 상태
-     * - ON_TIME / LATE / NO_SHOW / CANCELED
+     * - ON_TIME / LATE / NO_SHOW / CANCELED / EARLY
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private ScheduleResultStatus status;
+    private ArrivedStatus status;
 
     /**
      * 길찾기 시작 버튼 사용 여부
@@ -67,14 +67,14 @@ public class ScheduleResult extends BaseEntity {
      *
      * 주의:
      * - 길찾기 시작 버튼을 누르는 시점에 true로 업데이트(또는 최초 생성)
-     * - 도착 확정은 GPS로 status가 ON_TIME/LATE가 되면서 판단
+     * - 도착 확정은 GPS로 status가 ON_TIME/LATE /EARLY가 되면서 판단
      */
     @Column(name = "navigation_used", nullable = false)
     private Boolean navigationUsed;
 
     /**
      * GPS 기반 실제 도착 확정 시각
-     * - 도착이 확정된 경우에만 값이 존재(ON_TIME/LATE)
+     * - 도착이 확정된 경우에만 값이 존재(ON_TIME/LATE/EARLY)
      * - 정시/지각 판정의 근거 데이터가 됨
      */
     @Column(name = "arrived_at")
@@ -113,7 +113,7 @@ public class ScheduleResult extends BaseEntity {
     @Builder(builderMethodName = "internalBuilder")
     private ScheduleResult(
             Schedule schedule,
-            ScheduleResultStatus status,
+            ArrivedStatus status,
             Boolean navigationUsed,
             LocalDateTime arrivedAt,
             Integer lateMinutes,
@@ -135,7 +135,7 @@ public class ScheduleResult extends BaseEntity {
      */
     public static ScheduleResult of(
             Schedule schedule,
-            ScheduleResultStatus status,
+            ArrivedStatus status,
             Boolean navigationUsed,
             LocalDateTime arrivedAt,
             Integer lateMinutes,
@@ -167,7 +167,7 @@ public class ScheduleResult extends BaseEntity {
      * - 도착 확정 시 status/arrivedAt/lateMinutes/punctualityScore/evaluatedAt 갱신
      */
     public void confirmArrival(
-            ScheduleResultStatus status, // ON_TIME 또는 LATE
+            ArrivedStatus status, // ON_TIME 또는 LATE
             LocalDateTime arrivedAt,
             Integer lateMinutes,
             Integer punctualityScore,
@@ -185,7 +185,7 @@ public class ScheduleResult extends BaseEntity {
      * - 일정 시작 후 cutoff 시간이 지났는데 도착이 확정되지 않은 경우 배치/스케줄러에서 호출
      */
     public void confirmNoShow(LocalDateTime evaluatedAt) {
-        this.status = ScheduleResultStatus.NO_SHOW;
+        this.status = ArrivedStatus.NO_SHOW;
         this.arrivedAt = null;
         this.lateMinutes = null;
         this.punctualityScore = 0;
@@ -197,7 +197,7 @@ public class ScheduleResult extends BaseEntity {
      * - 취소는 분모에서 제외하는 정책을 권장(리포트 계산 시 제외)
      */
     public void confirmCanceled(LocalDateTime evaluatedAt) {
-        this.status = ScheduleResultStatus.CANCELED;
+        this.status = ArrivedStatus.CANCELED;
         this.evaluatedAt = evaluatedAt;
     }
 }

@@ -4,9 +4,9 @@ import app.tamingo.common.exception.CustomException;
 import app.tamingo.domain.gpt.prompt.common.DataPrompt;
 import app.tamingo.domain.gpt.prompt.weeklyreport.WeeklyReportInsightPrompt;
 import app.tamingo.domain.gpt.service.weeklyreport.WeeklyInsightGptService;
+import app.tamingo.domain.home.entity.enums.ArrivedStatus;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleResult;
-import app.tamingo.domain.schedule.enums.ScheduleResultStatus;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.schedule.repository.ScheduleResultRepository;
 import app.tamingo.domain.todo.entity.Todo;
@@ -88,8 +88,8 @@ public class WeeklyReportBatchWorker {
         List<ScheduleResult> finalizedResults = schedules.stream()
                 .map(s -> resultByScheduleId.get(s.getId()))
                 .filter(Objects::nonNull)
-                .filter(r -> r.getStatus() != ScheduleResultStatus.PENDING)
-                .filter(r -> r.getStatus() != ScheduleResultStatus.CANCELED)
+                .filter(r -> r.getStatus() != ArrivedStatus.PENDING)
+                .filter(r -> r.getStatus() != ArrivedStatus.CANCELED)
                 .toList();
 
         // -------------------------
@@ -106,7 +106,8 @@ public class WeeklyReportBatchWorker {
         int scheduleTotal = finalizedResults.size();
 
         int onTimeCount = (int) finalizedResults.stream()
-                .filter(r -> r.getStatus() == ScheduleResultStatus.ON_TIME)
+                .filter(r -> r.getStatus() == ArrivedStatus.ON_TIME
+                        || r.getStatus() == ArrivedStatus.EARLY)
                 .count();
 
         BigDecimal onTimeRate = percent(onTimeCount, scheduleTotal);
@@ -116,11 +117,14 @@ public class WeeklyReportBatchWorker {
 
         // -------------------------
         // 4) Navigation Bonus B
-        // 정책: 길찾기 시작(navigationUsed=true) 후 도착(ON_TIME/LATE)한 횟수당 +1
+        // 정책: 길찾기 시작(navigationUsed=true) 후 도착(ON_TIME/EARLY/LATE)한 횟수당 +1
         // -------------------------
         int navigationBonus = (int) finalizedResults.stream()
                 .filter(r -> Boolean.TRUE.equals(r.getNavigationUsed()))
-                .filter(r -> r.getStatus() == ScheduleResultStatus.ON_TIME || r.getStatus() == ScheduleResultStatus.LATE)
+                .filter(r ->
+                        r.getStatus() == ArrivedStatus.ON_TIME
+                        || r.getStatus() == ArrivedStatus.LATE
+                        || r.getStatus() == ArrivedStatus.EARLY)
                 .count();
 
         // -------------------------
@@ -239,8 +243,8 @@ public class WeeklyReportBatchWorker {
         for (Schedule s : schedules) {
             ScheduleResult r = resultByScheduleId.get(s.getId());
             if (r == null) continue;
-            if (r.getStatus() == ScheduleResultStatus.PENDING) continue;
-            if (r.getStatus() == ScheduleResultStatus.CANCELED) continue;
+            if (r.getStatus() == ArrivedStatus.PENDING) continue;
+            if (r.getStatus() == ArrivedStatus.CANCELED) continue;
 
             LocalDate date = s.getStartTime().toLocalDate();
             resultsByDate.computeIfAbsent(date, k -> new ArrayList<>()).add(r);
@@ -262,7 +266,9 @@ public class WeeklyReportBatchWorker {
             List<ScheduleResult> dayResults = resultsByDate.getOrDefault(date, List.of());
             int scheduleCount = dayResults.size();
             int onTimeCount = (int) dayResults.stream()
-                    .filter(r -> r.getStatus() == ScheduleResultStatus.ON_TIME)
+                    .filter(r ->
+                            r.getStatus() == ArrivedStatus.ON_TIME
+                            || r.getStatus() == ArrivedStatus.EARLY)
                     .count();
             BigDecimal punctualityRate = percent(onTimeCount, scheduleCount);
 
@@ -329,7 +335,7 @@ public class WeeklyReportBatchWorker {
 
     private Integer avgLateMinutes(List<ScheduleResult> results) {
         List<Integer> lateMinutes = results.stream()
-                .filter(r -> r.getStatus() == ScheduleResultStatus.LATE)
+                .filter(r -> r.getStatus() == ArrivedStatus.LATE)
                 .map(ScheduleResult::getLateMinutes)
                 .filter(Objects::nonNull)
                 .toList();
