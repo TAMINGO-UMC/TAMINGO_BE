@@ -11,6 +11,8 @@ services:
       - "8080:8080"
     env_file:
       - .env
+    volumes:
+      - ./secrets/serviceAccountKey.json:/run/secrets/firebase/serviceAccountKey.json:ro
     depends_on:
       - redis
 
