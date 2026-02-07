@@ -10,6 +10,12 @@ import java.util.Objects;
 @Component
 public class FindRouteResponseConverter {
 
+    private final RouteColorResolver routeColorResolver;
+
+    public FindRouteResponseConverter(RouteColorResolver routeColorResolver) {
+        this.routeColorResolver = routeColorResolver;
+    }
+
     public List<FindRouteResponse.RouteLeg> toRouteLegs(OdsayTransitResponse.Itinerary itinerary) {
         if (itinerary == null || itinerary.legs() == null) {
             return List.of();
@@ -35,7 +41,11 @@ public class FindRouteResponseConverter {
         String startName = leg.start() != null ? leg.start().name() : null;
         String endName = leg.end() != null ? leg.end().name() : null;
         List<String> stations = toStationNames(leg.passStopList());
+        Integer stationCount = stations != null ? stations.size() : null;
         String walkDescription = buildWalkDescription(mode, leg.distance(), leg.sectionTime());
+        String routeColor = leg.routeColor() != null
+                ? leg.routeColor()
+                : routeColorResolver.resolve(mode, leg.route());
 
         return new FindRouteResponse.RouteLeg(
                 mode,
@@ -44,8 +54,9 @@ public class FindRouteResponseConverter {
                 startName,
                 endName,
                 leg.route(),
-                leg.routeColor(),
+                routeColor,
                 stations,
+                stationCount,
                 walkDescription
         );
     }

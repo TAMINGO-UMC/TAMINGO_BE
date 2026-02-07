@@ -1,5 +1,6 @@
 package app.tamingo.domain.home.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,6 +23,7 @@ public record FindRouteResponse(
     /**
      * 실제 타임라인에 표시되는 단위
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record RouteLeg(
             TransportMode mode,              // WALK, BUS, SUBWAY
             Integer sectionTime,              // 구간 소요 시간
@@ -33,6 +35,7 @@ public record FindRouteResponse(
             String routeName,                 // 1024, 303, 2호선 등
             String routeColor,                // 노선 색상
             List<String> stations,            // 경유 정류장 이름 목록
+            Integer stationCount,             // 경유 정류장 수
 
             // 도보 전용
             String walkDescription            // ex "도보 106m (2분)"

@@ -64,6 +64,7 @@ public class DailyPlanResponse {
         private String location;
         private LocalTime time; // 시간
         private Integer requiredMinutes; // 소요시간
+        private String title;
         private String message;
 
         public GapRecommendItem(
@@ -71,12 +72,14 @@ public class DailyPlanResponse {
                 String location,
                 LocalTime time,
                 Integer requiredMinutes,
+                String title,
                 String message
         ) {
             super(DailyPlanItemType.GAP_RECOMMEND);
             this.suggestionId = suggestionId;
             this.location = location;
             this.time = time;
+            this.title = title;
             this.requiredMinutes = requiredMinutes;
             this.message = message;
         }
