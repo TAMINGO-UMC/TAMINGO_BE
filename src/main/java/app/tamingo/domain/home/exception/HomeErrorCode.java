@@ -15,7 +15,9 @@ public enum HomeErrorCode implements BaseCode {
     ALREADY_DEPARTED(HttpStatus.CONFLICT, "HOME-004", "이미 출발 처리된 일정입니다."),
     ALREADY_ARRIVED(HttpStatus.CONFLICT,"HOME-005","이미 도착 처리된 일정입니다." ),
     SCHEDULE_START_SNAPSHOT_NOT_FOUND(HttpStatus.NOT_FOUND,"HOME-006" ,"해당 일정에 저장된 출발지가 없습니다." ),
-    TOO_MANY_TODOS(HttpStatus.BAD_REQUEST,"HOME-007", "경유 가능한 경유지의 개수를 초과했습니다." );
+    TOO_MANY_TODOS(HttpStatus.BAD_REQUEST,"HOME-007", "경유 가능한 경유지의 개수를 초과했습니다." ),
+    SCHEDULE_RESULT_EXISTS(HttpStatus.CONFLICT,"HOME-008","결과가 이미 저장된 일정입니다." );
+
 
     private final HttpStatus httpStatus;
     private final String code;

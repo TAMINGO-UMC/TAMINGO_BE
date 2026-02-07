@@ -1,9 +1,9 @@
-package app.tamingo.domain.tmap.service;
+package app.tamingo.domain.odsay.service;
 
 import app.tamingo.domain.home.dto.DirectionResult;
 import app.tamingo.domain.home.dto.Location;
-import app.tamingo.domain.tmap.client.TmapTransitClient;
-import app.tamingo.domain.tmap.dto.TmapTransitResponse;
+import app.tamingo.domain.odsay.client.OdsayTransitClient;
+import app.tamingo.domain.odsay.dto.OdsayTransitResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,14 +13,14 @@ import java.util.List;
 
 /**
  * 경로 계산 서비스
- * TMAP 대중교통 경로 조회 및 우회 여부 판단
+ * ODSAY 대중교통 경로 조회 및 우회 여부 판단
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DirectionService {
 
-    private final TmapTransitClient tmapTransitClient;
+    private final OdsayTransitClient odsayTransitClient;
 
     /**
      * 우회 시간 최대 허용치
@@ -39,13 +39,13 @@ public class DirectionService {
     public DirectionResult calculateRoute(
             double startLat, double startLng,
             double goalLat, double goalLng) {
-        return tmapTransitClient.route(startLat, startLng, goalLat, goalLng);
+        return odsayTransitClient.route(startLat, startLng, goalLat, goalLng);
     }
 
-    public TmapTransitResponse calculateRouteDetail(
+    public OdsayTransitResponse calculateRouteDetail(
             double startLat, double startLng,
             double goalLat, double goalLng) {
-        return tmapTransitClient.routeResponse(startLat, startLng, goalLat, goalLng);
+        return odsayTransitClient.routeResponse(startLat, startLng, goalLat, goalLng);
     }
 
     /**
@@ -63,8 +63,8 @@ public class DirectionService {
             double startLat, double startLng,
             double todoLat, double todoLng,
             double goalLat, double goalLng) {
-        DirectionResult leg1 = tmapTransitClient.route(startLat, startLng, todoLat, todoLng);
-        DirectionResult leg2 = tmapTransitClient.route(todoLat, todoLng, goalLat, goalLng);
+        DirectionResult leg1 = odsayTransitClient.route(startLat, startLng, todoLat, todoLng);
+        DirectionResult leg2 = odsayTransitClient.route(todoLat, todoLng, goalLat, goalLng);
         if (leg1 == null || leg2 == null) {
             return null;
         }
@@ -97,7 +97,7 @@ public class DirectionService {
         for (int i = 0; i < points.size() - 1; i++) {
             Location from = points.get(i);
             Location to = points.get(i + 1);
-            DirectionResult leg = tmapTransitClient.route(
+            DirectionResult leg = odsayTransitClient.route(
                     from.latitude(), from.longitude(),
                     to.latitude(), to.longitude()
             );

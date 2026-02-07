@@ -49,13 +49,12 @@ kakao:
     key: ${KAKAO_API_KEY}
     url: https://dapi.kakao.com
 
-tmap:
-  url: https://apis.openapi.sk.com/transit
-  app-key: ${TMAP_APP_KEY}
-  format: json
-  lang: 0
-  count: 1
-
+odsay:
+  url: https://api.odsay.com/v1/api
+  api-key: ${ODSAY_API_KEY}
+  search-type: 0
+  search-path-type: 0
+  opt: 0
 # service-region:
 #   min-lat: 0.0
 #   max-lat: 0.0

@@ -71,8 +71,8 @@ public class ScheduleStartSnapshot {
     @Column(name = "is_reserved", nullable = false)
     private boolean isReserved = false;
 
-    @Column(name = "expected_eta", nullable = false)
-    private int expectedEta;
+    @Column(name = "expected_eta", nullable = false, columnDefinition = "integer default 0")
+    private int expectedEta = 0;
 
     public void reserved() {
         this.isReserved = true;

@@ -86,16 +86,12 @@ public class RealtimeScheduleRedisService {
         }
         LocalTime expectedDeparture = parseLocalTime(realtime.getExpectedDepartureTime());
         LocalTime expectedArrival = parseLocalTime(realtime.getExpectedArrivalTime());
-        LocalTime actualDeparture = parseLocalTime(realtime.getActualDepartureTime());
-        LocalTime actualArrival = parseLocalTime(realtime.getActualArrivalTime());
         return new DailyScheduleResponse.ScheduleStatusResponse(
                 realtime.getCurrentStatus(),
                 realtime.isStarted(),
                 realtime.getLeftOrDelayMinutes(),
                 expectedDeparture,
                 expectedArrival,
-                actualDeparture,
-                actualArrival,
                 realtime.getLateArrivalMinutes()
         );
     }
