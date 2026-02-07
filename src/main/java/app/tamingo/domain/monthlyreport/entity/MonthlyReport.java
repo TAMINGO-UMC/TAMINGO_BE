@@ -1,6 +1,6 @@
 package app.tamingo.domain.monthlyreport.entity;
 
-import app.tamingo.BaseEntity;
+import app.tamingo.common.entity.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.weeklyreport.enums.ProductivityGrade;
 import jakarta.persistence.*;

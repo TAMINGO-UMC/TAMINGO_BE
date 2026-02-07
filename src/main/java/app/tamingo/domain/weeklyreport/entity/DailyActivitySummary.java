@@ -1,6 +1,6 @@
 package app.tamingo.domain.weeklyreport.entity;
 
-import app.tamingo.BaseEntity;
+import app.tamingo.common.entity.BaseEntity;
 import app.tamingo.domain.weeklyreport.enums.DayOfWeekType;
 import jakarta.persistence.*;
 import lombok.*;

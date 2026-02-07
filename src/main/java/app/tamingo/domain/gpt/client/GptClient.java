@@ -1,7 +1,7 @@
 package app.tamingo.domain.gpt.client;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.common.response.gpt.GptErrorCode;
+import app.tamingo.domain.gpt.exception.GptErrorCode;
 import app.tamingo.common.webclient.ApiClient;
 import app.tamingo.domain.gpt.dto.GptRequest;
 import app.tamingo.domain.gpt.dto.GptResponse;
