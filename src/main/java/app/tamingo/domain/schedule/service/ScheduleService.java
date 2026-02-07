@@ -4,7 +4,6 @@ import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
 import app.tamingo.domain.calendar.enums.LinkStatus;
 import app.tamingo.domain.calendar.repository.ExternalTaskMappingRepository;
-import app.tamingo.domain.home.service.realtime.ScheduleInitQueueService;
 import app.tamingo.domain.schedule.dto.*;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleAiLog;
@@ -45,9 +44,9 @@ public class ScheduleService {
     private final UserRepository userRepository;
     private final ScheduleCategoryRepository scheduleCategoryRepository;
     private final ScheduleAiLogRepository scheduleAiLogRepository;
-    private final ScheduleInitQueueService scheduleInitQueueService;
     private final UserLearningSummaryService userLearningSummaryService;
     private final ExternalTaskMappingRepository externalTaskMappingRepository;
+
 
     @Transactional
     public CreateScheduleResponse createSchedule(Long userId, CreateScheduleRequest request){
@@ -131,14 +130,6 @@ public class ScheduleService {
         // 일괄 저장
         List<Schedule> savedSchedules = scheduleRepository.saveAll(schedulesToSave);
         Schedule firstSchedule = savedSchedules.get(0); // 첫 번째 일정을 대표로 사용
-
-        // 일정 시작 20분 전 초기화 큐 등록
-        for (Schedule schedule : savedSchedules) {
-            scheduleInitQueueService.scheduleInit(
-                    schedule.getId(),
-                    schedule.getStartTime().minusMinutes(20)
-            );
-        }
 
         // 첫 번째 일정에만 할 일 연결
         if (request.linkedTodoIds() != null && !request.linkedTodoIds().isEmpty()) {
@@ -282,19 +273,18 @@ public class ScheduleService {
             throw new CustomException(ScheduleErrorCode.SCHEDULE_NOT_OWNER);
         }
 
-        //외부(Apple)에서 들어온 일정이면, 앱에서 수정하는 순간 UNLINKED 처리
-        externalTaskMappingRepository.findByScheduleId(scheduleId)
-                .ifPresent(mapping -> {
-                    if (mapping.getLinkStatus() == LinkStatus.LINKED) {
-                        mapping.unlink(); //이후 /sync에서 schedule 덮어쓰기 스킵
-                    }
-                });
-
         ScheduleCategory category = null;
         if (request.scheduleCategoryId() != null) {
             category = scheduleCategoryRepository.findById(request.scheduleCategoryId())
                     .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_CATEGORY_NOT_FOUND));
         }
+        //링크 바꾸기
+        externalTaskMappingRepository.findByScheduleId(scheduleId)
+                .ifPresent(mapping -> {
+                    if (mapping.getLinkStatus() == LinkStatus.LINKED) {
+                        mapping.unlink();
+                    }
+                });
 
         schedule.update(
                 category,
