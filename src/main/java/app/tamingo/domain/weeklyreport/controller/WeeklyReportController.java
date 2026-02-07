@@ -4,6 +4,7 @@ import app.tamingo.common.response.ApiResponse;
 import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.weeklyreport.dto.WeeklyReportResponse;
 import app.tamingo.domain.weeklyreport.service.WeeklyReportService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,6 +21,10 @@ public class WeeklyReportController {
 
     private final WeeklyReportService weeklyReportService;
 
+    @Operation(
+            summary = "주간 리포트 조회",
+            description = "weekStartDate(YYYY-MM-DD)가 속한 주의 주간 리포트를 조회합니다. 서버에서 해당 날짜를 그 주의 월요일로 자동 보정합니다."
+    )
     @GetMapping
     public ApiResponse<WeeklyReportResponse> getWeeklyReport(
             @AuthenticationPrincipal Long userId,

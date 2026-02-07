@@ -1,4 +1,4 @@
-package app.tamingo.common.response.gpt;
+package app.tamingo.domain.gpt.exception;
 
 import app.tamingo.common.response.BaseCode;
 import lombok.AllArgsConstructor;

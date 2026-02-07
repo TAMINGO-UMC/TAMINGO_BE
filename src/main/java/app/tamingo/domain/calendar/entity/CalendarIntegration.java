@@ -1,6 +1,6 @@
 package app.tamingo.domain.calendar.entity;
 
-import app.tamingo.BaseEntity;
+import app.tamingo.common.entity.BaseEntity;
 import app.tamingo.domain.calendar.enums.CalendarIntegrationStatus;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -13,6 +13,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         name = "calendar_integration",
+        uniqueConstraints = {
+                // 유저당 애플 연동은 1개만 존재
+                @UniqueConstraint(name = "uk_calendar_integration_user", columnNames = {"user_id"})
+        },
         indexes = {
                 @Index(name = "idx_calendar_integration_user_id", columnList = "user_id")
         }
@@ -23,24 +27,16 @@ public class CalendarIntegration extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 유저 외래키
+    // 연동 소유자(유저)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // 연동 제공자 (APPLE)
-    @Column(name = "provider", nullable = false, length = 30)
-    private String provider;
-
-    // Apple -> App 동기화 여부
+    // Apple -> App 동기화 ON/OFF
     @Column(name = "sync_from_apple", nullable = false)
     private boolean syncFromApple;
 
-    // App -> Apple 동기화 여부
-    @Column(name = "sync_to_apple", nullable = false)
-    private boolean syncToApple;
-
-    // 연동 상태
+    // 연동 상태 (ACTIVE/SYNCING/ERROR 등)
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     private CalendarIntegrationStatus status;
@@ -52,62 +48,54 @@ public class CalendarIntegration extends BaseEntity {
     @Builder(builderMethodName = "internalBuilder")
     private CalendarIntegration(
             User user,
-            String provider,
             boolean syncFromApple,
-            boolean syncToApple,
             CalendarIntegrationStatus status,
             LocalDateTime lastSyncedAt
     ) {
         this.user = user;
-        this.provider = provider;
         this.syncFromApple = syncFromApple;
-        this.syncToApple = syncToApple;
         this.status = status;
         this.lastSyncedAt = lastSyncedAt;
     }
 
-    public static CalendarIntegration of(
-            User user,
-            String provider,
-            boolean syncFromApple,
-            boolean syncToApple,
-            CalendarIntegrationStatus status,
-            LocalDateTime lastSyncedAt
-    ) {
+    // 최초 연동 생성 (기본: 동기화 ON)
+    public static CalendarIntegration of(User user) {
         return CalendarIntegration.internalBuilder()
                 .user(user)
-                .provider(provider)
-                .syncFromApple(syncFromApple)
-                .syncToApple(syncToApple)
-                .status(status)
-                .lastSyncedAt(lastSyncedAt)
+                .syncFromApple(true)
+                .status(CalendarIntegrationStatus.ACTIVE)
+                .lastSyncedAt(null)
                 .build();
     }
 
-    // 토글 변경
-    public void updateSyncFlags(boolean syncFromApple, boolean syncToApple) {
+    // 동기화 스위치 변경
+    public void updateSyncFromApple(boolean syncFromApple) {
         this.syncFromApple = syncFromApple;
-        this.syncToApple = syncToApple;
     }
 
-    // 상태 변경
-    public void updateStatus(CalendarIntegrationStatus status) {
-        this.status = status;
-    }
-
-    // 동기화 성공 처리
-    public void markSyncedNow() {
-        this.lastSyncedAt = LocalDateTime.now();
-        this.status = CalendarIntegrationStatus.ACTIVE;
-    }
-
-    // 동기화 시작 처리
+    // 동기화 진행중 표시(선택)
     public void markSyncing() {
         this.status = CalendarIntegrationStatus.SYNCING;
     }
 
-    // 오류 처리
+    // 동기화 성공 처리
+    public void markSyncedNow() {
+        this.status = CalendarIntegrationStatus.ACTIVE;
+        this.lastSyncedAt = LocalDateTime.now();
+    }
+
+    // 동기화 실패 처리
     public void markError() {
         this.status = CalendarIntegrationStatus.ERROR;
     }
+    // ACTIVE로 변경(연동 ON)
+    public void markActive() {
+        this.status = CalendarIntegrationStatus.ACTIVE;
+    }
+
+    // INACTIVE로 변경(연동 OFF)
+    public void markInactive() {
+        this.status = CalendarIntegrationStatus.INACTIVE;
+    }
+
 }

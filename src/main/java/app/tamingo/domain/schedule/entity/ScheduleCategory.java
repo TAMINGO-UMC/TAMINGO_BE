@@ -1,6 +1,6 @@
 package app.tamingo.domain.schedule.entity;
 
-import app.tamingo.BaseEntity;
+import app.tamingo.common.entity.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,36 +35,29 @@ public class ScheduleCategory extends BaseEntity {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    // 아이콘 코드
-    @Column(name = "icon_code", nullable = false, length = 50)
-    private String iconCode;
-
     // 색상 코드
     @Column(name = "color_code", nullable = false, length = 20)
     private String colorCode;
 
     //빌더형식 생성자
     @Builder(builderMethodName = "internalBuilder")
-    private ScheduleCategory(String name, String iconCode, String colorCode, User user) {
+    private ScheduleCategory(String name,String colorCode, User user) {
         this.name = name;
-        this.iconCode = iconCode;
         this.colorCode = colorCode;
         this.user = user;
     }
 
     //정적팩토리 메서드
-    public static ScheduleCategory of(String name, String iconCode, String colorCode, User user) {
+    public static ScheduleCategory of(String name,String colorCode, User user) {
         return ScheduleCategory.internalBuilder()
                 .name(name)
-                .iconCode(iconCode)
                 .colorCode(colorCode)
                 .user(user)
                 .build();
     }
     //수정 기능
-    public void update(String name, String iconCode, String colorCode) {
+    public void update(String name,String colorCode) {
         this.name = name;
-        this.iconCode = iconCode;
         this.colorCode = colorCode;
     }
 

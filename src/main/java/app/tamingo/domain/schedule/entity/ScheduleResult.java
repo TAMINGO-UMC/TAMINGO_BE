@@ -1,5 +1,5 @@
 package app.tamingo.domain.schedule.entity;
-import app.tamingo.BaseEntity;
+import app.tamingo.common.entity.BaseEntity;
 import app.tamingo.domain.schedule.enums.ScheduleResultStatus;
 import jakarta.persistence.*;
 import lombok.*;

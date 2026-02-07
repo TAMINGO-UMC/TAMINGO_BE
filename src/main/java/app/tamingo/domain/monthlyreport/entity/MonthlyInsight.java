@@ -1,6 +1,6 @@
 package app.tamingo.domain.monthlyreport.entity;
 
-import app.tamingo.BaseEntity;
+import app.tamingo.common.entity.BaseEntity;
 import app.tamingo.domain.monthlyreport.enums.MonthlyInsightType;
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,8 +1,6 @@
 package app.tamingo.domain.user.entity;
 
-import app.tamingo.BaseEntity;
 import app.tamingo.domain.terms.entity.Terms;
-import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

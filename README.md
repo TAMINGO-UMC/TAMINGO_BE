@@ -1,19 +1,76 @@
-# Tamingo Server
+# Tamingo Backend
 
 **Tamingo** 프로젝트의 Spring Boot 기반 백엔드 레포지토리입니다.
 
 ---
-
 ## 👤 백엔드 팀원 소개
 
 <div align="center">
 
 | Backend | Backend |                                    Backend                                    | Backend | Backend |
 |:------:|:------:|:-----------------------------------------------------------------------------:|:------:|:------:|
-| <img src="https://github.com/HeejuKo.png" width="150" /> | <img src="https://github.com/JiwonLee42.png" width="150" /> |        <img src="https://github.com/dearmytwilight.png" width="150" />        | <img src="https://github.com/leegy21.png" width="150" /> | <img src="https://avatars.githubusercontent.com/u/0?v=4" width="150" /> |
-| [고희주](https://github.com/HeejuKo)<br/>로그인 / 회원가입<br/>이메일 인증<br/>온보딩 | [이지원](https://github.com/JiwonLee42)<br/>홈 | [김도윤](https://github.com/dearmytwilight)<br/>마이페이지<br/>장소 & 시간 설정<br/>알림 / 설정 | [이가영](https://github.com/leegy21)<br/>일정<br/>할 일 |  [김현강](https://github.com/hyeonkangkimm)<br/>마이페이지<br/>주간 리포트<br/>캘린더 연동 |
+| <img src="https://github.com/HeejuKo.png" width="150" /> | <img src="https://github.com/JiwonLee42.png" width="150" /> |        <img src="https://github.com/dearmytwilight.png" width="150" />        | <img src="https://github.com/leegy21.png" width="150" /> | <img src="https://github.com/hyeonkangkimm.png" width="150" /> |
+| [고희주](https://github.com/HeejuKo)<br/>로그인 / 회원가입<br/>이메일 인증<br/>온보딩 | [이지원](https://github.com/JiwonLee42)<br/> 홈화면 일정 조회 및 길찾기<br/>틈새일정 및 경로추천<br/>실시간 일정 추적 | [김도윤](https://github.com/dearmytwilight)<br/>마이페이지<br/>장소 & 시간 설정<br/>알림 / 설정 | [이가영](https://github.com/leegy21)<br/>일정,할일 기능<br/> 일정/할일AI 추론 |  [김현강](https://github.com/hyeonkangkimm)<br/>마이페이지<br/>주간 리포트<br/>캘린더 연동 |
 
 </div>
+
+---
+## 🛠 기술 스택
+
+### Backend
+
+<div align="left">
+  <img src="https://img.shields.io/badge/Java-21-007396?style=for-the-badge&logo=openjdk&logoColor=white" />
+  <img src="https://img.shields.io/badge/Spring%20Boot-4.0.1-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
+  <img src="https://img.shields.io/badge/Spring%20Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white" />
+  <img src="https://img.shields.io/badge/JPA-Hibernate-59666C?style=for-the-badge&logo=hibernate&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" />
+  <img src="https://img.shields.io/badge/Redisson-DC382D?style=for-the-badge&logo=redis&logoColor=white" />
+  <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" />
+  <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" />
+  <img src="https://img.shields.io/badge/WebClient-WebFlux-6DB33F?style=for-the-badge&logo=spring&logoColor=white" />
+</div>
+
+### AI / Infra
+
+<div align="left">
+  <img src="https://img.shields.io/badge/OpenAI-GPT-412991?style=for-the-badge&logo=openai&logoColor=white" />
+  <img src="https://img.shields.io/badge/Firebase-Admin-DD2C00?style=for-the-badge&logo=firebase&logoColor=white" />
+   <img src="https://img.shields.io/badge/AWS%20EC2-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" />
+</div>
+
+---
+
+## 🔌 사용 외부 API
+
+<div align="left">
+  <img src="https://img.shields.io/badge/Kakao%20Map-FFCD00?style=for-the-badge&logo=kakao&logoColor=000000" />
+  <img src="https://img.shields.io/badge/ODsay-003A8F?style=for-the-badge&logo=mapbox&logoColor=white" />
+  <img src="https://img.shields.io/badge/Apple%20Calendar-000000?style=for-the-badge&logo=apple&logoColor=white" />
+  <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" />
+</div>
+
+---
+
+| API | 사용 목적 |
+|---|---|
+| Kakao Map API | 지도 표시, 장소 검색 |
+| ODsay API | 대중교통 길찾기, 소요 시간 계산 |
+| Apple Calendar | 사용자 캘린더 연동 |
+| OpenAI API | 일정 분석, 추천, 자연어 처리 |
+
+---
+
+## 🏗 시스템 아키텍처
+
+<div align="center">
+  <img width="800" height="600" alt="Image" src="https://github.com/user-attachments/assets/6a7a4130-9e7f-4f76-8e25-916a76f08bc2" />
+</div>
+
 
 ---
 

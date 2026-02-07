@@ -48,7 +48,6 @@ public class ScheduleCategoryService {
         }
         ScheduleCategory category = ScheduleCategory.of(
                 req.name(),
-                req.iconCode(),
                 req.colorCode(),
                 user
         );
@@ -74,7 +73,7 @@ public class ScheduleCategoryService {
         }
 
         // 카테고리 업데이트
-        category.update(req.name(), req.iconCode(), req.colorCode());
+        category.update(req.name(),req.colorCode());
 
         return ScheduleCategoryResponse.from(category);
     }
