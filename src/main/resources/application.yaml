@@ -40,6 +40,10 @@ jwt:
   access-exp-ms: 3600000        # 1시간
   refresh-exp-ms: 1209600000    # 14일
 
+fcm:
+  key:
+    path: ${FCM_KEY_PATH:classpath:serviceAccountKey.json}
+
 chatgpt:
   url: https://api.openai.com/v1
   api-key: ${GPT_API_KEY}
