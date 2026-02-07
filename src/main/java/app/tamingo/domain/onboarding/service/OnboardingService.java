@@ -17,7 +17,9 @@ import app.tamingo.domain.user.repository.UserRepository;
 import app.tamingo.domain.useractivetime.entity.UserActiveTime;
 import app.tamingo.domain.useractivetime.repository.UserActiveTimeRepository;
 import app.tamingo.domain.userlearning.entity.PersonalSetting;
+import app.tamingo.domain.userlearning.entity.UserLearningSummary;
 import app.tamingo.domain.userlearning.repository.PersonalSettingRepository;
+import app.tamingo.domain.userlearning.repository.UserLearningSummaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +44,7 @@ public class OnboardingService {
     private final PersonalSettingRepository personalSettingRepository;
     private final FavoritePlaceService favoritePlaceService;
     private final NotificationSettingService notificationSettingService;
+    private final UserLearningSummaryRepository userLearningSummaryRepository;
 
     public void saveOnboarding(Long userId, OnboardingRequest req) {
         User user = getUserOrThrow(userId);
@@ -178,13 +181,16 @@ public class OnboardingService {
         }
     }
 
-    // 개인화 설정(오차 로그 수집)
+    // 개인화 설정(오차 로그 수집), 개인화 학습 설정
     private void createPersonalSettingIfAbsent(User user) {
         Long userId = user.getId();
 
         if (!personalSettingRepository.existsById(userId)) {
             personalSettingRepository.save(
                     PersonalSetting.of(user, true) // 기본값 ON
+            );
+            userLearningSummaryRepository.save(
+                    UserLearningSummary.of(user,0,0.0,0)
             );
         }
     }
