@@ -1,28 +1,34 @@
 package app.tamingo.domain.calendar.dto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-// 설명: iOS(EventKit)에서 읽은 이벤트 리스트를 서버로 보내는 요청 DTO
+// 설명: iOS(EventKit)에서 읽은 최소 이벤트 리스트를 서버로 보내는 요청 DTO
 public record AppleCalendarSyncRequest(
-        @NotEmpty List<@Valid AppleCalendarEventItem> events
+        @NotNull(message = "필수 값입니다")
+        List<@Valid AppleCalendarEventItem> events
 ) {
-    // 설명: 이벤트 1건 DTO
+
+    // 설명: 최소 이벤트 1건
     public record AppleCalendarEventItem(
-            @NotNull String externalEventUid,     //EventKit 고유키(추천: calendarItemExternalIdentifier)
-            String calendarExternalId,            //캘린더 식별자(선택)
-            String calendarName,                  //캘린더 이름(선택)
-            String title,                         //일정 제목(선택)
-            @NotNull String startAt,              //시작(ISO-8601 문자열 권장, 서버에서 파싱)
-            @NotNull String endAt,                //종료(ISO-8601 문자열 권장)
-            boolean isAllDay,                     //종일 여부
-            String timezone,                      //타임존ex) Asia/Seoul
-            String location,                      //장소
-            String notes,                         //메모
-            String lastExternalModifiedAt,        //Apple 마지막 수정시간
-            Boolean deleted                       // 삭제 이벤트면 true
+            @NotBlank(message = "필수 값입니다")
+            String externalEventUid,   // 설명: calendarItemExternalIdentifier
+
+            String title,              // 설명: 일정 제목(없으면 서버에서 '일정'으로 보정)
+
+            @NotBlank(message = "필수 값입니다")
+            String startAt,            // 설명: startDate (ISO-8601 문자열, +09:00 포함 추천)
+
+            @NotBlank(message = "필수 값입니다")
+            String endAt,              // 설명: endDate (ISO-8601 문자열)
+
+            String location,           // 설명: 장소
+
+            @NotNull(message = "필수 값입니다")
+            Boolean isAllDay           // 설명: 종일 여부 (EventKit isAllDay)
     ) {}
 }

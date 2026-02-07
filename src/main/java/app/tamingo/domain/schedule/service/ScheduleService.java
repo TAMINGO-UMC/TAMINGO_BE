@@ -2,6 +2,8 @@ package app.tamingo.domain.schedule.service;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
+import app.tamingo.domain.calendar.enums.LinkStatus;
+import app.tamingo.domain.calendar.repository.ExternalTaskMappingRepository;
 import app.tamingo.domain.home.service.realtime.ScheduleInitQueueService;
 import app.tamingo.domain.schedule.dto.*;
 import app.tamingo.domain.schedule.entity.Schedule;
@@ -45,6 +47,7 @@ public class ScheduleService {
     private final ScheduleAiLogRepository scheduleAiLogRepository;
     private final ScheduleInitQueueService scheduleInitQueueService;
     private final UserLearningSummaryService userLearningSummaryService;
+    private final ExternalTaskMappingRepository externalTaskMappingRepository;
 
     @Transactional
     public CreateScheduleResponse createSchedule(Long userId, CreateScheduleRequest request){
@@ -278,6 +281,14 @@ public class ScheduleService {
         if (!schedule.getUser().getId().equals(userId)) {
             throw new CustomException(ScheduleErrorCode.SCHEDULE_NOT_OWNER);
         }
+
+        //외부(Apple)에서 들어온 일정이면, 앱에서 수정하는 순간 UNLINKED 처리
+        externalTaskMappingRepository.findByScheduleId(scheduleId)
+                .ifPresent(mapping -> {
+                    if (mapping.getLinkStatus() == LinkStatus.LINKED) {
+                        mapping.unlink(); //이후 /sync에서 schedule 덮어쓰기 스킵
+                    }
+                });
 
         ScheduleCategory category = null;
         if (request.scheduleCategoryId() != null) {

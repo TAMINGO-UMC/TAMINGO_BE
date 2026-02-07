@@ -38,22 +38,30 @@ public class AppleCalendarSyncService {
     @Transactional
     public AppleCalendarSyncResponse syncFromApple(Long userId, AppleCalendarSyncRequest request) {
 
-        //유저 조회
+        // 설명: 유저 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
-        //유저의 애플 연동 조회(없으면 생성)
+        // 설명: 유저의 애플 연동 조회(없으면 생성)
         CalendarIntegration integration = calendarIntegrationRepository.findByUserId(userId)
                 .orElseGet(() -> calendarIntegrationRepository.save(CalendarIntegration.of(user)));
 
-        //동기화 OFF면 그냥 결과만 리턴(정책에 따라 예외로 막아도 됨)
+
+        // 설명: 동기화 OFF면 아무것도 하지 않음(iOS는 원래 ACTIVE일 때만 호출하는 게 목표)
         if (!integration.isSyncFromApple()) {
             return new AppleCalendarSyncResponse(0, 0, 0, 0, LocalDateTime.now());
         }
 
+        // 설명: 이벤트가 없으면 동기화 성공 시간만 기록하고 종료
+        if (request.events().isEmpty()) {
+            integration.markSyncedNow();
+            return new AppleCalendarSyncResponse(0, 0, 0, 0, LocalDateTime.now());
+        }
+
+        // 설명: 동기화 진행 상태 표시
         integration.markSyncing();
 
-        //응답용 카운터
+        // 설명: 응답용 카운터
         int createdSchedules = 0;
         int updatedSchedules = 0;
         int skippedSchedules = 0;
@@ -61,87 +69,68 @@ public class AppleCalendarSyncService {
 
         for (AppleCalendarSyncRequest.AppleCalendarEventItem item : request.events()) {
 
-            //삭제 이벤트 여부
-            boolean deleted = Boolean.TRUE.equals(item.deleted());
-
-            //iOS에서 ISO 문자열로 넘어온 시간 파싱
+            // 설명: iOS에서 ISO 문자열로 넘어온 시간 파싱(+09:00 포함)
             LocalDateTime startAt = parseToLocalDateTime(item.startAt());
             LocalDateTime endAt = parseToLocalDateTime(item.endAt());
-            LocalDateTime lastModified = (item.lastExternalModifiedAt() == null)
-                    ? null
-                    : parseToLocalDateTime(item.lastExternalModifiedAt());
 
-            //CalendarEvent upsert
+            // 1) CalendarEvent upsert (원본 스냅샷 저장)
             CalendarEvent calendarEvent = calendarEventRepository
                     .findByIntegrationAndUid(integration.getId(), item.externalEventUid())
                     .orElseGet(() -> CalendarEvent.of(
                             integration,
                             user,
                             item.externalEventUid(),
-                            item.calendarExternalId(),
-                            item.calendarName(),
-                            item.title(),
+                            null,                 // calendarExternalId (최소 DTO에서는 없음)
+                            null,                 // calendarName (최소 DTO에서는 없음)
+                            safeTitle(item.title()),
                             startAt,
                             endAt,
                             item.isAllDay(),
-                            item.timezone(),
+                            null,                 // timezone (최소 DTO에서는 없음)
                             item.location(),
-                            item.notes(),
-                            lastModified
+                            null,                 // notes (최소 DTO에서는 없음)
+                            null                  // lastExternalModifiedAt (최소 DTO에서는 없음)
                     ));
 
-            //기존이면 update, 삭제면 삭제 처리
+            // 설명: 기존 이벤트면 최신 값으로 갱신
             if (calendarEvent.getId() != null) {
-                if (deleted) {
-                    calendarEvent.markDeletedNow();
-                } else {
-                    calendarEvent.updateFromApple(
-                            item.calendarExternalId(),
-                            item.calendarName(),
-                            item.title(),
-                            startAt,
-                            endAt,
-                            item.isAllDay(),
-                            item.timezone(),
-                            item.location(),
-                            item.notes(),
-                            lastModified
-                    );
-                }
-            } else {
-                //신규인데 삭제로 오는 케이스 방어
-                if (deleted) {
-                    calendarEvent.markDeletedNow();
-                }
+                calendarEvent.updateFromApple(
+                        null,                 // calendarExternalId
+                        null,                 // calendarName
+                        safeTitle(item.title()),
+                        startAt,
+                        endAt,
+                        item.isAllDay(),
+                        null,                 // timezone
+                        item.location(),
+                        null,                 // notes
+                        null                  // lastExternalModifiedAt
+                );
             }
 
             calendarEventRepository.save(calendarEvent);
             upsertedEvents++;
 
-            //ExternalTaskMapping 조회
+            // 2) ExternalTaskMapping 조회 (이 Apple 이벤트가 어떤 schedule과 연결됐는지)
             Optional<ExternalTaskMapping> mappingOpt =
                     externalTaskMappingRepository.findByIntegrationAndUid(integration.getId(), item.externalEventUid());
 
-            //매핑 없음 -> (삭제면 스킵) 아니면 schedule 생성 + mapping 생성
+            // 3) 매핑이 없으면 schedule 생성 + mapping 생성
             if (mappingOpt.isEmpty()) {
-                if (deleted) {
-                    skippedSchedules++;
-                    continue;
-                }
 
                 Schedule schedule = Schedule.of(
                         user,
-                        null, //카테고리 없으면 null or 기본값
+                        null,                      // 설명: 카테고리 없으면 null
                         safeTitle(item.title()),
                         startAt,
                         endAt,
-                        item.location(), //placeName
-                        null,            //address
-                        null,            //latitude
-                        null,            //longitude
+                        item.location(),           // 설명: placeName
+                        null,                      // address
+                        null,                      // latitude
+                        null,                      // longitude
                         RepeatType.NONE,
                         null,
-                        item.notes()     //memo
+                        null                       // 설명: memo (최소 DTO에서는 notes 없음)
                 );
 
                 scheduleRepository.save(schedule);
@@ -155,42 +144,35 @@ public class AppleCalendarSyncService {
 
             ExternalTaskMapping mapping = mappingOpt.get();
 
-            //UNLINKED면 schedule 업데이트 스킵(덮어쓰기 방지)
+            // 4) UNLINKED면 schedule 덮어쓰기 스킵(앱에서 수정한 일정 보호)
             if (mapping.getLinkStatus() == LinkStatus.UNLINKED) {
                 mapping.markSyncedNow();
                 skippedSchedules++;
                 continue;
             }
 
-            //LINKED면 schedule 덮어쓰기 업데이트
-            if (deleted) {
-                //삭제 정책은 선택(지금은 schedule 건드리지 않고 스킵)
-                mapping.markSyncedNow();
-                skippedSchedules++;
-                continue;
-            }
-
+            // 5) LINKED면 schedule 덮어쓰기 업데이트
             Schedule schedule = mapping.getSchedule();
 
-            //Schedule.update는 전체 파라미터가 필요하므로 기존 값 유지하면서 Apple 관련만 교체
             schedule.update(
-                    schedule.getScheduleCategory(), //앱 카테고리 유지
+                    schedule.getScheduleCategory(), // 설명: 앱 카테고리 유지
                     safeTitle(item.title()),
                     startAt,
                     endAt,
-                    item.location(),                 //placeName 덮어쓰기
-                    schedule.getAddress(),            //앱 값 유지
+                    item.location(),                // 설명: placeName 덮어쓰기
+                    schedule.getAddress(),          // 설명: 앱 값 유지
                     schedule.getLatitude(),
                     schedule.getLongitude(),
-                    schedule.getRepeatType(),         //반복 앱 값 유지
+                    schedule.getRepeatType(),       // 설명: 반복 앱 값 유지
                     schedule.getRepeatEndDate(),
-                    item.notes()                      //memo 덮어쓰기
+                    schedule.getMemo()              // 설명: memo 유지(최소 DTO에서 notes가 없으니 덮어쓰지 않음)
             );
 
             mapping.markSyncedNow();
             updatedSchedules++;
         }
 
+        // 설명: 동기화 성공 처리(ACTIVE + lastSyncedAt 갱신)
         integration.markSyncedNow();
 
         return new AppleCalendarSyncResponse(
@@ -202,13 +184,13 @@ public class AppleCalendarSyncService {
         );
     }
 
-    //title null/blank 및 길이 20 제한 보정
+    // 설명: title null/blank 및 길이 20 제한 보정(Schedule.title 제약)
     private String safeTitle(String title) {
         if (title == null || title.isBlank()) return "일정";
         return title.length() > 20 ? title.substring(0, 20) : title;
     }
 
-    //오프셋 포함 ISO 문자열(권장)을 LocalDateTime으로 파싱
+    // 설명: 오프셋 포함 ISO 문자열(권장)을 LocalDateTime으로 파싱
     private LocalDateTime parseToLocalDateTime(String iso) {
         try {
             return OffsetDateTime.parse(iso).toLocalDateTime();
