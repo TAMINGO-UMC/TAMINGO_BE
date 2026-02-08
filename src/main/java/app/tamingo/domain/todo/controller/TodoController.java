@@ -18,7 +18,7 @@ import java.time.LocalDate;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/todos")
-@Tag(name = "Todo API", description = "할 일 관련 API")
+@Tag(name = "할 일 관련 API")
 public class TodoController {
 
     private final TodoService todoService;
