@@ -91,7 +91,7 @@ public class MyPageService {
         // 6) 알림(중요 알림 on/off) - 현재 도메인 구조상 전체를 다 보여줄 필요는 없어서,
         //    마이페이지 카드에 보여줄 대표값만 내려줌(출발 알림 enabled 기준)
         NotificationSetting notif = notificationSettingRepository.findById(userId).orElse(null);
-        boolean importantAlarmEnabled = (notif != null) && notif.isDepartureAlertEnabled();
+        boolean importantAlarmEnabled = (notif == null) || notif.isDepartureAlertEnabled();
 
         // 7) 개인화(오차 로그 수집) 설정
         PersonalSetting personal = null;
@@ -99,7 +99,7 @@ public class MyPageService {
             personal = personalSettingRepository.findByUser(user);
         } catch (Exception ignored) {}
 
-        boolean learningDataEnabled = (personal != null) && personal.isErrorLogEnabled();
+        boolean learningDataEnabled = (personal == null) || personal.isErrorLogEnabled();
 
         return new MyPageSummaryResponse(
                 new MyPageSummaryResponse.Profile(user.getNickname(), user.getEmail()),
