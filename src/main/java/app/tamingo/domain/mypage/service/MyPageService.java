@@ -88,8 +88,7 @@ public class MyPageService {
                 .map(tp -> tp.getTransport().name())
                 .toList();
 
-        // 6) 알림(중요 알림 on/off) - 현재 도메인 구조상 전체를 다 보여줄 필요는 없어서,
-        //    마이페이지 카드에 보여줄 대표값만 내려줌(출발 알림 enabled 기준)
+        // 6) 알림(중요 알림 on/off)
         NotificationSetting notif = notificationSettingRepository.findById(userId).orElse(null);
         boolean importantAlarmEnabled = (notif == null) || notif.isDepartureAlertEnabled();
 
