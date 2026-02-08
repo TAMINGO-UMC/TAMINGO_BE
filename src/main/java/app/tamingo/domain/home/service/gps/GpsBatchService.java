@@ -4,9 +4,12 @@ import app.tamingo.domain.home.redis.RealtimeSchedule;
 import app.tamingo.domain.home.redis.RealtimeScheduleRepository;
 import app.tamingo.domain.home.service.realtime.RealTimeScheduleService;
 import app.tamingo.domain.home.service.geoutil.GeoService;
+import app.tamingo.domain.notification.dto.NotificationMessage;
+import app.tamingo.domain.notification.service.NotificationProducer;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +22,7 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GpsBatchService {
 
 
@@ -32,6 +36,7 @@ public class GpsBatchService {
     private final RealtimeScheduleRepository realtimeScheduleRepository;
     private final GeoService geoService;
     private final RealTimeScheduleService realTimeScheduleService;
+    private final NotificationProducer notificationProducer;
 
     // 오늘의 일정 처리
     @Transactional
@@ -100,9 +105,16 @@ public class GpsBatchService {
         return !now.isBefore(early) && !now.isAfter(late);
     }
 
-    // 위치 전송 요청 푸시 발송 (구현 필요)
+    // 위치 전송 요청 푸시 발송
     private void sendLocationRequestPush(Schedule schedule) {
-        // TODO: 위치 전송 요청 푸시 연결
+        NotificationMessage msg = NotificationMessage.createSilentLocation(
+                schedule.getUser().getId(),
+                schedule.getUser().getNickname(),
+                schedule.getId()
+        );
+
+        notificationProducer.send(msg);
+        log.info("[5번 위치 확인] {}님 일정(Id:{})위치 요청", schedule.getUser().getNickname(), schedule.getId());
     }
 
 
