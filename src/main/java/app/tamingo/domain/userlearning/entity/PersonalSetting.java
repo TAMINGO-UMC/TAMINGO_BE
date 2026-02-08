@@ -45,6 +45,8 @@ public class PersonalSetting extends BaseEntity {
         if (this.errorLogEnabled) {
             this.errorLogEnabled = false;
         }
+        else {
+            this.errorLogEnabled = true;
+        }
     }
-
 }
