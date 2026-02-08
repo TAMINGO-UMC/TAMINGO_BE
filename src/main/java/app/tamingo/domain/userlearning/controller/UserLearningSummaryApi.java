@@ -19,8 +19,8 @@ public interface UserLearningSummaryApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요약 조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "USER_NOT_FOUND")
     })
-    @GetMapping("/summary")
-    app.tamingo.common.response.ApiResponse<UserSummaryResponse> viewSummary(
+    @GetMapping
+    ApiResponse<UserSummaryResponse> viewSummary(
             @AuthenticationPrincipal Long userId
     );
 

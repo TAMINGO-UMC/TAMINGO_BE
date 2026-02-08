@@ -3,6 +3,7 @@ package app.tamingo.domain.notification.scheduler;
 import app.tamingo.domain.home.entity.ScheduleStartSnapshot;
 import app.tamingo.domain.home.repository.ScheduleStartSnapshotRepository;
 import app.tamingo.domain.notification.dto.NotificationMessage;
+import app.tamingo.domain.notification.enums.NotificationType;
 import app.tamingo.domain.notification.service.NotificationProducer;
 import app.tamingo.domain.notificationsetting.repository.NotificationSettingRepository;
 import app.tamingo.domain.user.entity.User;
@@ -39,6 +40,7 @@ public class NotificationReservationScheduler {
                 int eta = snapshot.getExpectedEta();
                 LocalDateTime startTime = snapshot.getSchedule().getStartTime();
                 LocalDateTime departureTime = startTime.minusMinutes(eta);
+                Long scheduleId = snapshot.getSchedule().getId();
 
                 // --- [1번 알림: 출발 20분 전 사전 알림 예약] ---
                 notificationProducer.reserve(
@@ -87,6 +89,16 @@ public class NotificationReservationScheduler {
                         log.info("[10번(n분전) 예약] {}님 {}분 전 알림", user.getNickname(), leadMinutes);
                     }
                 });
+
+                // [7번 알림 : Silent GPS 체크 예약]
+                LocalDateTime silentGpsTime = startTime.minusHours(1);
+
+                notificationProducer.reserve(
+                        NotificationMessage.createSilentGps(user.getId(), user.getNickname(), scheduleId),
+                        silentGpsTime
+                );
+
+                log.info("[7번 Silent GPS 예약] {} 님 Silent GPS 예약", user.getNickname());
 
                 snapshot.reserved();
                 log.info("{}님 알림세트 예약 성공", user.getNickname());

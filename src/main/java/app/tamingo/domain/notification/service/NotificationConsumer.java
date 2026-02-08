@@ -37,6 +37,18 @@ public class NotificationConsumer {
         // 활성화된 모든 토큰 가져오기
         List<DeviceToken> activeTokens = deviceTokenRepository.findAllByUserIdAndIsActiveTrue(msg.getUserId());
 
+        if (msg.isSilent()) {
+            for (DeviceToken deviceToken : activeTokens) {
+                fcmService.sendDataMessage(
+                        deviceToken.getToken(),
+                        msg.getType().name(),
+                        String.valueOf(msg.getScheduleId())
+                );
+            }
+            log.info("[정적 알림 발송] {}님에게 위치 요청 신호 전송", msg.getUserName());
+            return;
+        }
+
         if (activeTokens.isEmpty()) {
             log.warn("[활성 토큰 오류] 유저 {}의 활성 토큰 미존재.", msg.getUserId());
             return;
@@ -78,6 +90,9 @@ public class NotificationConsumer {
 
             case ARRIVAL_CHECK -> String.format("%s님, [%s]에 잘 도착하셨나요? 도착하셨다면 버튼을 눌러 상태를 변경해 주세요!",
                     msg.getUserName(), msg.getDestination());
+
+            case BEFORE_N -> String.format("%s님, 설정하신 출발 %d분 전입니다! 잊지 말고 준비해 보세요.",
+                    msg.getUserName(), msg.getExpectedEta());
 
             default -> "Tamingo 알림이 도착했습니다.";
         };
