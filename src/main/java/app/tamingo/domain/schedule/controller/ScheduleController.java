@@ -20,7 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/schedules")
-@Tag(name = "Schedule API", description = "일정 관련 API")
+@Tag(name = "일정 관련 API")
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
