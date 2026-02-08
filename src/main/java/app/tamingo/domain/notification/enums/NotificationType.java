@@ -7,5 +7,7 @@ public enum NotificationType {
     PERSONAL,
     TRAFFIC,
     GAP,
-    BEFORE_N
+    BEFORE_N,
+    SILENT_LOCATION,
+    SILENT_GPS
 }

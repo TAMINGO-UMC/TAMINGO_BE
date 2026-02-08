@@ -34,4 +34,21 @@ public class NotificationProducer {
         }
     }
 
+    public void send(NotificationMessage message) {
+        try {
+            // 즉시 발송
+            double score = (double) LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().getEpochSecond();
+
+            // Redis ZSet에 추가
+            notificationRedisRepository.saveToZSet(message, score);
+
+            log.info("[알림 즉시 발송 요청] 유저: {}, 타입: {}, 시간: {}",
+                    message.getUserName(), message.getType(), LocalDateTime.now());
+
+        } catch (Exception e) {
+            log.error("[알림 발송 실패] 유저ID: {}, 에러: {}", message.getUserId(), e.getMessage());
+            throw new RuntimeException("Redis 알림 발송 중 오류 발생", e);
+        }
+    }
+
 }

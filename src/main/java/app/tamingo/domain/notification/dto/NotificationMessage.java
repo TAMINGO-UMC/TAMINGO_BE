@@ -17,6 +17,7 @@ public class NotificationMessage implements Serializable {
     private String destination;
     private NotificationType type;
     private int expectedEta;
+    private Long scheduleId;
 
     // [1번 알림] 출발 20분 전 알림
     public static NotificationMessage createDepartureBefore(
@@ -89,6 +90,31 @@ public class NotificationMessage implements Serializable {
                 .userName(userName)
                 .destination(destination)
                 .expectedEta(expectedEta)
+                .build();
+    }
+
+    public boolean isSilent() {
+        return this.type == NotificationType.SILENT_LOCATION ||
+                this.type == NotificationType.SILENT_GPS;
+    }
+
+    // [5번] 위치 전송 (정적)
+    public static NotificationMessage createSilentLocation(Long userId, String userName, Long scheduleId) {
+        return NotificationMessage.builder()
+                .userId(userId)
+                .userName(userName)
+                .scheduleId(scheduleId)
+                .type(NotificationType.SILENT_LOCATION)
+                .build();
+    }
+
+    // [7번] Silent GPS
+    public static NotificationMessage createSilentGps(Long userId, String userName, Long scheduleId) {
+        return NotificationMessage.builder()
+                .userId(userId)
+                .userName(userName)
+                .scheduleId(scheduleId)
+                .type(NotificationType.SILENT_GPS) // 7번 타입
                 .build();
     }
 }
