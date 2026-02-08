@@ -13,6 +13,7 @@ import app.tamingo.domain.userlearning.repository.ErrorLogRepository;
 import app.tamingo.domain.userlearning.repository.PersonalSettingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class ErrorLogService {
     private final ErrorLogRepository errorLogRepository;
 
     // 오차 로그 설정 on off
+    @Transactional
     public ErrorLogSettingResponse setErrorLogSetting(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));

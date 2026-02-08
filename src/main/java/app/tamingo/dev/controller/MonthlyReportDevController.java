@@ -3,6 +3,7 @@ package app.tamingo.dev.controller;
 import app.tamingo.common.response.ApiResponse;
 import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.monthlyreport.batch.MonthlyReportBatchService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.YearMonth;
 
+@Tag(name = "개발용 dev api 실사용x")
 @Profile("dev")
 @RestController
 @RequiredArgsConstructor

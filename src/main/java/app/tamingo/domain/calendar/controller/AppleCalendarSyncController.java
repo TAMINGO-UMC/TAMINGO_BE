@@ -13,7 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 //iOS가 EventKit 이벤트 리스트를 서버로 보내는 동기화 API
-@Tag(name = "Apple Calendar Sync", description = "iOS(EventKit) 이벤트 리스트 업로드/동기화 API")
+@Tag(name = "iOS(EventKit) 이벤트 리스트 업로드/동기화 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/calendar/apple")

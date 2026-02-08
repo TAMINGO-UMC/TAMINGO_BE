@@ -51,4 +51,34 @@ public class FcmService {
             }
         }
     }
+
+    @Async
+    @Transactional
+    public void sendDataMessage(String token, String type, String scheduleId) {
+        try {
+            Message message = Message.builder()
+                    .setToken(token)
+                    .putData("type", type)
+                    .putData("scheduleId", scheduleId)
+                    .build();
+
+            FirebaseMessaging.getInstance().send(message);
+            log.info("[FCM 정적 알림 발송] Token: {}, Type: {}", token, type);
+        } catch (FirebaseMessagingException e) {
+            // 토큰이 만료되었거나 유효하지 않은 경우
+            if (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED ||
+                    e.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT) {
+
+                log.warn("[만료된 토큰] : {}", token);
+
+                // DB에서 해당 토큰을 찾아 isActive = false로 변경
+                deviceTokenRepository.findByToken(token).ifPresent(deviceToken -> {
+                    deviceToken.deactivate(); // isActive = false로 변경
+                    log.info("[만료된 토큰 비활성화] : {}", deviceToken.getId());
+                });
+            } else {
+                log.error("[FCM 발송 중 기타 에러 발생] : {}", e.getMessage());
+            }
+        }
+    }
 }
