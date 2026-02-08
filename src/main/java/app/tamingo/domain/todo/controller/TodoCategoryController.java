@@ -6,6 +6,7 @@ import app.tamingo.domain.todo.dto.TodoCategoryResponse;
 import app.tamingo.domain.todo.dto.TodoCategoryUpsertRequest;
 import app.tamingo.domain.todo.service.TodoCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "할 일 카테고리 조회,생성,수정,삭제 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/todo-categories")
