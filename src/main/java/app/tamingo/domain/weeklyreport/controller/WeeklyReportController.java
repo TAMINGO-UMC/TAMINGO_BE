@@ -5,6 +5,7 @@ import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.weeklyreport.dto.WeeklyReportResponse;
 import app.tamingo.domain.weeklyreport.service.WeeklyReportService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +15,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 
+@Tag(name = "주간리포트 조회 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/reports/weekly")

@@ -13,7 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 // 설명: Apple 캘린더 연동 상태 조회/토글 API
-@Tag(name = "Apple Calendar Integration", description = "애플 캘린더 연동 상태 조회/토글 API")
+@Tag(name = "애플 캘린더 연동 상태 조회/토글 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/calendar/apple")
