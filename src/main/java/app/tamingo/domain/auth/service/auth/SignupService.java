@@ -192,12 +192,6 @@ public class SignupService {
         return new SignupResult(user.getId(), access, refresh);
     }
 
-    public record SignupResult(
-            Long userId,
-            String accessToken,
-            String refreshToken
-    ) {}
-
     private SignupSession getSessionOrThrow(String signupSessionId) {
         if (signupSessionId == null || signupSessionId.isBlank()) {
             throw new CustomException(ErrorCode.INVALID_REQUEST);
