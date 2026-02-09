@@ -24,14 +24,15 @@ public class UserActiveTimeService {
     public UserActiveTimeResponse getUserActiveTime(Long userId) {
 
         // 유저 존재 여부 확인
-        userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
         // 유저 설정 존재 여부 확인
         return userActiveTimeRepository.findById(userId)
                 .map(UserActiveTimeResponse::from)
                 .orElseGet(() -> {
-                    return UserActiveTimeResponse.empty();
+                    UserActiveTime defaultTime = UserActiveTime.builder().user(user).build();
+                    return UserActiveTimeResponse.from(defaultTime);
                 });
     }
 

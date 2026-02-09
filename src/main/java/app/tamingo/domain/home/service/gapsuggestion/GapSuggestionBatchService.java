@@ -3,6 +3,7 @@ package app.tamingo.domain.home.service.gapsuggestion;
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
 import app.tamingo.domain.home.dto.GapSuggestionRunResponse;
+import app.tamingo.domain.notification.scheduler.NotificationReservationScheduler;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class GapSuggestionBatchService {
 
     private final UserRepository userRepository;
     private final GapSuggestionService gapSuggestionService;
+    private final NotificationReservationScheduler notificationScheduler;
 
     public GapSuggestionRunResponse run(LocalDate targetDate, User user) {
         LocalDate date = targetDate != null ? targetDate : LocalDate.now(TARGET_ZONE);
@@ -44,6 +46,7 @@ public class GapSuggestionBatchService {
         for (User user : users) {
             try {
                 gapSuggestionService.generateGapTimeSuggestions(user, targetDate);
+                notificationScheduler.reserveGapNotification(user, targetDate);
             } catch (Exception ex) {
                 failedUserIds.add(user.getId());
                 log.warn("[HOME] 틈새 일정 생성 실패 userId={}, date={}",
@@ -68,6 +71,7 @@ public class GapSuggestionBatchService {
 
         try {
             gapSuggestionService.generateGapTimeSuggestions(user, targetDate);
+            notificationScheduler.reserveGapNotification(user, targetDate);
             log.info("[HOME][GAP] 틈새시간 추천 성공 userId={}, date={}",
                     user.getId(), targetDate);
             return new GapSuggestionRunResponse(

@@ -3,14 +3,15 @@ package app.tamingo.domain.useractivetime.entity;
 import app.tamingo.common.entity.BaseEntity;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalTime;
 
 @Entity
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Table(name="user_active_time")
 public class UserActiveTime extends BaseEntity {
 
@@ -23,18 +24,25 @@ public class UserActiveTime extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private LocalTime startTime;
-    private LocalTime endTime;
+    @Builder.Default
+    private LocalTime startTime = LocalTime.of(9,0);
+    @Builder.Default
+    private LocalTime endTime = LocalTime.of(22,0);
 
     // 요일 필드
-    private boolean mon;
-    private boolean tue;
-    private boolean wed;
-    private boolean thu;
-    private boolean fri;
-    private boolean weekend;
+    @Builder.Default
+    private boolean mon = true;
+    @Builder.Default
+    private boolean tue = true;
+    @Builder.Default
+    private boolean wed = true;
+    @Builder.Default
+    private boolean thu = true;
+    @Builder.Default
+    private boolean fri = true;
+    @Builder.Default
+    private boolean weekend = true;
 
-    @Builder
     private UserActiveTime(User user, LocalTime startTime, LocalTime endTime, boolean mon, boolean tue, boolean wed, boolean thu, boolean fri, boolean weekend) {
         this.user = user;
         this.startTime = startTime;

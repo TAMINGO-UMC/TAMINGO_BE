@@ -10,9 +10,7 @@ public record NotificationSettingResponse(
         boolean latenessRiskAlertEnabled,
         boolean realtimeTransitEnabled,
         boolean todoProposalEnabled,
-        boolean locationMoveCheckEnabled,
-        boolean routineAlertEnabled
-) {
+        boolean locationMoveCheckEnabled) {
     public static NotificationSettingResponse from(NotificationSetting setting) {
         return NotificationSettingResponse.builder()
                 .departureAlertEnabled(setting.isDepartureAlertEnabled())
@@ -21,7 +19,6 @@ public record NotificationSettingResponse(
                 .realtimeTransitEnabled(setting.isRealtimeTransitEnabled())
                 .todoProposalEnabled(setting.isTodoProposalEnabled())
                 .locationMoveCheckEnabled(setting.isLocationMoveCheckEnabled())
-                .routineAlertEnabled(setting.isRoutineAlertEnabled())
                 .build();
 
     }
