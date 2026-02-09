@@ -238,13 +238,9 @@ public class RealTimeScheduleService {
     // 실시간 사용자 위치 기반 ETA 업데이트
     // 위치만 받아오면 현재 사용자의 active한 스케줄을 조회함
     @Transactional
-    public void updateRealtime(Long userId, double userLat, double userLng) {
+    public void updateRealtime(Long userId, Long scheduleId, double userLat, double userLng) {
         LocalDateTime now = LocalDateTime.now();
-        Schedule schedule = resolveActiveSchedule(userId, now);
-        if (schedule == null) {
-            return;
-        }
-
+        Schedule schedule = findScheduleById(scheduleId);
         saveLocation(schedule, userLat, userLng, now);
 
         if (!hasDestination(schedule)) {
@@ -274,33 +270,6 @@ public class RealTimeScheduleService {
         handleArrivalIfNeeded(schedule, userLat, userLng, now, "CURRENT_LOCATION");
     }
 
-    // 현재 스케줄 가져옴
-    private Schedule resolveActiveSchedule(Long userId, LocalDateTime now) {
-        Schedule cached = findActiveScheduleFromCache(userId, now);
-        if (cached != null) {
-            return cached;
-        }
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
-        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
-        LocalDateTime endOfDay = startOfDay.plusDays(1);
-        List<Schedule> schedules = scheduleRepository.findAllToDaySchedules(user, startOfDay, endOfDay);
-
-        Schedule candidate = null;
-        long bestDiff = Long.MAX_VALUE;
-        for (Schedule schedule : schedules) {
-            if (!isWithinTrackingWindow(schedule, now)) {
-                continue;
-            }
-            long diff = Math.abs(Duration.between(now, schedule.getStartTime()).toMinutes());
-            if (diff < bestDiff) {
-                bestDiff = diff;
-                candidate = schedule;
-            }
-        }
-        cacheActiveScheduleIfPresent(candidate, now);
-        return candidate;
-    }
 
     private boolean isWithinTrackingWindow(Schedule schedule, LocalDateTime now) {
         LocalDateTime windowStart = schedule.getStartTime().minusMinutes(ACTIVE_SCHEDULE_PRE_START_MIN);
@@ -634,33 +603,6 @@ public class RealTimeScheduleService {
         );
 
         updateDepartureAlarmOnArrival(schedule, realtime, realtime.getEtaMinutes(), realDuration, arrivedStatus);
-    }
-
-    private Schedule findActiveScheduleFromCache(Long userId, LocalDateTime now) {
-        RealtimeActiveSchedule active = realtimeScheduleRedisService.findActiveSchedule(userId);
-        if (active == null) {
-            return null;
-        }
-        Schedule schedule = scheduleRepository.findById(active.getScheduleId()).orElse(null);
-        if (schedule == null || !isWithinTrackingWindow(schedule, now)) {
-            realtimeScheduleRedisService.deleteActiveSchedule(userId);
-            return null;
-        }
-        return schedule;
-    }
-
-    private void cacheActiveScheduleIfPresent(Schedule schedule, LocalDateTime now) {
-        if (schedule == null) {
-            return;
-        }
-        long ttlSec = ttlSecondsUntil(resolveEndTime(schedule), REALTIME_SCHEDULE_TTL_AFTER_END_MIN);
-        RealtimeActiveSchedule active = realtimeScheduleRedisService.getOrCreateActiveSchedule(
-                schedule.getUser().getId(),
-                schedule.getId(),
-                now.format(ISO),
-                ttlSec
-        );
-        realtimeScheduleRedisService.saveActiveSchedule(active);
     }
 
     private void saveActiveSchedule(Schedule schedule, LocalDateTime now, long ttlSec) {
