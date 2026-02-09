@@ -1,6 +1,8 @@
 package app.tamingo.domain.home.service.gapsuggestion;
 
+import app.tamingo.domain.home.service.geoutil.GeoService;
 import app.tamingo.domain.schedule.entity.Schedule;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -9,7 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class GapTimeService {
+
+    private final GeoService geoService;
 
     /**
      * 일정 기반 틈새시간 목록을 추출해서 반환
@@ -29,10 +34,9 @@ public class GapTimeService {
             if (gapMinutes >= 15) {
                 double midLat = (current.getLatitude() + next.getLatitude()) / 2;
                 double midLon = (current.getLongitude() + next.getLongitude()) / 2;
-                double distance = calculateDistance(
+                double distance = geoService.distanceKm(
                         current.getLatitude(), current.getLongitude(),
-                        next.getLatitude(), next.getLongitude()
-                );
+                        next.getLatitude(), next.getLongitude());
 
                 gapTimes.add(GapTime.builder()
                         .previousSchedule(current)
@@ -48,27 +52,6 @@ public class GapTimeService {
         }
 
         return gapTimes;
-    }
-
-
-    /**
-     * 두 좌표 간 거리 계산
-     * @return 거리
-     */
-    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        // 지구 반경
-        final int R = 6371;
-
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        return R * c;
     }
 
 }
