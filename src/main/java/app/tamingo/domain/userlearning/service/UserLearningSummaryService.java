@@ -36,8 +36,10 @@ public class UserLearningSummaryService {
                 .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
         UserLearningSummary userLearningSummary =
                 userLearningSummaryRepository.findByUser(user)
-                        .orElse(null);
-        Long patternCount = userLearningSummary != null ? userLearningSummary.getSampleCount() : 0;
+                        .orElse(UserLearningSummary.of(user,0L,0.0,0));
+        // 패턴 수 계산
+        // 기존에는 패턴 수를 일정 종료 시마다 갱신하도록 설정 -> 더미를 넣을 시에는 갱신이 안되는 문제 방시하기 위해 조회 시마다 집계
+        Long patternCount = userLearningPatternRepository.countByUser(user);
         double avgAccuracy = userLearningSummary != null ? userLearningSummary.getAvgAccuracyRate() : 0.0;
         // ai 추론 장소 개수 계산
         int fvpCount = Math.toIntExact(favoritePlaceRepository.countAiFvpByUser(user));

@@ -1,19 +1,11 @@
 package app.tamingo.domain.notification.scheduler;
-
 import app.tamingo.domain.home.entity.ScheduleStartSnapshot;
 import app.tamingo.domain.home.entity.enums.SuggestionType;
 import app.tamingo.domain.home.repository.ScheduleStartSnapshotRepository;
 import app.tamingo.domain.home.repository.SuggestionLearningRepository;
-import app.tamingo.domain.home.service.gapsuggestion.GapTime;
-import app.tamingo.domain.home.service.gapsuggestion.GapTimeService;
 import app.tamingo.domain.notification.dto.NotificationMessage;
-import app.tamingo.domain.notification.enums.NotificationType;
 import app.tamingo.domain.notification.service.NotificationProducer;
 import app.tamingo.domain.notificationsetting.repository.NotificationSettingRepository;
-import app.tamingo.domain.schedule.entity.Schedule;
-import app.tamingo.domain.schedule.repository.ScheduleRepository;
-import app.tamingo.domain.todo.entity.Todo;
-import app.tamingo.domain.todo.repository.TodoRepository;
 import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.useractivetime.service.UserActiveTimeService;
 import app.tamingo.domain.userlearning.entity.DepartureAlarm;
@@ -23,11 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Comparator;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,9 +31,6 @@ public class NotificationReservationScheduler {
     private final ScheduleStartSnapshotRepository snapshotRepository;
     private final DepartureAlarmRepository departureAlarmRepository;
     private final NotificationSettingRepository notificationSettingRepository;
-    private final GapTimeService gapTimeService;
-    private final TodoRepository todoRepository;
-    private final ScheduleRepository scheduleRepository;
     private final UserActiveTimeService userActiveTimeService;
     private final SuggestionLearningRepository suggestionRepository;
 
@@ -50,6 +38,9 @@ public class NotificationReservationScheduler {
     @Scheduled(fixedDelay = 60000)
     @Transactional
     public void reserveNotifications() {
+        if (isQuietHours()) {
+            return;
+        }
         List<ScheduleStartSnapshot> newSnapshots = snapshotRepository.findAllByIsReservedFalse();
 
         for (ScheduleStartSnapshot snapshot : newSnapshots) {
@@ -145,6 +136,11 @@ public class NotificationReservationScheduler {
                 log.error("알림 예약 실패 -> snapshotId={}", snapshot.getId(), e);
             }
         }
+    }
+
+    private boolean isQuietHours() {
+        LocalTime now = LocalTime.now(ZoneId.systemDefault());
+        return !now.isBefore(LocalTime.of(1, 0)) && now.isBefore(LocalTime.of(8, 0));
     }
 
     public void reserveGapNotification(User user, LocalDate date) {

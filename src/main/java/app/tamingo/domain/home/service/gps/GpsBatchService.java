@@ -51,7 +51,9 @@ public class GpsBatchService {
         for (Schedule schedule : schedules) {
 
             // 길찾기 비활성화 되었거나, 위도/경도 정보가 없는 경우 건너뜀
-            if (schedule.getLatitude() == null || schedule.getLongitude() == null || schedule.getIsNavigationEnabled() == false) {
+            if (schedule.getLatitude() == null
+                    || schedule.getLongitude() == null
+                    || !Boolean.TRUE.equals(schedule.getIsNavigationEnabled())) {
                 continue;
             }
             RealtimeSchedule realtime = realtimeScheduleRepository

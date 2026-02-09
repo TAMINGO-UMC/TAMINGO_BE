@@ -12,4 +12,6 @@ public interface UserLearningPatternRepository extends JpaRepository<UserLearnin
     Optional<UserLearningPattern> findByUserAndTimeSlotAndRouteType(User user, TimeSlot timeSlot, RouteType routeType);
 
     void deleteByUser(User user);
+
+    Long countByUser(User user);
 }

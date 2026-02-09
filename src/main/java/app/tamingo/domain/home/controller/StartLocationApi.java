@@ -1,7 +1,6 @@
 package app.tamingo.domain.home.controller;
 
 import app.tamingo.common.response.ApiResponse;
-import app.tamingo.domain.home.dto.RealTimeGpsRequest;
 import app.tamingo.domain.home.dto.StartLocationGpsRequest;
 import app.tamingo.domain.home.dto.StartLocationGpsResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,7 +45,7 @@ public interface StartLocationApi {
                     description = "실시간 위치 전송용 GPS 좌표",
                     required = true
             )
-            @Valid @RequestBody RealTimeGpsRequest request
+            @Valid @RequestBody StartLocationGpsRequest request
     );
 
     @Operation(summary = "사후 확인 처리", description = "일정 종료 후 사후 확인을 처리합니다.")

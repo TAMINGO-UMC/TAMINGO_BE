@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Set;
 
 @Slf4j
@@ -22,6 +24,9 @@ public class NotificationPushScheduler {
 
     @Scheduled(fixedDelay = 60000) // 1분마다 실행
     public void publishNotifications() {
+        if (isQuietHours()) {
+            return;
+        }
         // 현재 시간 타임스탬프 기준으로 발송 대상 가져오기
         double now = (double) Instant.now().getEpochSecond();
 
@@ -48,5 +53,10 @@ public class NotificationPushScheduler {
                 log.error("알림 발송 중 오류 발생: {}", e.getMessage());
             }
         }
+    }
+
+    private boolean isQuietHours() {
+        LocalTime now = LocalTime.now(ZoneId.systemDefault());
+        return !now.isBefore(LocalTime.of(1, 0)) && now.isBefore(LocalTime.of(8, 0));
     }
 }

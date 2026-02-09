@@ -117,16 +117,42 @@ public class UserMobilityLearningService {
             int punctualityScore,
             ArrivedStatus arrivedStatus,
             LocalDateTime evaluatedAt,
+            LocalDateTime arrivedAt,
+            Integer lateMinutes,
             boolean navigationUsed
     ) {
-        // TODO : 주간리포트 적용 후 구현
-//        // 결과 중복 저장 방지
-//        if(scheduleResultRepository.existsByScheduleId(schedule.getId()))
-//            throw new CustomException(HomeErrorCode.SCHEDULE_RESULT_EXISTS);
-//        ScheduleResult scheduleResult = ScheduleResult.of(
-//                schedule,
-//                punctualityScore
-//        )
+        // 결과 중복 저장 방지
+        if(scheduleResultRepository.existsByScheduleId(schedule.getId()))
+            throw new CustomException(HomeErrorCode.SCHEDULE_RESULT_EXISTS);
+        ScheduleResult scheduleResult = ScheduleResult.of(
+                schedule,
+                arrivedStatus,
+                navigationUsed,
+                arrivedAt,
+                lateMinutes,
+                punctualityScore,
+                evaluatedAt
+        );
+        scheduleResultRepository.save(scheduleResult);
+    }
+
+    @Transactional
+    public void saveScheduleResultIfFirst(
+            Schedule schedule,
+            int punctualityScore,
+            ArrivedStatus arrivedStatus,
+            LocalDateTime evaluatedAt,
+            boolean navigationUsed
+    ) {
+        saveScheduleResultIfFirst(
+                schedule,
+                punctualityScore,
+                arrivedStatus,
+                evaluatedAt,
+                evaluatedAt,
+                null,
+                navigationUsed
+        );
     }
 
     private boolean isErrorLogEnabled(User user) {
