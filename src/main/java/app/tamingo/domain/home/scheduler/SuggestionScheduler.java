@@ -22,7 +22,6 @@ public class SuggestionScheduler {
     public void generateDailyGapSuggestions() {
         gapSuggestionBatchService.runForAllUsers();
         log.info("[HOME][GAP] 모든 사용자 틈새시간 추천 배치 작업 완료");
-        // TODO : 알림 전송 로직 - 틈새시간만 해당
         routeDetourSuggestionBatchService.runForAllUsers();
         log.info("[HOME][DETOUR] 모든 사용자 동선연계 추천 배치 작업 완료");
     }

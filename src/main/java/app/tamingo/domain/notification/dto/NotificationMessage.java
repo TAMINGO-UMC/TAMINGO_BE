@@ -18,6 +18,7 @@ public class NotificationMessage implements Serializable {
     private NotificationType type;
     private int expectedEta;
     private Long scheduleId;
+    private String todoTitle;
 
     // [1번 알림] 출발 20분 전 알림
     public static NotificationMessage createDepartureBefore(
@@ -114,7 +115,33 @@ public class NotificationMessage implements Serializable {
                 .userId(userId)
                 .userName(userName)
                 .scheduleId(scheduleId)
-                .type(NotificationType.SILENT_GPS) // 7번 타입
+                .type(NotificationType.SILENT_GPS)
                 .build();
+    }
+
+    // [8번] 틈새시간 알림
+    public static NotificationMessage createGapTime(
+            Long userId, String userName, String todoTitle, int gapMinutes
+    )  {
+        return NotificationMessage.builder()
+                .userId(userId)
+                .userName(userName)
+                .destination(todoTitle)
+                .expectedEta(gapMinutes)
+                .type(NotificationType.GAP)
+                .build();
+    }
+
+    // [11번] 연계 알림
+    public static NotificationMessage createRouteLink(Long userId, String userName, String destination, String todoTitle) {
+        return NotificationMessage.builder()
+                .userId(userId)
+                .userName(userName)
+                .type(NotificationType.ROUTE)
+                .destination(destination)
+                .expectedEta(0)
+                .todoTitle(todoTitle)
+                .build();
+
     }
 }

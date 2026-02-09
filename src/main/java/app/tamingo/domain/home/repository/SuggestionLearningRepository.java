@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface SuggestionLearningRepository extends JpaRepository<SuggestionLearning,Long> {
 
@@ -42,4 +43,35 @@ public interface SuggestionLearningRepository extends JpaRepository<SuggestionLe
             );
 
     List<SuggestionLearning> findBySchedule(Schedule schedule);
+
+    // 8번 알림용 - 시간이 가장 긴 틈새시간의 할 일
+    @Query("""
+    select sl from SuggestionLearning sl
+    where sl.user = :user
+      and sl.suggestionType = :type
+      and sl.startTime >= :startOfDay
+    order by sl.duration desc
+    limit 1
+    """)
+    Optional<SuggestionLearning> findBestGapForNotification(
+            @Param("user") User user,
+            @Param("type") SuggestionType type,
+            @Param("startOfDay") LocalDateTime startOfDay
+    );
+
+
+     // 11번 알림용 - 연계
+    @Query("""
+    select sl from SuggestionLearning sl
+    where sl.user = :user
+      and sl.suggestionType = :type
+      and sl.startTime >= :startOfDay
+    order by sl.startTime desc
+    limit 1
+    """)
+    Optional<SuggestionLearning> findBestRouteSuggestion(
+            @Param("user") User user,
+            @Param("type") SuggestionType type,
+            @Param("startOfDay") LocalDateTime startOfDay
+    );
 }

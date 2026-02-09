@@ -36,8 +36,7 @@ public class NotificationSettingService {
                 dto.departureLeadMinutes(),
                 dto.realtimeTransitEnabled(),
                 dto.todoProposalEnabled(),
-                dto.locationMoveCheckEnabled(),
-                dto.routineAlertEnabled()
+                dto.locationMoveCheckEnabled()
         );
 
         return NotificationSettingResponse.from(setting);

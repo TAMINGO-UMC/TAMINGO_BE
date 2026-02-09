@@ -3,7 +3,6 @@ package app.tamingo.domain.home.controller;
 import app.tamingo.common.response.ApiResponse;
 import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.home.dto.Location;
-import app.tamingo.domain.home.dto.RealTimeGpsRequest;
 import app.tamingo.domain.home.dto.StartLocationGpsRequest;
 import app.tamingo.domain.home.dto.StartLocationGpsResponse;
 import app.tamingo.domain.home.service.realtime.RealTimeScheduleService;
@@ -39,10 +38,11 @@ public class StartLocationController implements StartLocationApi {
     @Override
     public ApiResponse<Void> sendRealtimeLocation(
             @AuthenticationPrincipal Long userId,
-            @Valid @RequestBody RealTimeGpsRequest request
+            @Valid @RequestBody StartLocationGpsRequest request
             ) {
         realTimeScheduleService.updateRealtime(
                 userId,
+                request.scheduleId(),
                 request.latitude(),
                 request.longitude()
         );

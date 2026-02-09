@@ -43,14 +43,11 @@ public class NotificationSetting extends BaseEntity {
     @Column(name = "location_move_check_enabled", nullable = false)
     private boolean locationMoveCheckEnabled;
 
-    @Column(name = "routine_alert_enabled", nullable = false)
-    private boolean routineAlertEnabled;
 
     @Builder
     private NotificationSetting(User user, boolean departureAlertEnabled, int departureLeadMinutes,
                                 boolean latenessRiskAlertEnabled, boolean realtimeTransitEnabled,
-                                boolean todoProposalEnabled, boolean locationMoveCheckEnabled,
-                                boolean routineAlertEnabled) {
+                                boolean todoProposalEnabled, boolean locationMoveCheckEnabled) {
         this.user = user;
         this.departureAlertEnabled = departureAlertEnabled;
         this.departureLeadMinutes = departureLeadMinutes;
@@ -58,7 +55,6 @@ public class NotificationSetting extends BaseEntity {
         this.realtimeTransitEnabled = realtimeTransitEnabled;
         this.todoProposalEnabled = todoProposalEnabled;
         this.locationMoveCheckEnabled = locationMoveCheckEnabled;
-        this.routineAlertEnabled = routineAlertEnabled;
     }
 
     public static NotificationSetting of(User user) {
@@ -70,21 +66,19 @@ public class NotificationSetting extends BaseEntity {
                 .realtimeTransitEnabled(true)
                 .todoProposalEnabled(true)
                 .locationMoveCheckEnabled(false)
-                .routineAlertEnabled(true)
                 .build();
     }
 
     public void update(
             boolean departureAlertEnabled, int departureLeadMinutes,
             boolean realtimeTransitEnabled, boolean todoProposalEnabled,
-            boolean locationMoveCheckEnabled, boolean routineAlertEnabled
+            boolean locationMoveCheckEnabled
     ) {
         this.departureAlertEnabled = departureAlertEnabled;
         this.departureLeadMinutes = departureLeadMinutes;
         this.realtimeTransitEnabled = realtimeTransitEnabled;
         this.todoProposalEnabled = todoProposalEnabled;
         this.locationMoveCheckEnabled = locationMoveCheckEnabled;
-        this.routineAlertEnabled = routineAlertEnabled;
     }
 
     // 온보딩 전용 메서드
