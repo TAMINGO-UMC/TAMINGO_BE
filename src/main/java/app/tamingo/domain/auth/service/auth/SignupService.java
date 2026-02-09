@@ -2,6 +2,7 @@ package app.tamingo.domain.auth.service.auth;
 
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ErrorCode;
+import app.tamingo.domain.auth.dto.signup.CompleteSignupResponse;
 import app.tamingo.domain.auth.exception.AuthErrorCode;
 import app.tamingo.domain.auth.service.email.EmailVerificationService;
 import app.tamingo.domain.terms.exception.TermsErrorCode;
@@ -119,7 +120,7 @@ public class SignupService {
     }
 
     // 4. 아이디 생성 (회원가입 완료)
-    public SignupResult completeSignup(String signupSessionId, String nickname, String password) {
+    public CompleteSignupResponse completeSignup(String signupSessionId, String nickname, String password) {
         SignupSession session = getSessionOrThrow(signupSessionId);
 
         if (!session.isEmailVerified()) {
@@ -189,7 +190,7 @@ public class SignupService {
         long refreshTtlSec = jwtTokenProvider.getRefreshExpMs() / 1000;
         refreshTokenRepository.save(RefreshToken.create(user.getId(), refresh, refreshTtlSec));
 
-        return new SignupResult(user.getId(), access, refresh);
+        return new CompleteSignupResponse(user.getId(), access, refresh);
     }
 
     private SignupSession getSessionOrThrow(String signupSessionId) {

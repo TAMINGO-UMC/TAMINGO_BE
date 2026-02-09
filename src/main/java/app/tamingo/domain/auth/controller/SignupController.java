@@ -80,14 +80,12 @@ public class SignupController {
             @RequestHeader("X-Signup-Session-Id") String signupSessionId,
             @RequestBody CompleteSignupRequest request
     ) {
-        SignupService.SignupResult r = signupService.completeSignup(
+        CompleteSignupResponse r = signupService.completeSignup(
                 signupSessionId,
                 request.nickname(),
                 request.password()
         );
-        return ApiResponse.onSuccess(
-                new CompleteSignupResponse(r.userId(), r.accessToken(), r.refreshToken()),
-                SuccessCode.CREATED
+        return ApiResponse.onSuccess(r, SuccessCode.CREATED
         );
     }
 }
