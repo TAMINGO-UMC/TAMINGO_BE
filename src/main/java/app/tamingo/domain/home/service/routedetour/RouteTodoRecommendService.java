@@ -95,11 +95,14 @@ public class RouteTodoRecommendService {
             return List.of();
         }
 
+        Integer detourMinutes = calculateDetourMinutes(schedule, nextSchedule, bestCandidate.todo());
+        RouteDetourCandidate result = new RouteDetourCandidate(bestCandidate.todo(), detourMinutes);
+
         log.info("[HOME][DETOUR] 우회할 할일 탐색 완료: '{}' (approx distance: {}km)",
                 bestCandidate.todo().getTitle(),
                 String.format("%.2f", bestDistanceKm));
 
-        return List.of(bestCandidate);
+        return List.of(result);
     }
 
     /**
@@ -154,6 +157,22 @@ public class RouteTodoRecommendService {
                 todo.getLatitude(), todo.getLongitude(),
                 nextSchedule.getLatitude(), nextSchedule.getLongitude());
         return Math.min(toStart, toEnd);
+    }
+
+    private Integer calculateDetourMinutes(Schedule schedule, Schedule nextSchedule, Todo todo) {
+        if (!hasLocation(schedule) || !hasLocation(nextSchedule) || !hasLocation(todo)) {
+            return null;
+        }
+        DirectionResult detour = directionService.calculateRouteWithTodo(
+                schedule.getLatitude(), schedule.getLongitude(),
+                todo.getLatitude(), todo.getLongitude(),
+                nextSchedule.getLatitude(), nextSchedule.getLongitude()
+        );
+        if (detour == null) {
+            log.debug("[HOME][DETOUR] 우회 경로 계산 실패. todoId={}", todo.getId());
+            return null;
+        }
+        return detour.getTotalMinutes();
     }
 
     /**

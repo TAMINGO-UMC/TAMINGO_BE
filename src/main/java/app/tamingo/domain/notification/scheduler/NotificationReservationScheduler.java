@@ -15,6 +15,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +33,9 @@ public class NotificationReservationScheduler {
     @Scheduled(fixedDelay = 60000)
     @Transactional
     public void reserveNotifications() {
+        if (isQuietHours()) {
+            return;
+        }
         List<ScheduleStartSnapshot> newSnapshots = snapshotRepository.findAllByIsReservedFalse();
 
         for (ScheduleStartSnapshot snapshot : newSnapshots) {
@@ -107,5 +112,10 @@ public class NotificationReservationScheduler {
                 log.error("알림 예약 실패 -> snapshotId={}", snapshot.getId(), e);
             }
         }
+    }
+
+    private boolean isQuietHours() {
+        LocalTime now = LocalTime.now(ZoneId.systemDefault());
+        return !now.isBefore(LocalTime.of(1, 0)) && now.isBefore(LocalTime.of(8, 0));
     }
 }
