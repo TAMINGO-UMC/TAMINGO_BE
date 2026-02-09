@@ -85,7 +85,6 @@ public class SignupController {
                 request.nickname(),
                 request.password()
         );
-        return ApiResponse.onSuccess(r, SuccessCode.CREATED
-        );
+        return ApiResponse.onSuccess(r, SuccessCode.CREATED);
     }
 }
