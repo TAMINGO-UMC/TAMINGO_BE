@@ -1,12 +1,13 @@
 package app.tamingo.domain.notification.scheduler;
-
 import app.tamingo.domain.home.entity.ScheduleStartSnapshot;
+import app.tamingo.domain.home.entity.enums.SuggestionType;
 import app.tamingo.domain.home.repository.ScheduleStartSnapshotRepository;
+import app.tamingo.domain.home.repository.SuggestionLearningRepository;
 import app.tamingo.domain.notification.dto.NotificationMessage;
-import app.tamingo.domain.notification.enums.NotificationType;
 import app.tamingo.domain.notification.service.NotificationProducer;
 import app.tamingo.domain.notificationsetting.repository.NotificationSettingRepository;
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.useractivetime.service.UserActiveTimeService;
 import app.tamingo.domain.userlearning.entity.DepartureAlarm;
 import app.tamingo.domain.userlearning.repository.DepartureAlarmRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -29,6 +31,9 @@ public class NotificationReservationScheduler {
     private final ScheduleStartSnapshotRepository snapshotRepository;
     private final DepartureAlarmRepository departureAlarmRepository;
     private final NotificationSettingRepository notificationSettingRepository;
+    private final UserActiveTimeService userActiveTimeService;
+    private final SuggestionLearningRepository suggestionRepository;
+
 
     @Scheduled(fixedDelay = 60000)
     @Transactional
@@ -105,6 +110,25 @@ public class NotificationReservationScheduler {
 
                 log.info("[7번 Silent GPS 예약] {} 님 Silent GPS 예약", user.getNickname());
 
+                // [11번 알림]
+                suggestionRepository.findBestRouteSuggestion(user, SuggestionType.ROUTE_DETOUR, LocalDate.now().atStartOfDay())
+                        .ifPresent(suggestion -> {
+
+                            LocalDateTime alertTime = departureTime.minusMinutes(20);
+
+                            if (alertTime.isAfter(LocalDateTime.now())) {
+                                notificationProducer.reserve(
+                                        NotificationMessage.createRouteLink(
+                                                user.getId(),
+                                                user.getNickname(),
+                                                suggestion.getPlaceName(),
+                                                suggestion.getTitle()
+                                        ),
+                                        alertTime
+                                );
+                                log.info("[11번 예약] {}님 {}분 일찍 출발 제안", user.getNickname(), eta + 20);
+                            }
+                        });
                 snapshot.reserved();
                 log.info("{}님 알림세트 예약 성공", user.getNickname());
 
@@ -118,4 +142,27 @@ public class NotificationReservationScheduler {
         LocalTime now = LocalTime.now(ZoneId.systemDefault());
         return !now.isBefore(LocalTime.of(1, 0)) && now.isBefore(LocalTime.of(8, 0));
     }
+
+    public void reserveGapNotification(User user, LocalDate date) {
+        LocalDateTime startOfDay = date.atStartOfDay();
+        suggestionRepository.findBestGapForNotification(user, SuggestionType.GAP_TIME, startOfDay)
+                .ifPresent(suggestion -> {
+
+                    var activeResponse = userActiveTimeService.getUserActiveTime(user.getId());
+                    LocalDateTime alertTime = LocalDateTime.of(date, activeResponse.startTime());
+
+                    notificationProducer.reserve(
+                            NotificationMessage.createGapTime(
+                                    user.getId(),
+                                    user.getNickname(),
+                                    suggestion.getTitle(),
+                                    suggestion.getDuration()
+                            ),
+                            alertTime
+                    );
+
+                    log.info("[8번 틈새 시간 예약] {}님 - {}", user.getNickname(), suggestion.getTitle());
+                });
+    }
+
 }

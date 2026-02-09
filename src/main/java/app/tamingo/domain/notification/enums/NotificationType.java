@@ -9,5 +9,6 @@ public enum NotificationType {
     GAP,
     BEFORE_N,
     SILENT_LOCATION,
-    SILENT_GPS
+    SILENT_GPS,
+    ROUTE
 }

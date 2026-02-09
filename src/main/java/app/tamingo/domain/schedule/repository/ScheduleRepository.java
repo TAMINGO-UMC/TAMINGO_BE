@@ -3,7 +3,6 @@ package app.tamingo.domain.schedule.repository;
 import app.tamingo.domain.schedule.entity.Schedule;
 import app.tamingo.domain.schedule.entity.ScheduleCategory;
 import app.tamingo.domain.user.entity.User;
-import jakarta.validation.constraints.Null;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
