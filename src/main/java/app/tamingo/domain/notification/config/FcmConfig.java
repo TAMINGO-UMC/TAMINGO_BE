@@ -28,19 +28,24 @@ public class FcmConfig {
 
     @PostConstruct
     public void init() {
-        try {
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(
-                            resourceLoader.getResource(fcmKeyPath).getInputStream()))
-                    .build();
 
-            if (FirebaseApp.getApps().isEmpty()) {
-                FirebaseApp.initializeApp(options);
-                log.info("Firebase Admin SDK 초기화: {}", fcmKeyPath);
+        try {
+            org.springframework.core.io.Resource resource = resourceLoader.getResource(fcmKeyPath);
+
+            if (resource.exists()) {
+                FirebaseOptions options = FirebaseOptions.builder()
+                        .setCredentials(GoogleCredentials.fromStream(resource.getInputStream()))
+                        .build();
+
+                if (FirebaseApp.getApps().isEmpty()) {
+                    FirebaseApp.initializeApp(options);
+                    log.info("FCM 초기화");
+                }
+            } else {
+                log.error("FCM 키 파일을 찾을 수 없습니다. 경로 확인 필요: {}", fcmKeyPath);
             }
-        } catch (IOException e) {
-            log.error("Firebase 초기화 실패: {}", e.getMessage());
-            throw new RuntimeException("FCM 설정 오류");
+        } catch (Exception e) {
+            log.error("FCM 초기화 중 에러 발생: {}", e.getMessage());
         }
     }
 }

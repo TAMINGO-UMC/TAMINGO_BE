@@ -94,6 +94,12 @@ public class NotificationConsumer {
             case BEFORE_N -> String.format("%s님, 설정하신 출발 %d분 전입니다! 잊지 말고 준비해 보세요.",
                     msg.getUserName(), msg.getExpectedEta());
 
+            case GAP -> String.format("오늘 일정 사이에 %s의 틈새 시간이 생겼어요! 미뤄둔 '%s'을 처리하기 딱 좋은 시간이에요.",
+                    timeText, msg.getDestination());
+
+            case ROUTE -> String.format("[%s]로 가는 길에 '%s' 장소가 있어요. %d분만 일찍 출발해서 한꺼번에 해결하실까요?",
+                    msg.getDestination(), msg.getTodoTitle(), msg.getExpectedEta());
+
             default -> "Tamingo 알림이 도착했습니다.";
         };
     }

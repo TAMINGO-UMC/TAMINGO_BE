@@ -7,8 +7,7 @@ public class NotificationSettingRequest {
             Integer departureLeadMinutes,
             Boolean realtimeTransitEnabled,
             Boolean todoProposalEnabled,
-            Boolean locationMoveCheckEnabled,
-            Boolean routineAlertEnabled
+            Boolean locationMoveCheckEnabled
     ) {
         public UpdateDto {
             // 수정 시 값이 누락되면 기존 로직을 유지하거나 기본값으로 덮어씀
@@ -17,7 +16,6 @@ public class NotificationSettingRequest {
             realtimeTransitEnabled = (realtimeTransitEnabled == null) ? false : realtimeTransitEnabled;
             todoProposalEnabled = (todoProposalEnabled == null) ? false : todoProposalEnabled;
             locationMoveCheckEnabled = (locationMoveCheckEnabled == null) ? false : locationMoveCheckEnabled;
-            routineAlertEnabled = (routineAlertEnabled == null) ? false : routineAlertEnabled;
         }
     }
 }
