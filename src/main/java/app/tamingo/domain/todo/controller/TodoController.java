@@ -95,4 +95,14 @@ public class TodoController {
         DailyTodoListResponse response = todoService.getDailyTodos(userId, date);
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
+
+    @Operation(summary = "할 일 삭제 API", description = "특정 할 일을 삭제합니다. 연결된 일정과의 관계도 해제됩니다.")
+    @DeleteMapping("/{todoId}")
+    public ApiResponse<String> deleteTodo(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long todoId
+    ) {
+        todoService.delete(userId, todoId);
+        return ApiResponse.onSuccess("할 일이 성공적으로 삭제되었습니다.", SuccessCode.OK);
+    }
 }

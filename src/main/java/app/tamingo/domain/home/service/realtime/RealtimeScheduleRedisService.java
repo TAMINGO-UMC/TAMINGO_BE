@@ -89,7 +89,7 @@ public class RealtimeScheduleRedisService {
         return new DailyScheduleResponse.ScheduleStatusResponse(
                 realtime.getCurrentStatus(),
                 realtime.isStarted(),
-                realtime.getLeftOrDelayMinutes(),
+                realtime.getLeftOrDelayMinutes()     ,
                 expectedDeparture,
                 expectedArrival,
                 realtime.getLateArrivalMinutes()

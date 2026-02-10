@@ -6,6 +6,8 @@ import app.tamingo.domain.todo.enums.RepeatType;
 import app.tamingo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +27,9 @@ import java.util.List;
                 @Index(name = "idx_schedule_place", columnList = "place_name")
         }
 )
+
+@SQLDelete(sql = "UPDATE schedule SET deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class Schedule extends BaseEntity {
 
     @Id
@@ -82,6 +87,9 @@ public class Schedule extends BaseEntity {
 
     @Column(name = "memo", length = 200)
     private String memo;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @Builder(builderMethodName = "internalBuilder")
     private Schedule(
@@ -180,5 +188,12 @@ public class Schedule extends BaseEntity {
 
     public void updateMapEtaMinutes(Integer mapEtaMinutes) {
         this.mapEtaMinutes = mapEtaMinutes;
+    }
+
+    public void softDelete(LocalDateTime now) {
+        if (this.deletedAt != null) {
+            return;
+        }
+        this.deletedAt = now;
     }
 }

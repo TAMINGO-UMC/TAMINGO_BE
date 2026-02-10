@@ -20,6 +20,7 @@ import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
 import app.tamingo.domain.userlearning.service.UserLearningSummaryService;
+import app.tamingo.domain.home.service.startplace.ScheduleStartSnapshotService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +47,7 @@ public class ScheduleService {
     private final ScheduleAiLogRepository scheduleAiLogRepository;
     private final UserLearningSummaryService userLearningSummaryService;
     private final ExternalTaskMappingRepository externalTaskMappingRepository;
+    private final ScheduleStartSnapshotService scheduleStartSnapshotService;
 
 
     @Transactional
@@ -151,6 +153,14 @@ public class ScheduleService {
             saveAiLog(user, firstSchedule, category, request);
 
             userLearningSummaryService.updateAiStats(userId);
+        }
+
+        // 일정 생성 시 출발지 스냅샷 생성
+        LocalDateTime decidedAt = LocalDateTime.now();
+        for (Schedule schedule : savedSchedules) {
+            if (Boolean.TRUE.equals(schedule.getIsNavigationEnabled())) {
+                scheduleStartSnapshotService.createSnapshotForSchedule(schedule, decidedAt);
+            }
         }
 
         return new CreateScheduleResponse(firstSchedule.getId());
@@ -286,10 +296,17 @@ public class ScheduleService {
                     }
                 });
 
+        LocalDateTime newStartTime = request.toStartDateTime();
+        boolean startTimeChanged = !Objects.equals(schedule.getStartTime(), newStartTime);
+        boolean latitudeChanged = !Objects.equals(schedule.getLatitude(), request.latitude());
+        boolean longitudeChanged = !Objects.equals(schedule.getLongitude(), request.longitude());
+        boolean shouldRefreshSnapshot = startTimeChanged || latitudeChanged || longitudeChanged;
+        boolean newHasLocation = request.latitude() != null && request.longitude() != null;
+
         schedule.update(
                 category,
                 request.title(),
-                request.toStartDateTime(),
+                newStartTime,
                 request.toEndDateTime(),
                 request.placeName(),
                 request.address(),
@@ -299,6 +316,16 @@ public class ScheduleService {
                 request.repeatEndDate(),
                 request.memo()
         );
+
+        // 일정 수정 시 출발지 스냅샷 갱신/삭제 (시간/위치 변경 시에만)
+        if (shouldRefreshSnapshot) {
+            LocalDateTime decidedAt = LocalDateTime.now();
+            if (Boolean.TRUE.equals(schedule.getIsNavigationEnabled()) && newHasLocation) {
+                scheduleStartSnapshotService.refreshSnapshotForSchedule(schedule, decidedAt);
+            } else {
+                scheduleStartSnapshotService.deleteSnapshotForSchedule(schedule);
+            }
+        }
 
         // 할 일 연결 업데이트
         // 기존 연결 해제
@@ -350,5 +377,31 @@ public class ScheduleService {
 
         // 통합 반환
         return MonthlyScheduleResponse.of(schedules, categories);
+    }
+
+    @Transactional
+    public void deleteSchedule(Long userId, Long scheduleId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_NOT_FOUND));
+
+        if (!schedule.getUser().getId().equals(userId)) {
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_NOT_OWNER);
+        }
+
+        // 연결된 할 일 해제
+        for (Todo todo : schedule.getTodoList()) {
+            todo.disconnectSchedule();
+        }
+
+        // AI 로그 삭제
+        scheduleAiLogRepository.findBySchedule(schedule)
+                .ifPresent(scheduleAiLogRepository::delete);
+
+        schedule.softDelete(LocalDateTime.now());
+
+        scheduleRepository.flush();
+
+        // AI 평균 정확도 갱신
+        userLearningSummaryService.updateAiStats(userId);
     }
 }
