@@ -38,37 +38,6 @@ public class ScheduleStartSnapshotService {
     private final KakaoGeoService kakaoGeoService;
 
     /**
-     * 모든 일정의 시작 1시간 + 출발 알림 시간  전에 출발지 스냅샷 생성하는 배치작업 - 추ㅜ 삭제
-     *
-     * @return 스냅샷 개수
-     */
-    public int createSnapshotsForStartMinusOneHour() {
-        LocalDateTime now = LocalDateTime.now(TARGET_ZONE);
-        LocalDateTime windowStart = now.plusHours(1);
-        LocalDateTime windowEnd = windowStart.plusMinutes(1);
-
-        // 1시간 후 ~ 1시간 1분 후 사이의 일정 조회
-        List<Schedule> schedules =
-                scheduleRepository.findAllByStartTimeBetween(windowStart, windowEnd);
-
-        int savedCount = 0;
-
-        // 일정별로 출발지 스냅샷 생성
-        for (Schedule schedule : schedules) {
-            if (createSnapshotForSchedule(schedule, now)) {
-                savedCount++;
-            }
-        }
-
-        if (savedCount > 0) {
-            log.info("[HOME][START] 출발지 스냅샷 생성 완료. count={}, windowStart={}, windowEnd={}",
-                    savedCount, windowStart, windowEnd);
-        }
-
-        return savedCount;
-    }
-
-    /**
      * 해당 일정의 출발지 스냅샷 생성
      * 이전 스케줄이 있다면, 직전 스케줄의 장소를 가져옴
      * @param schedule
@@ -117,6 +86,15 @@ public class ScheduleStartSnapshotService {
             return false;
         }
 
+
+        // 예상 시간 계산
+        int expectedEta = calculateRouteMinutes(
+                decision.location().latitude(),
+                decision.location().longitude(),
+                schedule.getLatitude(),
+                schedule.getLongitude()
+        );
+
         ScheduleStartSnapshot snapshot = ScheduleStartSnapshot.of(
                 schedule,
                 decision.sourceType(),
@@ -125,11 +103,31 @@ public class ScheduleStartSnapshotService {
                 decision.location().longitude(),
                 decision.placeName(),
                 decidedAt,
+                expectedEta,
                 false
         );
 
         scheduleStartSnapshotRepository.save(snapshot);
         return true;
+    }
+
+    // 일정 변경 시 스냅샷 갱신
+    public void refreshSnapshotForSchedule(Schedule schedule, LocalDateTime decidedAt) {
+        if (schedule == null) {
+            return;
+        }
+        scheduleStartSnapshotRepository.findBySchedule(schedule)
+                .ifPresent(scheduleStartSnapshotRepository::delete);
+        createSnapshotForSchedule(schedule, decidedAt);
+    }
+
+    // 길찾기 비활성화 등으로 스냅샷 제거
+    public void deleteSnapshotForSchedule(Schedule schedule) {
+        if (schedule == null) {
+            return;
+        }
+        scheduleStartSnapshotRepository.findBySchedule(schedule)
+                .ifPresent(scheduleStartSnapshotRepository::delete);
     }
 
     // SILENT GPS CHECK 적용 - 출발지 스냅샷이 존재하고, GPS 위치가 스냅샷보다 더 오래 걸리는 경우에만 오버라이드
@@ -184,7 +182,8 @@ public class ScheduleStartSnapshotService {
                     gpsLocation.latitude(),
                     gpsLocation.longitude(),
                     placeName,
-                    LocalDateTime.now(TARGET_ZONE)
+                    LocalDateTime.now(TARGET_ZONE),
+                    gpsMinutes
 
             );
 

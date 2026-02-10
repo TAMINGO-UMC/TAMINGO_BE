@@ -1,8 +1,10 @@
 package app.tamingo.domain.home.service.realtime;
 
 import app.tamingo.common.exception.CustomException;
+import app.tamingo.domain.home.converter.DailyScheduleResponseConverter;
 import app.tamingo.domain.home.converter.FindRouteResponseConverter;
 import app.tamingo.domain.home.dto.*;
+import app.tamingo.domain.home.entity.ScheduleStartSnapshot;
 import app.tamingo.domain.home.entity.enums.CurrentStatus;
 import app.tamingo.domain.home.entity.enums.TimeSlot;
 import app.tamingo.domain.home.exception.HomeErrorCode;
@@ -40,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -308,21 +311,47 @@ public class RealTimeScheduleService {
         realtimeScheduleRedisService.saveScheduleStatus(realtime);
     }
 
-    // 실시간 일정 상태 조회, Redis 생성 전이면 기본 설정
+    // 실시간 일정 상태 조회, Redis 생성 전이면 기본 설정 - startSnapshot에서 가져오기
     @Transactional(readOnly = true)
     public DailyScheduleResponse.ScheduleStatusResponse calculateScheduleStatus(Schedule schedule) {
         RealtimeSchedule realtime = realtimeScheduleRedisService.findScheduleStatus(schedule.getId());
         if (realtime != null) {
             return realtimeScheduleRedisService.toStatusResponse(realtime);
         }
+        else {
+            return resolveStatusByNow(LocalDateTime.now(), schedule);
+        }
+    }
+
+    private DailyScheduleResponse.ScheduleStatusResponse resolveStatusByNow(LocalDateTime now, Schedule schedule) {
+        ScheduleStartSnapshot snapshot =
+                scheduleStartSnapshotService.findSnapshotEntity(schedule);
+        LocalDateTime expectedDeparture = schedule.getStartTime();
+        LocalDateTime expectedArrival = schedule.getStartTime();
+        if (snapshot != null) {
+            if (snapshot.getDepartureTime() != null) {
+                expectedDeparture = snapshot.getDepartureTime();
+            }
+            if (snapshot.getArrivalTime() != null) {
+                expectedArrival = snapshot.getArrivalTime();
+            }
+        }
+
+        // 현재시간, 출발예상시간 차이 가져오기
+        long diffMinutes = Duration.between(now, expectedDeparture).toMinutes();
+        CurrentStatus status = resolveStatus(diffMinutes);
+        int leftOrDelayMinutes = (int) Math.abs(diffMinutes);
+        long arrivalDiffMinutes = Duration.between(now, expectedArrival).toMinutes();
+        Integer lateArrivalMinutes = arrivalDiffMinutes < 0 ? (int) Math.abs(arrivalDiffMinutes) : null;
+        boolean isStarted = !expectedDeparture.isAfter(now);
 
         return new DailyScheduleResponse.ScheduleStatusResponse(
-                CurrentStatus.READY,
-                false,
-                0,
-                schedule.getStartTime().toLocalTime(),
-                schedule.getEndTime().toLocalTime(),
-                0
+                status,
+                isStarted,
+                leftOrDelayMinutes,
+                expectedDeparture.toLocalTime(),
+                expectedArrival.toLocalTime(),
+                lateArrivalMinutes
         );
     }
 
@@ -384,7 +413,7 @@ public class RealTimeScheduleService {
 
     // 지각/출발 상태 판별
     private CurrentStatus resolveStatus(long diffMinutes) {
-        if (diffMinutes >= 10) {
+        if (diffMinutes >= 20) {
             return CurrentStatus.READY;
         }
         if (diffMinutes > 0) {
