@@ -189,4 +189,11 @@ public class Schedule extends BaseEntity {
     public void updateMapEtaMinutes(Integer mapEtaMinutes) {
         this.mapEtaMinutes = mapEtaMinutes;
     }
+
+    public void softDelete(LocalDateTime now) {
+        if (this.deletedAt != null) {
+            return;
+        }
+        this.deletedAt = now;
+    }
 }

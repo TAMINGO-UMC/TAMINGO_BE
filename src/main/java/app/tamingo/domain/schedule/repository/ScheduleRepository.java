@@ -142,7 +142,4 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     Optional<Schedule> findByIdAndUser(Long scheduleId, User user);
 
-    default void softDelete(Schedule schedule) {
-        this.delete(schedule);
-    }
 }

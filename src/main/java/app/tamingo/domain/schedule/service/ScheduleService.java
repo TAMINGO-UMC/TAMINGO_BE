@@ -397,7 +397,9 @@ public class ScheduleService {
         scheduleAiLogRepository.findBySchedule(schedule)
                 .ifPresent(scheduleAiLogRepository::delete);
 
-        scheduleRepository.softDelete(schedule);
+        schedule.softDelete(LocalDateTime.now());
+
+        scheduleRepository.flush();
 
         // AI 평균 정확도 갱신
         userLearningSummaryService.updateAiStats(userId);
