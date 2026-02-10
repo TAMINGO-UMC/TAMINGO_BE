@@ -378,4 +378,30 @@ public class ScheduleService {
         // 통합 반환
         return MonthlyScheduleResponse.of(schedules, categories);
     }
+
+    @Transactional
+    public void deleteSchedule(Long userId, Long scheduleId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_NOT_FOUND));
+
+        if (!schedule.getUser().getId().equals(userId)) {
+            throw new CustomException(ScheduleErrorCode.SCHEDULE_NOT_OWNER);
+        }
+
+        // 연결된 할 일 해제
+        for (Todo todo : schedule.getTodoList()) {
+            todo.disconnectSchedule();
+        }
+
+        // AI 로그 삭제
+        scheduleAiLogRepository.findBySchedule(schedule)
+                .ifPresent(scheduleAiLogRepository::delete);
+
+        schedule.softDelete(LocalDateTime.now());
+
+        scheduleRepository.flush();
+
+        // AI 평균 정확도 갱신
+        userLearningSummaryService.updateAiStats(userId);
+    }
 }
