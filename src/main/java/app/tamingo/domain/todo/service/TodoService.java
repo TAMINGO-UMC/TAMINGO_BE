@@ -394,4 +394,28 @@ public class TodoService {
         return DailyTodoListResponse.of(dailyTodos, backlogTodos);
     }
 
+    /**
+     * 할 일 삭제 API
+     */
+    @Transactional
+    public void delete(Long userId, Long todoId) {
+        Todo todo = todoRepository.findById(todoId)
+                .orElseThrow(() -> new CustomException(TodoErrorCode.TODO_NOT_FOUND));
+
+        if (!todo.getUser().getId().equals(userId)) {
+            throw new CustomException(TodoErrorCode.TODO_NOT_OWNER);
+        }
+
+        // 연결된 일정 해제
+        todo.disconnectSchedule();
+
+        // AI 로그 삭제
+        todoAiLogRepository.findByTodo(todo).ifPresent(todoAiLogRepository::delete);
+
+        todoRepository.delete(todo);
+
+        // AI 평균 정확도 갱신
+        userLearningSummaryService.updateAiStats(userId);
+    }
+
 }
