@@ -41,13 +41,13 @@ public class StartLocationController implements StartLocationApi {
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody StartLocationGpsRequest request
             ) {
-        realTimeScheduleService.updateRealtime(
+        UserGpsResponse userGpsResponse = realTimeScheduleService.updateRealtime(
                 userId,
                 request.scheduleId(),
                 request.latitude(),
                 request.longitude()
         );
-        return ApiResponse.onSuccess(null, SuccessCode.OK);
+        return ApiResponse.onSuccess(userGpsResponse, SuccessCode.OK);
     }
 
     @Override
