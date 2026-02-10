@@ -86,20 +86,6 @@ public class NotificationReservationScheduler {
                 // 결정된 정각 알림(2번 또는 3번) 예약
                 notificationProducer.reserve(onTimeMessage, departureTime);
 
-                // [10번 알림 : N분 전]
-                notificationSettingRepository.findById(user.getId()).ifPresent(setting -> {
-                    if (setting.isDepartureAlertEnabled()) {
-                        int leadMinutes = setting.getDepartureLeadMinutes();
-                        LocalDateTime reminderTime = departureTime.minusMinutes(leadMinutes);
-
-                        notificationProducer.reserve(
-                                NotificationMessage.createNMinutes(user.getId(), user.getNickname(), destination, leadMinutes),
-                                reminderTime
-                        );
-                        log.info("[10번(n분전) 예약] {}님 {}분 전 알림", user.getNickname(), leadMinutes);
-                    }
-                });
-
                 // [7번 알림 : Silent GPS 체크 예약]
                 LocalDateTime silentGpsTime = startTime.minusHours(1);
 
