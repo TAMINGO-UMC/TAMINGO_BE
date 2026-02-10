@@ -107,6 +107,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
         SELECT * FROM schedule s 
         WHERE s.user_id = :userId 
         AND s.start_time >= :now
+        AND s.deleted_at IS NULL
         AND s.latitude BETWEEN :minLat AND :maxLat 
         AND s.longitude BETWEEN :minLon AND :maxLon
         AND (6371 * acos(cos(radians(:latitude)) * cos(radians(s.latitude)) 
