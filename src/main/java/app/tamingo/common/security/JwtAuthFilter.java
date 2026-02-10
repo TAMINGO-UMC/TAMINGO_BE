@@ -3,12 +3,14 @@ package app.tamingo.common.security;
 import app.tamingo.common.exception.CustomException;
 import app.tamingo.common.response.ApiResponse;
 import app.tamingo.common.response.BaseCode;
+import app.tamingo.common.response.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -18,12 +20,24 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final ObjectMapper objectMapper;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        return path.startsWith("/api/auth/")
+                || path.startsWith("/api/terms/")
+                || path.startsWith("/swagger-ui/")
+                || path.startsWith("/v3/api-docs/")
+                || "OPTIONS".equalsIgnoreCase(request.getMethod());
+    }
 
     @Override
     protected void doFilterInternal(
@@ -54,6 +68,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         } catch (CustomException e) {
             SecurityContextHolder.clearContext();
             writeErrorResponse(response, e.getErrorCode());
+        } catch (Exception e) {
+            log.error("Unexpected error in JwtAuthFilter", e);
+            SecurityContextHolder.clearContext();
+            writeErrorResponse(response, ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
