@@ -48,9 +48,9 @@ public class NotificationReservationScheduler {
                 User user = snapshot.getSchedule().getUser();
                 String destination = snapshot.getSchedule().getPlaceName();
                 int eta = snapshot.getExpectedEta();
-                LocalDateTime startTime = snapshot.getSchedule().getStartTime();
-                LocalDateTime departureTime = startTime.minusMinutes(eta);
                 Long scheduleId = snapshot.getSchedule().getId();
+                LocalDateTime departureTime = snapshot.getDepartureTime();
+                LocalDateTime startTime = snapshot.getSchedule().getStartTime();
 
                 // --- [1번 알림: 출발 20분 전 사전 알림 예약] ---
                 notificationProducer.reserve(
@@ -112,7 +112,7 @@ public class NotificationReservationScheduler {
                                         ),
                                         alertTime
                                 );
-                                log.info("[11번 예약] {}님 {}분 일찍 출발 제안", user.getNickname(), eta + 20);
+                                log.info("[11번 예약] {}님 연계 알림 예약", user.getNickname());
                             }
                         });
                 snapshot.reserved();
