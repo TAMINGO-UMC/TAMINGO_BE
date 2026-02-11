@@ -65,6 +65,12 @@
 
 ---
 
+## 💾 ERD
+<img width="4400" alt="타밍고 BE" src="https://github.com/user-attachments/assets/c9ba80e8-8b7e-475a-aeab-61073ab1cb0c" />
+
+
+---
+
 ## 🏗 시스템 아키텍처
 
 <div align="center">
