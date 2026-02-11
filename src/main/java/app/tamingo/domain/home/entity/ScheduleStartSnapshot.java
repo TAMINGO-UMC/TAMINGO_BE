@@ -60,6 +60,12 @@ public class ScheduleStartSnapshot {
     @Column(name = "decided_at", nullable = false)
     private LocalDateTime decidedAt;
 
+    @Column(name = "departure_time", nullable = false)
+    private LocalDateTime departureTime;
+
+    @Column(name = "arrival_time")
+    private LocalDateTime arrivalTime;
+
     // 스냅샷 기준 지도 ETA (분)
     @Column(name = "map_eta_minutes")
     private Integer mapEtaMinutes;
@@ -71,8 +77,8 @@ public class ScheduleStartSnapshot {
     @Column(name = "is_reserved", nullable = false)
     private boolean isReserved = false;
 
-    @Column(name = "expected_eta", nullable = false, columnDefinition = "integer default 0")
-    private int expectedEta = 0;
+    @Column(name = "expected_eta", nullable = false)
+    private int expectedEta;
 
     public void reserved() {
         this.isReserved = true;
@@ -87,7 +93,10 @@ public class ScheduleStartSnapshot {
             double usedStartLng,
             String usedStartPlaceName,
             LocalDateTime decidedAt,
-            boolean overridden
+            boolean overridden,
+            LocalDateTime departureTime,
+            LocalDateTime arriveTime,
+            int expectedEta
     ) {
         this.schedule = schedule;
         this.startSourceType = startSourceType;
@@ -95,8 +104,11 @@ public class ScheduleStartSnapshot {
         this.usedStartLat = usedStartLat;
         this.usedStartLng = usedStartLng;
         this.usedStartPlaceName = usedStartPlaceName;
+        this.departureTime = departureTime;
+        this.arrivalTime = arriveTime;
         this.decidedAt = decidedAt;
         this.overridden = overridden;
+        this.expectedEta = expectedEta;
     }
 
     public static ScheduleStartSnapshot of(
@@ -107,8 +119,12 @@ public class ScheduleStartSnapshot {
             double usedStartLng,
             String usedStartPlaceName,
             LocalDateTime decidedAt,
+            int expectedEta,
             boolean overridden
     ) {
+        LocalDateTime scheduleStart = schedule.getStartTime();
+        LocalDateTime arriveTime = scheduleStart;
+        LocalDateTime departureTime = scheduleStart.minusMinutes(expectedEta);
         return ScheduleStartSnapshot.internalBuilder()
                 .schedule(schedule)
                 .startSourceType(startSourceType)
@@ -117,6 +133,9 @@ public class ScheduleStartSnapshot {
                 .usedStartLng(usedStartLng)
                 .usedStartPlaceName(usedStartPlaceName)
                 .decidedAt(decidedAt)
+                .departureTime(departureTime)
+                .arriveTime(arriveTime)
+                .expectedEta(expectedEta)
                 .overridden(overridden)
                 .build();
     }
@@ -126,18 +145,20 @@ public class ScheduleStartSnapshot {
             double usedStartLat,
             double usedStartLng,
             String usedStartPlaceName,
-            LocalDateTime decidedAt
+            LocalDateTime decidedAt,
+            int mapEtaMinutes
     ) {
-        applyGps(usedStartLat, usedStartLng, usedStartPlaceName, decidedAt, true);
+        applyGps(usedStartLat, usedStartLng, usedStartPlaceName, decidedAt, true, mapEtaMinutes);
     }
 
-    // GPS 적용 공통 로직
+    // GPS 적용 공통 로직 - 일정 생성 말고, GPS 기반으로 출발 시간을 측정할 경우
     private void applyGps(
             double usedStartLat,
             double usedStartLng,
             String usedStartPlaceName,
             LocalDateTime decidedAt,
-            boolean overridden
+            boolean overridden,
+            int mapEtaMinutes
     ) {
         this.startSourceType = StartSourceType.GPS;
         this.startSourceId = 0L;
@@ -146,7 +167,13 @@ public class ScheduleStartSnapshot {
         this.decidedAt = decidedAt;
         this.usedStartPlaceName = usedStartPlaceName;
         this.overridden = overridden;
-        this.mapEtaMinutes = null;
+        LocalDateTime scheduleStart = this.schedule != null ? this.schedule.getStartTime() : null;
+        if (scheduleStart != null) {
+            this.arrivalTime = scheduleStart;
+            this.departureTime = scheduleStart.minusMinutes(mapEtaMinutes);
+        }
+        this.mapEtaMinutes = mapEtaMinutes;
+        this.expectedEta = mapEtaMinutes;
     }
 
     public void updateMapEtaMinutes(Integer mapEtaMinutes) {

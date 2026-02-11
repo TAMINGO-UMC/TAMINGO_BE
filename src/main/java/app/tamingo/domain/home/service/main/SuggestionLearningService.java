@@ -76,6 +76,8 @@ public class SuggestionLearningService {
         Schedule schedule = Schedule.of(
                 suggestionLearning.getUser(),
                 category,
+
+
                 baseSchedule != null ? baseSchedule.getTitle() : "추천 일정",
                 suggestionLearning.getStartTime(),
                 suggestionLearning.getEndTime(),
@@ -142,7 +144,7 @@ public class SuggestionLearningService {
             return scheduleCategoryRepository.findByIdAndUser(
                             suggestionLearning.getSuggestedCategoryId(),
                             suggestionLearning.getUser())
-                    .orElseThrow(() -> new CustomException(ScheduleErrorCode.SCHEDULE_CATEGORY_NOT_FOUND));
+                    .orElse(null);
         }
         return baseSchedule != null ? baseSchedule.getScheduleCategory() : null;
     }

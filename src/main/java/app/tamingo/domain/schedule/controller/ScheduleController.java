@@ -102,4 +102,14 @@ public class ScheduleController {
         MonthlyScheduleResponse response = scheduleService.getMonthlySchedules(userId, yearMonth);
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
+
+    @Operation(summary = "일정 삭제 API", description = "특정 일정을 삭제합니다. (Soft Delete) 연결된 할 일은 해제되고, AI 학습 통계가 갱신됩니다.")
+    @DeleteMapping("/{scheduleId}")
+    public ApiResponse<String> deleteSchedule(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable("scheduleId") Long scheduleId
+    ) {
+        scheduleService.deleteSchedule(userId, scheduleId);
+        return ApiResponse.onSuccess("일정이 성공적으로 삭제되었습니다.", SuccessCode.OK);
+    }
 }

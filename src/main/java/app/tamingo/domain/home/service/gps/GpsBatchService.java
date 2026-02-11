@@ -27,7 +27,7 @@ public class GpsBatchService {
 
 
     private static final double ARRIVAL_RADIUS_KM = 0.05; // 50m
-    private static final int ARRIVAL_EARLY_MIN = 10;
+    private static final int ARRIVAL_EARLY_MIN = 20;
     private static final int ARRIVAL_LATE_MIN = 3;
     private static final int LOCATION_REQUEST_WINDOW_MIN = 20;
     private static final int LOCATION_REQUEST_INTERVAL_MIN = 10;

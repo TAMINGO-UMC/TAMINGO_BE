@@ -19,8 +19,6 @@ public class DailyScheduleResponseConverter {
             Integer leftOrDelayMinutes,
             LocalTime expectedDepartureTime,
             LocalTime expectedArrivalTime,
-            LocalTime actualDepartureTime,
-            LocalTime actualArrivalTime,
             Integer lateArrivalMinutes
     ) {
         return new DailyScheduleResponse.ScheduleStatusResponse(
