@@ -142,4 +142,14 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     Optional<Schedule> findByIdAndUser(Long scheduleId, User user);
 
+
+    // 삭제된 데이터 찾기
+    @Query("""
+    select s
+    from Schedule s
+    where s.id = :id
+    """)
+    Optional<Schedule> findByIdIncludingDeleted(@Param("id") Long id);
+
+
 }
