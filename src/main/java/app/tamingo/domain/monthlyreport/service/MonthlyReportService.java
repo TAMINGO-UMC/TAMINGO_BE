@@ -87,7 +87,8 @@ public class MonthlyReportService {
                 i.getType(),
                 i.getTitle(),
                 i.getContent(),
-                i.getModelVersion()
+                i.getModelVersion(),
+                i.getType().emoji()
         );
     }
 }
