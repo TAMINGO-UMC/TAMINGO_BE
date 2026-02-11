@@ -398,7 +398,7 @@ public class ScheduleService {
                 .ifPresent(mapping -> {
                     if (mapping.getLinkStatus() == LinkStatus.LINKED) {
                         mapping.unlink();
-                        mapping.markSyncedNow(); // 선택: '마지막 처리 시각' 찍고 싶으면
+                        mapping.markSyncedNow(); 
                     }
                 });
 
