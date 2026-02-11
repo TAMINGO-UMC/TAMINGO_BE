@@ -6,5 +6,6 @@ public record MonthlyInsightResponse(
         MonthlyInsightType type,
         String title,
         String content,
-        String modelVersion
+        String modelVersion,
+        String emoji
 ) {}
