@@ -7,7 +7,6 @@ import lombok.Builder;
 public record NotificationSettingResponse(
         boolean departureAlertEnabled,
         int departureLeadMinutes,
-        boolean latenessRiskAlertEnabled,
         boolean realtimeTransitEnabled,
         boolean todoProposalEnabled,
         boolean locationMoveCheckEnabled) {
@@ -15,7 +14,6 @@ public record NotificationSettingResponse(
         return NotificationSettingResponse.builder()
                 .departureAlertEnabled(setting.isDepartureAlertEnabled())
                 .departureLeadMinutes(setting.getDepartureLeadMinutes())
-                .latenessRiskAlertEnabled(setting.isLatenessRiskAlertEnabled())
                 .realtimeTransitEnabled(setting.isRealtimeTransitEnabled())
                 .todoProposalEnabled(setting.isTodoProposalEnabled())
                 .locationMoveCheckEnabled(setting.isLocationMoveCheckEnabled())

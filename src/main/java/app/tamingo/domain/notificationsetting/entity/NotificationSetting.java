@@ -31,9 +31,6 @@ public class NotificationSetting extends BaseEntity {
     @Column(name = "depart_alert_minutes", nullable = false)
     private int departureLeadMinutes;
 
-    @Column(name = "late_risk_alert_enabled", nullable = false)
-    private boolean latenessRiskAlertEnabled;
-
     @Column(name = "realtime_transit_enabled", nullable = false)
     private boolean realtimeTransitEnabled;
 
@@ -46,12 +43,10 @@ public class NotificationSetting extends BaseEntity {
 
     @Builder
     private NotificationSetting(User user, boolean departureAlertEnabled, int departureLeadMinutes,
-                                boolean latenessRiskAlertEnabled, boolean realtimeTransitEnabled,
-                                boolean todoProposalEnabled, boolean locationMoveCheckEnabled) {
+                                boolean realtimeTransitEnabled, boolean todoProposalEnabled, boolean locationMoveCheckEnabled) {
         this.user = user;
         this.departureAlertEnabled = departureAlertEnabled;
         this.departureLeadMinutes = departureLeadMinutes;
-        this.latenessRiskAlertEnabled = latenessRiskAlertEnabled;
         this.realtimeTransitEnabled = realtimeTransitEnabled;
         this.todoProposalEnabled = todoProposalEnabled;
         this.locationMoveCheckEnabled = locationMoveCheckEnabled;
@@ -62,7 +57,6 @@ public class NotificationSetting extends BaseEntity {
                 .user(user)
                 .departureAlertEnabled(true)
                 .departureLeadMinutes(30)
-                .latenessRiskAlertEnabled(true)
                 .realtimeTransitEnabled(true)
                 .todoProposalEnabled(true)
                 .locationMoveCheckEnabled(false)
