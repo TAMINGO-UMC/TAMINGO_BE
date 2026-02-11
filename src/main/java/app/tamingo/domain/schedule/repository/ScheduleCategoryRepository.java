@@ -20,7 +20,7 @@ public interface ScheduleCategoryRepository extends JpaRepository<ScheduleCatego
     //이름 중복 체크
     boolean existsByUserAndName(User user, String name);
 
-    @Query("select count(c) from TodoCategory c where c.user.id = :userId")
+    @Query("select count(c) from ScheduleCategory c where c.user.id = :userId")
     long countByUserId(@Param("userId") Long userId);
 
 
