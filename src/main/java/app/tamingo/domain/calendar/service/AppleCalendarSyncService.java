@@ -80,33 +80,30 @@ public class AppleCalendarSyncService {
                             integration,
                             user,
                             item.externalEventUid(),
-                            null,                 // calendarExternalId (최소 DTO에서는 없음)
-                            null,                 // calendarName (최소 DTO에서는 없음)
+                            null,
+                            null,
                             safeTitle(item.title()),
                             startAt,
                             endAt,
                             item.isAllDay(),
-                            null,                 // timezone (최소 DTO에서는 없음)
+                            null,
                             item.location(),
-                            null,                 // notes (최소 DTO에서는 없음)
-                            null                  // lastExternalModifiedAt (최소 DTO에서는 없음)
+                            null,
+                            null
                     ));
 
-            // 설명: 기존 이벤트면 최신 값으로 갱신
-            if (calendarEvent.getId() != null) {
-                calendarEvent.updateFromApple(
-                        null,                 // calendarExternalId
-                        null,                 // calendarName
-                        safeTitle(item.title()),
-                        startAt,
-                        endAt,
-                        item.isAllDay(),
-                        null,                 // timezone
-                        item.location(),
-                        null,                 // notes
-                        null                  // lastExternalModifiedAt
-                );
-            }
+            calendarEvent.updateFromApple(
+                    null,
+                    null,
+                    safeTitle(item.title()),
+                    startAt,
+                    endAt,
+                    item.isAllDay(),
+                    null,
+                    item.location(),
+                    null,
+                    null
+            );
 
             calendarEventRepository.save(calendarEvent);
             upsertedEvents++;
@@ -151,8 +148,29 @@ public class AppleCalendarSyncService {
                 continue;
             }
 
-            // 5) LINKED면 schedule 덮어쓰기 업데이트
-            Schedule schedule = mapping.getSchedule();
+            //여기부터는 LINKED만
+            Long scheduleId = mapping.getSchedule().getId();
+
+            //삭제 포함 조회로 schedule 상태 확인
+            Schedule schedule = scheduleRepository.findByIdIncludingDeleted(scheduleId).orElse(null);
+
+            if (schedule == null) {
+                // (보험) schedule row 자체가 없는 경우(과거 하드딜리트/데이터 꼬임)
+                mapping.unlink();      // 이후 덮어쓰기 방지
+                mapping.markSyncedNow();
+                skippedSchedules++;
+                continue;
+            }
+
+            if (schedule.getDeletedAt() != null) {
+                //앱에서 이미 삭제(soft delete)된 일정이면 다시 살리지 않기
+                if (mapping.getLinkStatus() == LinkStatus.LINKED) {
+                    mapping.unlink(); // LINKED였다면 UNLINKED로 전환(보험)
+                }
+                mapping.markSyncedNow();
+                skippedSchedules++;
+                continue;
+            }
 
             schedule.update(
                     schedule.getScheduleCategory(), // 설명: 앱 카테고리 유지

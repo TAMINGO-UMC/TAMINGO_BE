@@ -14,11 +14,11 @@ public interface ExternalTaskMappingRepository extends JpaRepository<ExternalTas
 
     //sync 시 (integrationId, externalEventUid)로 매핑 조회 (calendarEvent 조인)
     @Query("""
-        select m
-        from ExternalTaskMapping m
-        join m.calendarEvent ce
-        where m.integration.id = :integrationId
-          and ce.externalEventUid = :externalEventUid
+    select m
+    from ExternalTaskMapping m
+    join m.calendarEvent e
+    where m.integration.id = :integrationId
+    and e.externalEventUid = :externalEventUid
     """)
     Optional<ExternalTaskMapping> findByIntegrationAndUid(
             @Param("integrationId") Long integrationId,

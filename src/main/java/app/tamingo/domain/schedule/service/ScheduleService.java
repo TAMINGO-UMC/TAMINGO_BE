@@ -393,6 +393,15 @@ public class ScheduleService {
             todo.disconnectSchedule();
         }
 
+        //애플에서 가져온 일정이면 UNLINKED 처리
+        externalTaskMappingRepository.findByScheduleId(scheduleId)
+                .ifPresent(mapping -> {
+                    if (mapping.getLinkStatus() == LinkStatus.LINKED) {
+                        mapping.unlink();
+                        mapping.markSyncedNow(); 
+                    }
+                });
+
         // AI 로그 삭제
         scheduleAiLogRepository.findBySchedule(schedule)
                 .ifPresent(scheduleAiLogRepository::delete);
