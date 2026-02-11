@@ -5,6 +5,7 @@ import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.home.dto.Location;
 import app.tamingo.domain.home.dto.StartLocationGpsRequest;
 import app.tamingo.domain.home.dto.StartLocationGpsResponse;
+import app.tamingo.domain.home.dto.UserGpsResponse;
 import app.tamingo.domain.home.service.realtime.RealTimeScheduleService;
 import app.tamingo.domain.home.service.startplace.ScheduleStartSnapshotService;
 import lombok.RequiredArgsConstructor;
@@ -36,17 +37,17 @@ public class StartLocationController implements StartLocationApi {
     }
 
     @Override
-    public ApiResponse<Void> sendRealtimeLocation(
+    public ApiResponse<UserGpsResponse> sendRealtimeLocation(
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody StartLocationGpsRequest request
             ) {
-        realTimeScheduleService.updateRealtime(
+        UserGpsResponse userGpsResponse = realTimeScheduleService.updateRealtime(
                 userId,
                 request.scheduleId(),
                 request.latitude(),
                 request.longitude()
         );
-        return ApiResponse.onSuccess(null, SuccessCode.OK);
+        return ApiResponse.onSuccess(userGpsResponse, SuccessCode.OK);
     }
 
     @Override
