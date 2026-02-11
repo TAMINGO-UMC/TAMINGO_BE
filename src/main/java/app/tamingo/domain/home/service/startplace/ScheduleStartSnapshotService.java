@@ -87,6 +87,7 @@ public class ScheduleStartSnapshotService {
         }
 
 
+
         // 예상 시간 계산
         int expectedEta = calculateRouteMinutes(
                 decision.location().latitude(),

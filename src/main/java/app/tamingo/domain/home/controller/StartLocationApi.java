@@ -3,6 +3,7 @@ package app.tamingo.domain.home.controller;
 import app.tamingo.common.response.ApiResponse;
 import app.tamingo.domain.home.dto.StartLocationGpsRequest;
 import app.tamingo.domain.home.dto.StartLocationGpsResponse;
+import app.tamingo.domain.home.dto.UserGpsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -39,7 +40,7 @@ public interface StartLocationApi {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "USER_NOT_FOUND")
     })
     @PostMapping("/realtime")
-    ApiResponse<Void> sendRealtimeLocation(
+    ApiResponse<UserGpsResponse> sendRealtimeLocation(
             @AuthenticationPrincipal Long userId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "실시간 위치 전송용 GPS 좌표",

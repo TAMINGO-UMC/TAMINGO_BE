@@ -91,9 +91,6 @@ public class NotificationConsumer {
             case ARRIVAL_CHECK -> String.format("%s님, [%s]에 잘 도착하셨나요? 도착하셨다면 버튼을 눌러 상태를 변경해 주세요!",
                     msg.getUserName(), msg.getDestination());
 
-            case BEFORE_N -> String.format("%s님, 설정하신 출발 %d분 전입니다! 잊지 말고 준비해 보세요.",
-                    msg.getUserName(), msg.getExpectedEta());
-
             case GAP -> String.format("오늘 일정 사이에 %s의 틈새 시간이 생겼어요! 미뤄둔 '%s'을 처리하기 딱 좋은 시간이에요.",
                     timeText, msg.getDestination());
 
