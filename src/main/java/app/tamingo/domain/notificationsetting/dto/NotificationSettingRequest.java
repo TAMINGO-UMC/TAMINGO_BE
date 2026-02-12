@@ -1,7 +1,9 @@
 package app.tamingo.domain.notificationsetting.dto;
 
-public class NotificationSettingRequest {
+import io.swagger.v3.oas.annotations.media.Schema;
 
+public class NotificationSettingRequest {
+    @Schema(name = "NotificationUpdateDto")
     public record UpdateDto(
             Boolean departureAlertEnabled,
             Integer departureLeadMinutes,
