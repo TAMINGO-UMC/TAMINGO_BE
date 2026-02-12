@@ -13,6 +13,7 @@ import app.tamingo.domain.schedule.repository.ScheduleRepository;
 import app.tamingo.domain.todo.entity.Todo;
 import app.tamingo.domain.todo.repository.TodoRepository;
 import app.tamingo.domain.user.entity.User;
+import app.tamingo.domain.user.exception.UserErrorCode;
 import app.tamingo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,8 @@ public class SuggestionLearningService {
     // 틈새시간 일정 학습 수락 처리
     @Transactional
     public void acceptSuggestion(Long userId, Long suggestionLearningId) {
-        User user = userRepository.getReferenceById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
         SuggestionLearning suggestionLearning = loadOwnedSuggestion(user, suggestionLearningId);
 
         SuggestionPlanType planType = suggestionLearning.getPlanType();
@@ -54,7 +56,8 @@ public class SuggestionLearningService {
     // 틈새시간 일정 학습 거절 처리
     @Transactional
     public void rejectSuggestion(Long userId, Long suggestionLearningId) {
-        User user = userRepository.getReferenceById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
         SuggestionLearning suggestionLearning = loadOwnedSuggestion(user, suggestionLearningId);
         suggestionLearningRepository.delete(suggestionLearning);
     }
@@ -151,10 +154,15 @@ public class SuggestionLearningService {
 
 
     // 동선 연계 할일 편성 처리
+    @Transactional
     public void acceptRouteDetourTodo(Long userId,Long suggestionId) {
-        User user = userRepository.getReferenceById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+        // 존재하는 동선 연계인지 확인
         SuggestionLearning suggestionLearning = suggestionLearningRepository.findById(suggestionId)
                 .orElseThrow(() -> new CustomException(HomeErrorCode.SUGGESTION_LEARNING_NOT_FOUND));
+
         if (!suggestionLearning.getUser().getId().equals(user.getId())) {
             throw new CustomException(HomeErrorCode.SUGGESTION_UNAUTHORIZED_ACCESS);
         }
@@ -170,8 +178,10 @@ public class SuggestionLearningService {
     }
 
     // 동선 연계 할일 삭제 처리
+    @Transactional
     public void rejectRouteDetourTodo(Long userId,Long suggestionId) {
-        User user = userRepository.getReferenceById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
         SuggestionLearning suggestionLearning = suggestionLearningRepository.findById(suggestionId)
                 .orElseThrow(() -> new CustomException(HomeErrorCode.SUGGESTION_LEARNING_NOT_FOUND));
         if (!suggestionLearning.getUser().getId().equals(user.getId())) {
