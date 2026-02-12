@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.YearMonth;
 
-@Tag(name = "개발용 dev api 실사용x")
+
 @Profile("dev")
 @RestController
 @RequiredArgsConstructor

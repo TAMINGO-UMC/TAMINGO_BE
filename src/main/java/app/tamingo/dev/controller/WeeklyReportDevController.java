@@ -13,7 +13,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 
-@Tag(name = "개발용 dev api 실사용x")
+
 @Profile("dev")
 @RestController
 @RequiredArgsConstructor
