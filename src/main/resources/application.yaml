@@ -61,8 +61,8 @@ odsay:
   search-type: 0
   search-path-type: 0
   opt: 0
-# service-region:
-#   min-lat: 0.0
-#   max-lat: 0.0
-#   min-lng: 0.0
-#   max-lng: 0.0
+service-region:
+  min-lat: 36.9
+  max-lat: 37.9
+  min-lng: 126.3
+  max-lng: 127.8
