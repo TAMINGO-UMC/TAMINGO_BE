@@ -1,7 +1,5 @@
 package app.tamingo.domain.home.scheduler;
 
-import app.tamingo.domain.home.service.gapsuggestion.GapSuggestionBatchService;
-import app.tamingo.domain.home.service.routedetour.RouteDetourSuggestionBatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -12,17 +10,21 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SuggestionScheduler {
 
-    private final GapSuggestionBatchService gapSuggestionBatchService;
-    private final RouteDetourSuggestionBatchService routeDetourSuggestionBatchService;
+    private final HomeSuggestionAsyncRunner homeSuggestionAsyncRunner;
 
     /**
      * 매일 자정에 모든 사용자의 틈새시간 추천 / 동선 연계 추천 배치 작업 실행
      */
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     public void generateDailyGapSuggestions() {
-        gapSuggestionBatchService.runForAllUsers();
-        log.info("[HOME][GAP] 모든 사용자 틈새시간 추천 배치 작업 완료");
-        routeDetourSuggestionBatchService.runForAllUsers();
-        log.info("[HOME][DETOUR] 모든 사용자 동선연계 추천 배치 작업 완료");
+        log.info("[HOME][SUGGESTION] 배치 시작");
+        try {
+            var gapFuture = homeSuggestionAsyncRunner.runGapSuggestions();
+            var detourFuture = homeSuggestionAsyncRunner.runDetourSuggestions();
+            java.util.concurrent.CompletableFuture.allOf(gapFuture, detourFuture).join();
+            log.info("[HOME][SUGGESTION] 배치 완료");
+        } catch (Exception e) {
+            log.error("[HOME][SUGGESTION] 배치 실패", e);
+        }
     }
 }
