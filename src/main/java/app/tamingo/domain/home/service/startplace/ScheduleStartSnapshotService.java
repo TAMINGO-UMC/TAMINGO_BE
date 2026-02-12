@@ -262,7 +262,12 @@ public class ScheduleStartSnapshotService {
     }
 
     public String findPlaceNameWithLocation(double latitude, double longitude) {
-        return kakaoGeoService.getAddress(latitude, longitude).addressName();
+        var address = kakaoGeoService.getAddress(longitude, latitude);
+        if (address == null || address.addressName() == null) {
+            log.warn("[HOME][START] address lookup failed. lat={}, lng={}", latitude, longitude);
+            return "출발지";
+        }
+        return address.addressName();
     }
 
     @Transactional(readOnly = true)
