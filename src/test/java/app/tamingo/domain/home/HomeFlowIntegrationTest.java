@@ -169,7 +169,8 @@ class HomeFlowIntegrationTest {
                                                 List.of()
                                         ))
                                 )
-                        )
+                        ),
+                        null
                 ));
         log.info("[TEST] setUp complete userId={}", user.getId());
     }
@@ -228,7 +229,7 @@ class HomeFlowIntegrationTest {
 
         // 4) 일정 시작 20분 전 Redis 초기화 큐 등록 및 처리
         scheduleInitEnqueueScheduler.enqueueScheduleInit();
-        scheduleInitEnqueueScheduler.enqueueScheduleInit(); // next minute window fallback
+        scheduleInitEnqueueScheduler.enqueueScheduleInit();
         scheduleInitScheduler.processScheduleInitQueue();
         RealtimeSchedule realtime = realtimeScheduleRepository
                 .findById(RealtimeSchedule.key(schedule.getId()))

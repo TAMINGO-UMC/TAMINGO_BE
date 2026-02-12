@@ -2,6 +2,7 @@ package app.tamingo.domain.odsay.service;
 
 import app.tamingo.domain.home.dto.DirectionResult;
 import app.tamingo.domain.home.dto.Location;
+import app.tamingo.domain.home.service.geoutil.GeoService;
 import app.tamingo.domain.odsay.client.OdsayTransitClient;
 import app.tamingo.domain.odsay.dto.OdsayTransitResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +22,13 @@ import java.util.List;
 public class DirectionService {
 
     private final OdsayTransitClient odsayTransitClient;
+    private final GeoService geoService;
 
     /**
      * 우회 시간 최대 허용치
      */
     private static final int MAX_DETOUR_MINUTES = 20;
+    private static final int SHORT_DISTANCE_MAX_MINUTES = 10;
 
     /**
      * 기본 경로 계산
@@ -39,12 +42,24 @@ public class DirectionService {
     public DirectionResult calculateRoute(
             double startLat, double startLng,
             double goalLat, double goalLng) {
+        double distanceKm = geoService.distanceKm(startLat, startLng, goalLat, goalLng);
+        int shortMinutes = geoService.estimateShortDistanceMinutes(distanceKm);
+        if (shortMinutes > 0 && shortMinutes <= SHORT_DISTANCE_MAX_MINUTES) {
+            return new DirectionResult(shortMinutes, List.of());
+        }
         return odsayTransitClient.route(startLat, startLng, goalLat, goalLng);
     }
 
     public OdsayTransitResponse calculateRouteDetail(
             double startLat, double startLng,
             double goalLat, double goalLng) {
+        double distanceKm = geoService.distanceKm(startLat, startLng, goalLat, goalLng);
+        int shortMinutes = geoService.estimateShortDistanceMinutes(distanceKm);
+        if (shortMinutes > 0 && shortMinutes <= SHORT_DISTANCE_MAX_MINUTES) {
+            int seconds = shortMinutes * 60;
+            int meters = (int) Math.round(distanceKm * 1000.0);
+            return shortDistanceResponse(seconds, meters);
+        }
         return odsayTransitClient.routeResponse(startLat, startLng, goalLat, goalLng);
     }
 
@@ -63,8 +78,8 @@ public class DirectionService {
             double startLat, double startLng,
             double todoLat, double todoLng,
             double goalLat, double goalLng) {
-        DirectionResult leg1 = odsayTransitClient.route(startLat, startLng, todoLat, todoLng);
-        DirectionResult leg2 = odsayTransitClient.route(todoLat, todoLng, goalLat, goalLng);
+        DirectionResult leg1 = calculateRoute(startLat, startLng, todoLat, todoLng);
+        DirectionResult leg2 = calculateRoute(todoLat, todoLng, goalLat, goalLng);
         if (leg1 == null || leg2 == null) {
             return null;
         }
@@ -97,7 +112,7 @@ public class DirectionService {
         for (int i = 0; i < points.size() - 1; i++) {
             Location from = points.get(i);
             Location to = points.get(i + 1);
-            DirectionResult leg = odsayTransitClient.route(
+            DirectionResult leg = calculateRoute(
                     from.latitude(), from.longitude(),
                     to.latitude(), to.longitude()
             );
@@ -125,4 +140,35 @@ public class DirectionService {
 
         return acceptable;
     }
+
+    private OdsayTransitResponse shortDistanceResponse(int totalSeconds, int totalMeters) {
+        OdsayTransitResponse.Leg walkLeg = new OdsayTransitResponse.Leg(
+                "WALK",
+                totalSeconds,
+                totalMeters,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                List.of()
+        );
+        OdsayTransitResponse.Itinerary itinerary = new OdsayTransitResponse.Itinerary(
+                totalSeconds,
+                totalSeconds,
+                totalMeters,
+                totalMeters,
+                List.of(walkLeg)
+        );
+        return new OdsayTransitResponse(
+                new OdsayTransitResponse.MetaData(
+                        new OdsayTransitResponse.Plan(List.of(itinerary))
+                ),
+                "경로가 짧아서 길찾기 응답 제공되지않음"
+        );
+    }
+
 }

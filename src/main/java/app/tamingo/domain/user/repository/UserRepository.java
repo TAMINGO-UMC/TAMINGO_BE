@@ -17,4 +17,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     //id 가져오는 메서드
     @Query("select u.id from User u")
     List<Long> findAllUserIds();
+
+    // 활성상태의 모든 유저 조회
+    @Query("select u from User u where u.status = app.tamingo.domain.user.entity.UserStatus.ACTIVE")
+    List<User> findActiveUsers();
 }

@@ -164,15 +164,15 @@ public class StartLocationDeciderService {
         if (schedule == null || schedule.getLatitude() == null || schedule.getLongitude() == null) {
             return 0;
         }
+        double distanceKm = geoService.distanceKm(
+                startLat, startLng,
+                schedule.getLatitude(), schedule.getLongitude());
         try {
             return directionService.calculateRoute(
                     startLat, startLng,
                     schedule.getLatitude(), schedule.getLongitude()
             ).getTotalMinutes();
         } catch (RuntimeException e) {
-            double distanceKm = geoService.distanceKm(
-                    startLat, startLng,
-                    schedule.getLatitude(), schedule.getLongitude());
             int fallbackMinutes = (int) Math.round((distanceKm / FALLBACK_AVG_SPEED_KMH) * 60.0);
             log.warn("[HOME][START] 경로 계산 실패로 거리 기반 fallback 사용. scheduleId={}, minutes={}",
                     schedule.getId(), fallbackMinutes, e);

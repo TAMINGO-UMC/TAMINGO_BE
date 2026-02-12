@@ -25,6 +25,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 할일과 일정 연계해서 틈새시간 직접 저장하는 서비스
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -47,6 +50,7 @@ public class TodoMatchLinkService {
                 if (todo == null)
                         return;
 
+
                 Optional<GptLinkResult> gptResult = judgeScheduleLinkWithGpt(todo, schedules);
 
                 if (gptResult.isPresent() && !gptResult.get().isLinked()) {
@@ -66,8 +70,11 @@ public class TodoMatchLinkService {
 
                 // 1. 장소,소요시간 둘다 있을 경우 gpt comment만 추가로 받아서 저장
                 if (hasLocation(todo) && hasDuration(todo)) {
-                        if (!isLocationAppropriate(gap, todo))
+                        if (!isLocationAppropriate(gap, todo)) {
+                                log.info("[HOME][GAP] save skipped: location inappropriate todoId={}, gapMinutes={}",
+                                                todo.getId(), gap.getAvailableMinutes());
                                 return;
+                        }
 
                         saveTodoBasedSchedule(
                                         user, gap, todo, aiComment, categoryId);
@@ -131,10 +138,6 @@ public class TodoMatchLinkService {
                         Todo todo,
                         List<Schedule> schedules) {
                 List<ScheduleCategory> categories = scheduleCategoryRepository.findAllByUser(todo.getUser());
-                if (categories.isEmpty()) {
-                        log.debug("GPT link judge skipped: no categories. todoId={}", todo.getId());
-                        return Optional.empty();
-                }
 
                 List<Schedule> candidates = schedules.stream()
                                 .filter(s -> s.getLatitude() != null && s.getLongitude() != null)

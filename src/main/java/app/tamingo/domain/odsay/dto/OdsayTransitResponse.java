@@ -3,7 +3,8 @@ package app.tamingo.domain.odsay.dto;
 import java.util.List;
 
 public record OdsayTransitResponse(
-        MetaData metaData
+        MetaData metaData,
+        String message
 ) {
     public record MetaData(
             Plan plan

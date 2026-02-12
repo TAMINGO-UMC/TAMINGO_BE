@@ -39,13 +39,15 @@ public class GapSuggestionBatchService {
 
     // 모든 사용자들에 대해 실행
     public GapSuggestionRunResponse runForAllUsers(LocalDate targetDate) {
-        // TODO : 활성 사용자만 조회하도록 변경 필요
-        List<User> users = userRepository.findAll();
+        List<User> users = userRepository.findActiveUsers();
         List<Long> failedUserIds = new ArrayList<>();
 
         for (User user : users) {
             try {
+                // 제안 일정 생성
                 gapSuggestionService.generateGapTimeSuggestions(user, targetDate);
+
+                // 알림 전송
                 notificationScheduler.reserveGapNotification(user, targetDate);
             } catch (Exception ex) {
                 failedUserIds.add(user.getId());
