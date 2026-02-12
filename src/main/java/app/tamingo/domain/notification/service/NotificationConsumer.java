@@ -26,9 +26,16 @@ public class NotificationConsumer {
 
             sendPush(msg);
 
+        } catch (com.fasterxml.jackson.databind.exc.InvalidFormatException |
+                 com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException e) {
+            // Enum 불일치나 JSON 구조가 아예 틀린 경우
+            // 재시도해도 안 되니까 로그만 찍고 throw 안 함 -> 레디스에서 삭제됨
+            log.error("[데이터 형식 오류] 처리 불가능한 메시지라 폐기합니다 : {}", jsonMessage);
+
         } catch (Exception e) {
-            log.error("[JSON 파싱 실패 혹은 발송 오류] : {}", jsonMessage, e);
-            // 스케줄러가 Redis에서 삭제하지 않고 재시도
+            // 그 외의 오류 (네트워크 문제, FCM 서버 장애 등)
+            // 나중에 다시 하면 성공할 수도 있으니 에러를 던져서 재시도
+            log.error("[알림 발송 일시적 오류] 재시도를 위해 큐에 유지합니다 : {}", jsonMessage, e);
             throw new RuntimeException("알림 처리 실패", e);
         }
     }
