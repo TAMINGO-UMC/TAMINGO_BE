@@ -265,7 +265,7 @@ public class ScheduleStartSnapshotService {
         var address = kakaoGeoService.getAddress(longitude, latitude);
         if (address == null || address.addressName() == null) {
             log.warn("[HOME][START] address lookup failed. lat={}, lng={}", latitude, longitude);
-            return null;
+            return "출발지";
         }
         return address.addressName();
     }
