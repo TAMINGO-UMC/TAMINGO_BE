@@ -163,7 +163,8 @@ public class OdsayTransitClient extends ApiClient {
         return new OdsayTransitResponse(
                 new OdsayTransitResponse.MetaData(
                         new OdsayTransitResponse.Plan(itineraries)
-                )
+                ),
+                null
         );
     }
 

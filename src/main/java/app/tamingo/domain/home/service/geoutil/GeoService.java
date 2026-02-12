@@ -14,6 +14,7 @@ public class GeoService {
      * Haversine 공식의 중심각 계산 계수
      */
     private static final int HAVERSINE_COEFFICIENT = 2;
+    private static final double SHORT_DISTANCE_SPEED_KMH = 4.0;
 
     /**
      * 두 위도/경도 좌표 간의 거리 계산, km 단위
@@ -53,5 +54,17 @@ public class GeoService {
             double lat2, double lon2,
             double km) {
         return distanceKm(lat1, lon1, lat2, lon2) <= km;
+    }
+
+    /**
+     * 짧은 거리 ETA 추정 (도보 기준), 분 단위
+     */
+    public int estimateShortDistanceMinutes(double distanceKm) {
+        if (distanceKm <= 0) {
+            return 0;
+        }
+        double hours = distanceKm / SHORT_DISTANCE_SPEED_KMH;
+        int minutes = (int) Math.round(hours * 60.0);
+        return Math.max(1, minutes);
     }
 }
