@@ -1,7 +1,6 @@
 package app.tamingo.domain.home.service.realtime;
 
 import app.tamingo.common.exception.CustomException;
-import app.tamingo.domain.favoriteplace.repository.FavoritePlaceRepository;
 import app.tamingo.domain.home.entity.enums.ArrivedStatus;
 import app.tamingo.domain.home.entity.enums.TimeSlot;
 import app.tamingo.domain.home.exception.HomeErrorCode;
@@ -13,14 +12,13 @@ import app.tamingo.domain.user.entity.User;
 import app.tamingo.domain.userlearning.entity.ErrorLog;
 import app.tamingo.domain.userlearning.entity.PersonalSetting;
 import app.tamingo.domain.userlearning.entity.UserLearningPattern;
-import app.tamingo.domain.userlearning.entity.UserLearningSummary;
 import app.tamingo.domain.userlearning.entity.enums.RouteType;
 import app.tamingo.domain.userlearning.repository.ErrorLogRepository;
 import app.tamingo.domain.userlearning.repository.PersonalSettingRepository;
 import app.tamingo.domain.userlearning.repository.UserLearningPatternRepository;
-import app.tamingo.domain.userlearning.repository.UserLearningSummaryRepository;
 import app.tamingo.domain.schedule.entity.Schedule;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +27,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserMobilityLearningService {
 
     private static final RouteType DEFAULT_ROUTE_TYPE = RouteType.TRANSIT;
@@ -71,7 +70,7 @@ public class UserMobilityLearningService {
             return;
         }
         String arrivalPlace = schedule.getPlaceName();
-        ErrorLog log = ErrorLog.of(
+        ErrorLog errorLog = ErrorLog.of(
                 startPlaceName,
                 arrivalPlace,
                 expectedDuration,
@@ -80,7 +79,15 @@ public class UserMobilityLearningService {
                 ArrivedStatus.NO_SHOW,
                 schedule.getUser()
         );
-        errorLogRepository.save(log);
+        try {
+            errorLogRepository.save(errorLog);
+            log.info("[LEARNING] 초기 오차 로그 저장 완료. scheduleId={}, userId={}",
+                    schedule.getId(), schedule.getUser().getId());
+        } catch (Exception e) {
+            log.error("[LEARNING] 초기 오차 로그 저장 실패. scheduleId={}, userId={}",
+                    schedule.getId(), schedule.getUser().getId(), e);
+            throw e;
+        }
     }
 
     // 일정 종료 후 오차 로그 저장 (오차로그 on 일 경우)
@@ -99,7 +106,7 @@ public class UserMobilityLearningService {
         String arrivalPlace = schedule.getPlaceName() != null ? schedule.getPlaceName() : "DESTINATION";
         int errorMinutes = realDuration - expectedDuration;
 
-        ErrorLog log = ErrorLog.of(
+        ErrorLog errorLog = ErrorLog.of(
                 startPlace,
                 arrivalPlace,
                 expectedDuration,
@@ -108,7 +115,15 @@ public class UserMobilityLearningService {
                 arrivedStatus,
                 schedule.getUser()
         );
-        errorLogRepository.save(log);
+        try {
+            errorLogRepository.save(errorLog);
+            log.info("[LEARNING] 최종 오차 로그 저장 완료. scheduleId={}, userId={}, expected={}, real={}",
+                    schedule.getId(), schedule.getUser().getId(), expectedDuration, realDuration);
+        } catch (Exception e) {
+            log.error("[LEARNING] 최종 오차 로그 저장 실패. scheduleId={}, userId={}",
+                    schedule.getId(), schedule.getUser().getId(), e);
+            throw e;
+        }
     }
 
     @Transactional
@@ -122,8 +137,11 @@ public class UserMobilityLearningService {
             boolean navigationUsed
     ) {
         // 결과 중복 저장 방지
-        if(scheduleResultRepository.existsByScheduleId(schedule.getId()))
+        if (scheduleResultRepository.existsByScheduleId(schedule.getId())) {
+            log.warn("[LEARNING] 스케줄 결과가 이미 존재합니다. scheduleId={}, userId={}",
+                    schedule.getId(), schedule.getUser().getId());
             throw new CustomException(HomeErrorCode.SCHEDULE_RESULT_EXISTS);
+        }
         ScheduleResult scheduleResult = ScheduleResult.of(
                 schedule,
                 arrivedStatus,
@@ -133,7 +151,15 @@ public class UserMobilityLearningService {
                 punctualityScore,
                 evaluatedAt
         );
-        scheduleResultRepository.save(scheduleResult);
+        try {
+            scheduleResultRepository.save(scheduleResult);
+            log.info("[LEARNING] 스케줄 결과 저장 완료. scheduleId={}, userId={}, score={}",
+                    schedule.getId(), schedule.getUser().getId(), punctualityScore);
+        } catch (Exception e) {
+            log.error("[LEARNING] 스케줄 결과 저장 실패. scheduleId={}, userId={}",
+                    schedule.getId(), schedule.getUser().getId(), e);
+            throw e;
+        }
     }
 
     @Transactional

@@ -1,6 +1,7 @@
 package app.tamingo.domain.home.service.main;
 
 import app.tamingo.common.exception.CustomException;
+import app.tamingo.common.time.VirtualTimeService;
 import app.tamingo.domain.home.converter.DailyPlanItemConverter;
 import app.tamingo.domain.home.converter.DailyScheduleResponseConverter;
 import app.tamingo.domain.home.dto.DailyPlanResponse;
@@ -42,6 +43,7 @@ public class DailyPlanService {
     private final TodoRepository todoRepository;
     private final ScheduleStartSnapshotService scheduleStartSnapshotService;
     private final DirectionService directionService;
+    private final VirtualTimeService virtualTimeService;
 
 
     // 홈 화면 일정 목록 조회
@@ -50,8 +52,8 @@ public class DailyPlanService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
         // 오늘 일정 조회
-        LocalDate today = LocalDate.now();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = virtualTimeService.today();
+        LocalDateTime now = virtualTimeService.now();
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
 
@@ -165,7 +167,7 @@ public class DailyPlanService {
 
         // 출발지 스냅샷이 없으면 새로운 출발지를 생성
         if (snapshot == null) {
-            scheduleStartSnapshotService.createSnapshotForSchedule(schedule, LocalDateTime.now());
+            scheduleStartSnapshotService.createSnapshotForSchedule(schedule, virtualTimeService.now());
             snapshot = scheduleStartSnapshotService.findSnapshotEntity(schedule);
         }
         if (snapshot == null || snapshot.getMapEtaMinutes() != null) {
