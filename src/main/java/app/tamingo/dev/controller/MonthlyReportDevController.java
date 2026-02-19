@@ -3,16 +3,13 @@ package app.tamingo.dev.controller;
 import app.tamingo.common.response.ApiResponse;
 import app.tamingo.common.response.SuccessCode;
 import app.tamingo.domain.monthlyreport.batch.MonthlyReportBatchService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
 
 
-@Profile("dev")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/dev/reports")
