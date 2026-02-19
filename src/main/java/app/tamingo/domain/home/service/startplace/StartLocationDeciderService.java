@@ -1,6 +1,7 @@
 package app.tamingo.domain.home.service.startplace;
 
 import app.tamingo.domain.favoriteplace.entity.FavoritePlace;
+import app.tamingo.domain.home.dto.DirectionResult;
 import app.tamingo.domain.home.dto.Location;
 import app.tamingo.domain.home.entity.enums.StartSourceType;
 import app.tamingo.domain.home.service.geoutil.GeoService;
@@ -168,10 +169,17 @@ public class StartLocationDeciderService {
                 startLat, startLng,
                 schedule.getLatitude(), schedule.getLongitude());
         try {
-            return directionService.calculateRoute(
+            DirectionResult route = directionService.calculateRoute(
                     startLat, startLng,
                     schedule.getLatitude(), schedule.getLongitude()
-            ).getTotalMinutes();
+            );
+            if (route == null) {
+                int fallbackMinutes = (int) Math.round((distanceKm / FALLBACK_AVG_SPEED_KMH) * 60.0);
+                log.warn("[HOME][START] 경로 계산 결과 없음. fallback 사용 scheduleId={}, minutes={}",
+                        schedule.getId(), fallbackMinutes);
+                return fallbackMinutes;
+            }
+            return route.getTotalMinutes();
         } catch (RuntimeException e) {
             int fallbackMinutes = (int) Math.round((distanceKm / FALLBACK_AVG_SPEED_KMH) * 60.0);
             log.warn("[HOME][START] 경로 계산 실패로 거리 기반 fallback 사용. scheduleId={}, minutes={}",

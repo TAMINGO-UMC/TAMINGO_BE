@@ -44,23 +44,35 @@ public class DirectionService {
             double goalLat, double goalLng) {
         double distanceKm = geoService.distanceKm(startLat, startLng, goalLat, goalLng);
         int shortMinutes = geoService.estimateShortDistanceMinutes(distanceKm);
-        if (shortMinutes > 0 && shortMinutes <= SHORT_DISTANCE_MAX_MINUTES) {
+        if (shortMinutes <= SHORT_DISTANCE_MAX_MINUTES) {
             return new DirectionResult(shortMinutes, List.of());
         }
-        return odsayTransitClient.route(startLat, startLng, goalLat, goalLng);
+        DirectionResult route = odsayTransitClient.route(startLat, startLng, goalLat, goalLng);
+        if (route == null) {
+            int fallbackMinutes = geoService.estimateShortDistanceMinutes(distanceKm);
+            return new DirectionResult(Math.max(1, fallbackMinutes), List.of());
+        }
+        return route;
     }
 
+    // 길찾기
     public OdsayTransitResponse calculateRouteDetail(
             double startLat, double startLng,
             double goalLat, double goalLng) {
         double distanceKm = geoService.distanceKm(startLat, startLng, goalLat, goalLng);
         int shortMinutes = geoService.estimateShortDistanceMinutes(distanceKm);
-        if (shortMinutes > 0 && shortMinutes <= SHORT_DISTANCE_MAX_MINUTES) {
+        if (shortMinutes <= SHORT_DISTANCE_MAX_MINUTES) {
             int seconds = shortMinutes * 60;
             int meters = (int) Math.round(distanceKm * 1000.0);
             return shortDistanceResponse(seconds, meters);
         }
-        return odsayTransitClient.routeResponse(startLat, startLng, goalLat, goalLng);
+        OdsayTransitResponse response = odsayTransitClient.routeResponse(startLat, startLng, goalLat, goalLng);
+        if (response == null) {
+            int seconds = Math.max(60, shortMinutes) * 60;
+            int meters = (int) Math.round(distanceKm * 1000.0);
+            return shortDistanceResponse(seconds, meters);
+        }
+        return response;
     }
 
     /**
@@ -117,28 +129,16 @@ public class DirectionService {
                     to.latitude(), to.longitude()
             );
             if (leg == null) {
-                return null;
+                double segmentKm = geoService.distanceKm(
+                        from.latitude(), from.longitude(),
+                        to.latitude(), to.longitude()
+                );
+                int segmentMinutes = Math.max(1, geoService.estimateShortDistanceMinutes(segmentKm));
+                leg = new DirectionResult(segmentMinutes, List.of());
             }
             totalMinutes += leg.getTotalMinutes();
         }
         return new DirectionResult(totalMinutes, List.of());
-    }
-
-    /**
-     * 우회 시간이 허용 범위 내인지 판단
-     * 
-     * @param baseMinutes   기준 경로 소요 시간 (분)
-     * @param detourMinutes 우회 경로 소요 시간 (분)
-     * @return 허용 범위 내이면 true
-     */
-    public boolean isDetourAcceptable(int baseMinutes, int detourMinutes) {
-        int extraTime = detourMinutes - baseMinutes;
-        boolean acceptable = extraTime <= MAX_DETOUR_MINUTES;
-
-        log.debug("[HOME][DETOUR] 우회 시간 계산 base={}min, detour={}min, extra={}min, acceptable={}",
-                baseMinutes, detourMinutes, extraTime, acceptable);
-
-        return acceptable;
     }
 
     private OdsayTransitResponse shortDistanceResponse(int totalSeconds, int totalMeters) {
