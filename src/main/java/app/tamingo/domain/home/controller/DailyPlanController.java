@@ -2,6 +2,7 @@ package app.tamingo.domain.home.controller;
 
 import app.tamingo.common.response.ApiResponse;
 import app.tamingo.common.response.SuccessCode;
+import app.tamingo.common.time.VirtualTimeService;
 import app.tamingo.domain.home.dto.*;
 import app.tamingo.domain.home.service.main.DailyPlanService;
 import app.tamingo.domain.home.service.realtime.RealTimeScheduleService;
@@ -21,6 +22,7 @@ public class DailyPlanController implements DailyPlanApi {
     private final DailyPlanService dailyPlanService;
 
     private final RealTimeScheduleService realTimeScheduleService;
+    private final VirtualTimeService virtualTimeService;
 
     @Override
     public ApiResponse<DailyPlanResponse> viewTodaySchedules(
@@ -54,7 +56,7 @@ public class DailyPlanController implements DailyPlanApi {
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody StartLocationGpsRequest request
     ){
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = virtualTimeService.now();
         FindRouteEndResponse response = realTimeScheduleService.confirmArrivalByEndRouteFind(request,now);
         return ApiResponse.onSuccess(response, SuccessCode.OK);
     }
