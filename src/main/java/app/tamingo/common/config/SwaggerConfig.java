@@ -6,6 +6,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -37,5 +38,22 @@ public class SwaggerConfig implements WebMvcConfigurer {
                         .title("TAMINGO API 명세서")
                         .description("TAMINGO API 명세서입니다.")
                         .version("v0.0.1"));
+    }
+
+    @Bean
+    public GroupedOpenApi publicApi() {
+        return GroupedOpenApi.builder()
+                .group("public")
+                .pathsToMatch("/api/**")
+                .pathsToExclude("/api/dev/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi devApi() {
+        return GroupedOpenApi.builder()
+                .group("dev")
+                .pathsToMatch("/api/dev/**")
+                .build();
     }
 }
