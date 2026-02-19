@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
@@ -46,10 +47,13 @@ public class MyPageService {
     public MyPageSummaryResponse getSummary(Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
 
-        // 1) 주간 리포트(이번주 월요일 기준). 없으면 null
-        LocalDate thisWeekMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        // 1) 주간 리포트(지난주 월요일 기준). 없으면 null
+        ZoneId KST = ZoneId.of("Asia/Seoul");
+        LocalDate thisWeekMonday = LocalDate.now(KST).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate lastWeekMonday = thisWeekMonday.minusWeeks(1);
+
         WeeklyReport weeklyReport = weeklyReportRepository
-                .findByUserIdAndWeekStartDate(userId, thisWeekMonday)
+                .findByUserIdAndWeekStartDate(userId, lastWeekMonday)
                 .orElse(null);
 
         MyPageSummaryResponse.WeeklyReportSummary weeklySummary = (weeklyReport == null)
